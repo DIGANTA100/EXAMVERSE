@@ -1,0 +1,179 @@
+/* ============================================
+   EXAMVERSE - INTRO SCREEN CSS
+   Purple/Blue Cinematic Theme with Glowing Effects
+   ============================================ */
+
+/* Root Pane - Full Screen Container */
+.root-pane {
+    -fx-background-color: #000000;
+}
+
+/* Media View - Video Background */
+.media-view {
+    -fx-opacity: 1.0;
+}
+
+/* Overlay Container - Transparent overlay on video */
+.overlay-container {
+    -fx-background-color: transparent;
+}
+
+/* Button Container */
+.button-container {
+    -fx-background-color: transparent;
+}
+
+/* ============================================
+   GET STARTED BUTTON - Main Call to Action
+   ============================================ */
+
+.get-started-button {
+    /* Size and Shape */
+    -fx-min-width: 220px;
+    -fx-min-height: 52px;
+    -fx-pref-width: 220px;
+    -fx-pref-height: 52px;
+    -fx-background-radius: 0px;
+    -fx-border-radius: 0px;
+
+
+    /* Text Styling */
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-text-fill: white;
+    -fx-letter-spacing: 0.15em;
+
+    /* Background - Blue-Black Gradient */
+    -fx-background-color:
+            linear-gradient(to right, #0a1628 0%, #1e3a5f 50%, #0f2744 100%);
+
+    /* Border */
+    -fx-border-color: #2563eb;
+    -fx-border-width: 2px;
+
+    /* Shadow Effect - Subtle Blue Glow */
+    -fx-effect: dropshadow(gaussian, rgba(37, 99, 235, 0.5), 15, 0.5, 0, 0);
+
+    /* Cursor */
+    -fx-cursor: hand;
+
+    /* Smooth Transitions */
+    -fx-transition: all 0.3s ease;
+}
+
+/* Hover Effect - Enhanced Blue Glow */
+.get-started-button:hover {
+    /* Brighter Blue-Black Background */
+    -fx-background-color:
+            linear-gradient(to right, #1e3a5f 0%, #2563eb 50%, #1e40af 100%);
+
+    /* Enhanced Border */
+    -fx-border-color: #3b82f6;
+    -fx-border-width: 2.5px;
+
+    /* Stronger Blue Glow Effect */
+    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.8), 25, 0.7, 0, 0);
+
+    /* Scale Up Slightly */
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+/* Pressed Effect - Inset Shadow */
+.get-started-button:pressed {
+    /* Darker Blue-Black Background */
+    -fx-background-color:
+            linear-gradient(to right, #0a1628 0%, #1e3a5f 50%, #0f2744 100%);
+
+    /* Inset Effect */
+    -fx-effect: innershadow(gaussian, rgba(0, 0, 0, 0.5), 10, 0.5, 0, 2);
+
+    /* Scale Down */
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+
+    /* Move Down Slightly */
+    -fx-translate-y: 2px;
+}
+
+/* Disabled State */
+.get-started-button:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+/* For smaller screens, adjust button size */
+@media (max-width: 1366px) {
+    .get-started-button {
+        -fx-min-width: 240px;
+        -fx-min-height: 55px;
+        -fx-font-size: 16px;
+    }
+}
+
+/* ============================================
+   ADDITIONAL CINEMATIC EFFECTS
+   ============================================ */
+
+/* Optional: Add subtle vignette effect to overlay */
+.overlay-container::before {
+    -fx-background-color: radial-gradient(
+            circle at center,
+            transparent 0%,
+            rgba(0, 0, 0, 0.4) 100%
+    );
+}
+
+/* ============================================
+   ANIMATION CLASSES (for future use)
+   ============================================ */
+
+/* Fade In Animation */
+.fade-in {
+    -fx-opacity: 0;
+    -fx-transition: opacity 1.5s ease-in;
+}
+
+.fade-in-active {
+    -fx-opacity: 1;
+}
+
+/* Slide Up Animation */
+.slide-up {
+    -fx-translate-y: 50;
+    -fx-opacity: 0;
+    -fx-transition: all 1s ease-out;
+}
+
+.slide-up-active {
+    -fx-translate-y: 0;
+    -fx-opacity: 1;
+}
+
+/* Pulse Animation (for button attention) */
+@keyframes pulse {
+    0% {
+        -fx-scale-x: 1;
+        -fx-scale-y: 1;
+        -fx-effect: dropshadow(gaussian, rgba(168, 85, 247, 0.6), 20, 0.6, 0, 0);
+    }
+    50% {
+        -fx-scale-x: 1.03;
+        -fx-scale-y: 1.03;
+        -fx-effect: dropshadow(gaussian, rgba(168, 85, 247, 0.9), 30, 0.8, 0, 0);
+    }
+    100% {
+        -fx-scale-x: 1;
+        -fx-scale-y: 1;
+        -fx-effect: dropshadow(gaussian, rgba(168, 85, 247, 0.6), 20, 0.6, 0, 0);
+    }
+}
+
+.pulse-animation {
+    -fx-animation: pulse 2s infinite;
+}

@@ -1,69 +1,84 @@
 plugins {
-    java
-    application
-    id("org.javamodularity.moduleplugin") version "1.8.15"
-    id("org.openjfx.javafxplugin") version "0.0.13"
-    id("org.beryx.jlink") version "2.25.0"
+    id("java")
+    id("application")
+    id("org.openjfx.javafxplugin") version "0.1.0"
 }
 
-group = "com.example"
-version = "1.0-SNAPSHOT"
+group = "com.examverse"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
 }
 
-val junitVersion = "5.12.1"
-
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
-    }
-}
-
-tasks.withType<JavaCompile> {
-    options.encoding = "UTF-8"
-}
-
-application {
-    mainModule.set("com.example.examsystem")
-    mainClass.set("com.example.examsystem.HelloApplication")
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 javafx {
-    version = "21.0.6"
-    modules = listOf("javafx.controls", "javafx.fxml", "javafx.web", "javafx.swing", "javafx.media")
+    version = "21.0.1"
+    modules = listOf(
+        "javafx.controls",
+        "javafx.fxml",
+        "javafx.media",
+        "javafx.graphics",
+        "javafx.swing"
+    )
 }
 
 dependencies {
-    implementation("org.controlsfx:controlsfx:11.2.1")
-    implementation("com.dlsc.formsfx:formsfx-core:11.6.0") {
-        exclude(group = "org.openjfx")
-    }
-    implementation("net.synedra:validatorfx:0.6.1") {
-        exclude(group = "org.openjfx")
-    }
-    implementation("org.kordamp.ikonli:ikonli-javafx:12.3.1")
-    implementation("org.kordamp.bootstrapfx:bootstrapfx-core:0.4.0")
-    implementation("eu.hansolo:tilesfx:21.0.9") {
-        exclude(group = "org.openjfx")
-    }
-    implementation("com.github.almasb:fxgl:17.3") {
-        exclude(group = "org.openjfx")
-        exclude(group = "org.jetbrains.kotlin")
-    }
-    testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+    // JavaFX dependencies (handled by javafx plugin)
+
+    // Testing dependencies (optional)
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+application {
+    mainClass.set("com.examverse.app.Launcher")
+
+    // JVM arguments for JavaFX
+    applicationDefaultJvmArgs = listOf(
+        "--add-opens=javafx.graphics/javafx.scene=ALL-UNNAMED",
+        "--add-opens=javafx.controls/javafx.scene.control=ALL-UNNAMED",
+        "--add-opens=javafx.base/com.sun.javafx.runtime=ALL-UNNAMED"
+    )
 }
 
-jlink {
-    imageZip.set(layout.buildDirectory.file("/distributions/app-${javafx.platform.classifier}.zip"))
-    options.set(listOf("--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"))
-    launcher {
-        name = "app"
+tasks {
+    test {
+        useJUnitPlatform()
+    }
+
+    // Custom task to run the application
+    register("runApp") {
+        dependsOn("run")
+    }
+
+    // Configure JAR task
+    jar {
+        manifest {
+            attributes(
+                "Main-Class" to "com.examverse.app.Launcher",
+                "Implementation-Version" to project.version
+            )
+        }
+
+        // Include dependencies in JAR (Fat JAR)
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+    }
+}
+
+// Configure source and resources directories
+sourceSets {
+    main {
+        java {
+            setSrcDirs(listOf("src/main/java"))
+        }
+        resources {
+            setSrcDirs(listOf("src/main/resources"))
+        }
     }
 }

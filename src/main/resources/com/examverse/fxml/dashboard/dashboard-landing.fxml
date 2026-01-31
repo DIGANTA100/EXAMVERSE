@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.media.MediaView?>
+<?import javafx.geometry.Insets?>
+
+<StackPane fx:id="rootPane" xmlns="http://javafx.com/javafx/21"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.examverse.controller.dashboard.DashboardLandingController"
+           stylesheets="@../../css/dashboard-landing.css"
+           styleClass="root-pane">
+
+    <!-- Background Video Layer -->
+    <MediaView fx:id="mediaView"
+               fitWidth="1920"
+               fitHeight="1080"
+               preserveRatio="true"
+               smooth="true"
+               styleClass="media-view"/>
+
+    <!-- Main Content Overlay -->
+    <VBox alignment="TOP_CENTER" spacing="0" styleClass="content-overlay">
+
+        <!-- Top Navigation Bar -->
+        <HBox alignment="CENTER_LEFT" spacing="20" styleClass="nav-bar">
+            <padding>
+                <Insets top="30" bottom="30" left="60" right="60"/>
+            </padding>
+
+            <!-- Logo/Brand Area (Left) -->
+            <HBox alignment="CENTER_LEFT" spacing="12" styleClass="brand-container">
+                <VBox alignment="CENTER_LEFT" spacing="2">
+                    <HBox styleClass="logo-box">
+                        <padding>
+                            <Insets top="8" bottom="8" left="12" right="12"/>
+                        </padding>
+                    </HBox>
+                </VBox>
+
+                <VBox alignment="CENTER_LEFT" spacing="-2">
+                    <Label text="EXAMVERSE" styleClass="brand-title"/>
+                    <Label text="Neural Core System" styleClass="brand-subtitle"/>
+                </VBox>
+            </HBox>
+
+            <!-- Spacer -->
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- Right Navigation Buttons -->
+            <HBox alignment="CENTER_RIGHT" spacing="16" styleClass="nav-buttons">
+                <Button fx:id="aboutButton"
+                        text="About"
+                        styleClass="nav-button"
+                        onAction="#handleAbout"/>
+
+                <Button fx:id="featuresButton"
+                        text="Features"
+                        styleClass="nav-button"
+                        onAction="#handleFeatures"/>
+
+                <Button fx:id="docsButton"
+                        text="Docs"
+                        styleClass="nav-button"
+                        onAction="#handleDocs"/>
+
+                <Button fx:id="demoButton"
+                        text="Watch Demo"
+                        styleClass="nav-button-secondary"
+                        onAction="#handleDemo"/>
+            </HBox>
+        </HBox>
+
+        <!-- Spacer to push hero content to center -->
+        <Region VBox.vgrow="ALWAYS" minHeight="100"/>
+
+        <!-- Hero Section - Center Content -->
+        <VBox alignment="CENTER" spacing="25" styleClass="hero-section">
+            <padding>
+                <Insets top="0" bottom="0" left="100" right="100"/>
+            </padding>
+
+            <!-- Status Badge -->
+            <HBox alignment="CENTER" styleClass="status-badge">
+                <padding>
+                    <Insets top="6" bottom="6" left="16" right="16"/>
+                </padding>
+                <Label text="System Online • Neural Link Active" styleClass="badge-text"/>
+            </HBox>
+
+            <!-- Main Heading -->
+            <VBox alignment="CENTER" spacing="15">
+                <Label text="Architecture of Infinite Knowledge" styleClass="hero-title"/>
+                <Label text="Redefining academic intelligence through advanced examination systems and AI-powered learning frameworks"
+                       styleClass="hero-subtitle" wrapText="true" maxWidth="700" textAlignment="CENTER">
+                    <padding>
+                        <Insets left="40" right="40"/>
+                    </padding>
+                </Label>
+            </VBox>
+
+            <!-- Primary Action Buttons -->
+            <HBox alignment="CENTER" spacing="20" styleClass="action-buttons">
+                <padding>
+                    <Insets top="15"/>
+                </padding>
+
+                <Button fx:id="loginButton"
+                        text="Log In"
+                        styleClass="btn-primary"
+                        onAction="#handleLogin">
+                    <padding>
+                        <Insets top="16" bottom="16" left="35" right="35"/>
+                    </padding>
+                </Button>
+
+                <Button fx:id="signupButton"
+                        text="Sign Up"
+                        styleClass="btn-secondary"
+                        onAction="#handleSignup">
+                    <padding>
+                        <Insets top="16" bottom="16" left="35" right="35"/>
+                    </padding>
+                </Button>
+            </HBox>
+        </VBox>
+
+        <!-- Spacer -->
+        <Region VBox.vgrow="ALWAYS" minHeight="100"/>
+
+        <!-- Bottom Footer Bar -->
+        <HBox alignment="CENTER" spacing="30" styleClass="footer-bar">
+            <padding>
+                <Insets top="25" bottom="25" left="60" right="60"/>
+            </padding>
+
+            <!-- Left Side - System Stats -->
+            <HBox alignment="CENTER_LEFT" spacing="35" styleClass="stats-container">
+                <VBox alignment="CENTER_LEFT" spacing="3" styleClass="stat-item">
+                    <Label text="Latency" styleClass="stat-label"/>
+                    <Label text="2.4ms" styleClass="stat-value"/>
+                </VBox>
+
+                <VBox alignment="CENTER_LEFT" spacing="3" styleClass="stat-item">
+                    <Label text="Active Users" styleClass="stat-label"/>
+                    <Label text="1,247" styleClass="stat-value"/>
+                </VBox>
+
+                <VBox alignment="CENTER_LEFT" spacing="3" styleClass="stat-item">
+                    <Label text="Protocol" styleClass="stat-label"/>
+                    <Label text="EXM-v2.0" styleClass="stat-value"/>
+                </VBox>
+            </HBox>
+
+            <!-- Spacer -->
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- Right Side - Footer Links -->
+            <HBox alignment="CENTER_RIGHT" spacing="20" styleClass="footer-links">
+                <Button fx:id="contactButton"
+                        text="Contact"
+                        styleClass="footer-link"
+                        onAction="#handleContact"/>
+
+                <Button fx:id="faqButton"
+                        text="FAQ"
+                        styleClass="footer-link"
+                        onAction="#handleFAQ"/>
+
+                <Label text="© 2025 ExamVerse Network" styleClass="copyright"/>
+            </HBox>
+        </HBox>
+
+    </VBox>
+
+</StackPane>

@@ -1,0 +1,284 @@
+/* ============================================
+   EXAMVERSE - DASHBOARD LANDING PAGE CSS
+   Modern Tech/AI Theme - Cyan/Blue/Dark
+   Inspired by Academic Interface Design
+   ============================================ */
+
+/* ==================== BASE STYLES ==================== */
+
+.root-pane {
+    -fx-background-color: #020617;
+}
+
+.media-view {
+    -fx-opacity: 0.85;
+}
+
+.content-overlay {
+    -fx-background-color: transparent;
+}
+
+/* ==================== TOP NAVIGATION BAR ==================== */
+
+.nav-bar {
+    -fx-background-color: rgba(15, 23, 42, 0.4);
+    -fx-border-color: rgba(51, 65, 85, 0.3);
+    -fx-border-width: 0 0 1 0;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 20, 0.3, 0, 5);
+}
+
+/* Brand/Logo Styling */
+.logo-box {
+    -fx-background-color: rgba(15, 23, 42, 0.6);
+    -fx-border-color: rgba(34, 211, 238, 0.5);
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+.brand-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: 300;
+    -fx-text-fill: #f1f5f9;
+    -fx-font-family: "Segoe UI Light", "Arial", sans-serif;
+    -fx-letter-spacing: 0.1em;
+}
+
+.brand-subtitle {
+    -fx-font-size: 9px;
+    -fx-text-fill: rgba(34, 211, 238, 0.7);
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-letter-spacing: 0.3em;
+    -fx-font-weight: 500;
+}
+
+/* Navigation Buttons (Top Right) */
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 13px;
+    -fx-font-weight: 300;
+    -fx-font-family: "Segoe UI Light", "Arial", sans-serif;
+    -fx-letter-spacing: 0.05em;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+    -fx-border-width: 0;
+    -fx-padding: 8 0 8 0;
+}
+
+.nav-button:hover {
+    -fx-text-fill: #22d3ee;
+    -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.3), 8, 0.5, 0, 0);
+}
+
+.nav-button-secondary {
+    -fx-background-color: rgba(15, 23, 42, 0.5);
+    -fx-border-color: rgba(51, 65, 85, 0.5);
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-text-fill: #cbd5e1;
+    -fx-font-size: 13px;
+    -fx-font-weight: 400;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-padding: 8 20 8 20;
+    -fx-cursor: hand;
+}
+
+.nav-button-secondary:hover {
+    -fx-border-color: rgba(34, 211, 238, 0.5);
+    -fx-text-fill: #22d3ee;
+    -fx-background-color: rgba(15, 23, 42, 0.7);
+}
+
+/* ==================== HERO SECTION ==================== */
+
+.hero-section {
+    -fx-background-color: transparent;
+}
+
+/* Status Badge */
+.status-badge {
+    -fx-background-color: rgba(34, 211, 238, 0.05);
+    -fx-border-color: rgba(34, 211, 238, 0.2);
+    -fx-border-width: 1;
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+}
+
+.badge-text {
+    -fx-font-size: 10px;
+    -fx-text-fill: #22d3ee;
+    -fx-font-weight: 400;
+    -fx-letter-spacing: 0.15em;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+}
+
+/* Hero Title */
+.hero-title {
+    -fx-font-size: 56px;
+    -fx-font-weight: 300;
+    -fx-text-fill: white;
+    -fx-font-family: "Segoe UI Light", "Arial", sans-serif;
+    -fx-letter-spacing: -0.02em;
+    -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.3), 30, 0.4, 0, 0);
+}
+
+.hero-subtitle {
+    -fx-font-size: 17px;
+    -fx-font-weight: 300;
+    -fx-text-fill: #94a3b8;
+    -fx-font-family: "Segoe UI Light", "Arial", sans-serif;
+    -fx-line-spacing: 1.6;
+}
+
+/* ==================== PRIMARY ACTION BUTTONS ==================== */
+
+.btn-primary {
+    /* Cyan Primary Button */
+    -fx-background-color: #22d3ee;
+    -fx-text-fill: #0f172a;
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+    -fx-font-family: "Segoe UI Semibold", "Arial", sans-serif;
+    -fx-letter-spacing: 0.02em;
+    -fx-background-radius: 6;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.4), 20, 0.5, 0, 0);
+}
+
+.btn-primary:hover {
+    -fx-background-color: #06b6d4;
+    -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.6), 25, 0.6, 0, 0);
+    -fx-scale-x: 1.02;
+    -fx-scale-y: 1.02;
+}
+
+.btn-primary:pressed {
+    -fx-background-color: #0891b2;
+    -fx-translate-y: 1;
+}
+
+.btn-secondary {
+    /* Glass morphism style button */
+    -fx-background-color: rgba(15, 23, 42, 0.4);
+    -fx-border-color: rgba(51, 65, 85, 0.5);
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-text-fill: #cbd5e1;
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+    -fx-font-family: "Segoe UI Semibold", "Arial", sans-serif;
+    -fx-letter-spacing: 0.02em;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 15, 0.4, 0, 0);
+}
+
+.btn-secondary:hover {
+    -fx-background-color: rgba(30, 41, 59, 0.6);
+    -fx-border-color: rgba(34, 211, 238, 0.5);
+    -fx-text-fill: #22d3ee;
+    -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.3), 20, 0.5, 0, 0);
+}
+
+.btn-secondary:pressed {
+    -fx-background-color: rgba(15, 23, 42, 0.7);
+    -fx-translate-y: 1;
+}
+
+/* ==================== FOOTER BAR ==================== */
+
+.footer-bar {
+    -fx-background-color: rgba(15, 23, 42, 0.3);
+    -fx-border-color: rgba(51, 65, 85, 0.3);
+    -fx-border-width: 1 0 0 0;
+}
+
+/* Stats Section */
+.stats-container {
+    -fx-background-color: transparent;
+}
+
+.stat-item {
+    -fx-background-color: transparent;
+}
+
+.stat-label {
+    -fx-font-size: 9px;
+    -fx-text-fill: rgba(34, 211, 238, 0.5);
+    -fx-font-weight: 500;
+    -fx-letter-spacing: 0.25em;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+}
+
+.stat-value {
+    -fx-font-size: 12px;
+    -fx-text-fill: #e2e8f0;
+    -fx-font-weight: 400;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+}
+
+/* Footer Links */
+.footer-link {
+    -fx-background-color: transparent;
+    -fx-text-fill: #64748b;
+    -fx-font-size: 11px;
+    -fx-font-weight: 300;
+    -fx-letter-spacing: 0.15em;
+    -fx-font-family: "Segoe UI Light", "Arial", sans-serif;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+    -fx-border-width: 0;
+    -fx-padding: 4 0 4 0;
+}
+
+.footer-link:hover {
+    -fx-text-fill: #22d3ee;
+}
+
+.copyright {
+    -fx-font-size: 9px;
+    -fx-text-fill: rgba(100, 116, 139, 0.5);
+    -fx-font-weight: 300;
+    -fx-letter-spacing: 0.15em;
+    -fx-font-family: "Segoe UI Light", "Arial", sans-serif;
+}
+
+/* ==================== RESPONSIVE ADJUSTMENTS ==================== */
+
+@media (max-width: 1366px) {
+    .hero-title {
+        -fx-font-size: 48px;
+    }
+
+    .hero-subtitle {
+        -fx-font-size: 15px;
+    }
+
+    .btn-primary, .btn-secondary {
+        -fx-font-size: 14px;
+    }
+}
+
+/* ==================== ANIMATIONS (for future use) ==================== */
+
+.fade-in {
+    -fx-opacity: 0;
+}
+
+.fade-in-active {
+    -fx-opacity: 1;
+    -fx-transition: opacity 1s ease-in;
+}
+
+/* Glow pulse animation for primary button */
+@keyframes glow-pulse {
+    0%, 100% {
+        -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.4), 20, 0.5, 0, 0);
+    }
+    50% {
+        -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.7), 30, 0.7, 0, 0);
+    }
+}
