@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.geometry.Insets?>
+
+<StackPane xmlns="http://javafx.com/javafx/21"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.examverse.controller.auth.LoginController"
+           stylesheets="@../../css/auth.css"
+           styleClass="auth-root">
+
+    <!-- Background Gradient - Fills entire screen -->
+    <VBox alignment="CENTER" styleClass="background-gradient"
+          StackPane.alignment="CENTER"/>
+
+    <!-- Card Container - Centers the login card -->
+    <VBox alignment="CENTER" spacing="0"
+          StackPane.alignment="CENTER">
+
+        <!-- Login Card - Fixed Width in Center -->
+        <VBox alignment="CENTER" spacing="25" styleClass="login-card"
+              maxWidth="520" minWidth="520">
+            <padding>
+                <Insets top="50" bottom="50" left="60" right="60"/>
+            </padding>
+
+            <!-- Header Section -->
+            <VBox alignment="CENTER" spacing="10">
+                <!-- Logo/Icon Area -->
+                <HBox alignment="CENTER" styleClass="logo-container">
+                    <VBox alignment="CENTER" styleClass="logo-circle">
+                        <padding>
+                            <Insets top="22" bottom="22" left="22" right="22"/>
+                        </padding>
+                    </VBox>
+                </HBox>
+
+                <!-- Title -->
+                <Label text="Welcome Back" styleClass="auth-title"/>
+                <Label text="Log in to your ExamVerse account" styleClass="auth-subtitle"/>
+            </VBox>
+
+            <!-- Error/Success Message -->
+            <Label fx:id="errorLabel" text="" styleClass="message-label"
+                   wrapText="true" maxWidth="400"/>
+
+            <!-- Form Section -->
+            <VBox spacing="18" styleClass="form-section" maxWidth="400">
+
+                <!-- Username/Email Field -->
+                <VBox spacing="8">
+                    <Label text="Username or Email" styleClass="field-label"/>
+                    <TextField fx:id="usernameField"
+                               promptText="Enter your username or email"
+                               styleClass="input-field">
+                        <padding>
+                            <Insets top="14" bottom="14" left="16" right="16"/>
+                        </padding>
+                    </TextField>
+                </VBox>
+
+                <!-- Password Field -->
+                <VBox spacing="8">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Password" styleClass="field-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Forgot?" styleClass="link-button-small"
+                                onAction="#handleForgotPassword"/>
+                    </HBox>
+                    <PasswordField fx:id="passwordField"
+                                   promptText="Enter your password"
+                                   styleClass="input-field">
+                        <padding>
+                            <Insets top="14" bottom="14" left="16" right="16"/>
+                        </padding>
+                    </PasswordField>
+                </VBox>
+
+                <!-- Remember Me -->
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <CheckBox fx:id="rememberMeCheckbox"
+                              text="Remember me"
+                              styleClass="checkbox-custom"/>
+                </HBox>
+
+            </VBox>
+
+            <!-- Login Button -->
+            <Button fx:id="loginButton"
+                    text="Log In"
+                    styleClass="btn-login"
+                    onAction="#handleLogin"
+                    maxWidth="400">
+                <padding>
+                    <Insets top="16" bottom="16" left="35" right="35"/>
+                </padding>
+            </Button>
+
+            <!-- Divider -->
+            <HBox alignment="CENTER" spacing="12" styleClass="divider-container"
+                  maxWidth="400">
+                <Region styleClass="divider-line" HBox.hgrow="ALWAYS"/>
+                <Label text="OR" styleClass="divider-text"/>
+                <Region styleClass="divider-line" HBox.hgrow="ALWAYS"/>
+            </HBox>
+
+            <!-- Sign Up Link -->
+            <HBox alignment="CENTER" spacing="6">
+                <Label text="Don't have an account?" styleClass="signup-text"/>
+                <Button fx:id="signupLinkButton"
+                        text="Sign Up"
+                        styleClass="link-button"
+                        onAction="#handleSignupLink"/>
+            </HBox>
+
+            <!-- Back to Home -->
+            <Button text="← Back to Home"
+                    styleClass="back-button"
+                    onAction="#handleBack">
+                <padding>
+                    <Insets top="10" bottom="10" left="20" right="20"/>
+                </padding>
+            </Button>
+
+        </VBox>
+
+    </VBox>
+
+</StackPane>

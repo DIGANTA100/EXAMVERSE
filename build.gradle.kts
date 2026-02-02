@@ -30,6 +30,9 @@ javafx {
 dependencies {
     // JavaFX dependencies (handled by javafx plugin)
 
+    // MySQL Database Connector
+    implementation("com.mysql:mysql-connector-j:8.2.0")
+
     // Testing dependencies (optional)
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -38,11 +41,15 @@ dependencies {
 application {
     mainClass.set("com.examverse.app.Launcher")
 
-    // JVM arguments for JavaFX
+    // JVM arguments for JavaFX - Enhanced with module fixes
     applicationDefaultJvmArgs = listOf(
         "--add-opens=javafx.graphics/javafx.scene=ALL-UNNAMED",
         "--add-opens=javafx.controls/javafx.scene.control=ALL-UNNAMED",
-        "--add-opens=javafx.base/com.sun.javafx.runtime=ALL-UNNAMED"
+        "--add-opens=javafx.base/com.sun.javafx.runtime=ALL-UNNAMED",
+        "--add-opens=javafx.graphics/com.sun.javafx.application=ALL-UNNAMED",
+        "--add-modules=javafx.controls,javafx.fxml,javafx.media,javafx.graphics",
+        "-Dprism.verbose=false",
+        "-Djavafx.verbose=false"
     )
 }
 

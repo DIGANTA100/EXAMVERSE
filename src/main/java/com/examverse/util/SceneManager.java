@@ -52,8 +52,7 @@ public class SceneManager {
                 Parent root = FXMLLoader.load(
                         Objects.requireNonNull(SceneManager.class.getResource(fxmlPath))
                 );
-
-                scene = new Scene(root);
+                scene = new Scene(root, primaryStage.getWidth(), primaryStage.getHeight());
 
                 // Apply CSS if provided
                 if (cssPath != null && !cssPath.isEmpty()) {

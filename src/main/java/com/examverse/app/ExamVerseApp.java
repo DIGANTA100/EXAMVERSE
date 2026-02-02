@@ -4,19 +4,44 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import com.examverse.config.DatabaseConfig;
 import com.examverse.util.SceneManager;
 
 import java.util.Objects;
 
 /**
  * ExamVerseApp - Main JavaFX Application class
- * Initializes the application and loads the intro screen
+ * Initializes the application, database, and loads the intro screen
  */
 public class ExamVerseApp extends Application {
 
     private static Stage primaryStage;
+
+    @Override
+    public void init() {
+        // Initialize database before JavaFX starts
+        System.out.println("========================================");
+        System.out.println("🚀 ExamVerse Starting...");
+        System.out.println("========================================");
+
+        try {
+            System.out.println("📊 Initializing Database...");
+            DatabaseConfig.initializeTables();
+
+            if (DatabaseConfig.testConnection()) {
+                System.out.println("✅ Database initialized successfully!");
+            } else {
+                System.err.println("❌ Database connection failed!");
+                System.err.println("⚠️  App will continue, but features requiring database won't work.");
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Error initializing database: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        System.out.println("========================================");
+    }
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -40,13 +65,25 @@ public class ExamVerseApp extends Application {
         // Configure stage
         stage.setTitle("ExamVerse - Redefining Academic Intelligence");
         stage.setScene(scene);
-        stage.setMaximized(true); // Start maximized
+        stage.setMaximized(true);
         stage.setResizable(true);
 
-        // Optional: Set application icon
-        // stage.getIcons().add(new Image(getClass().getResourceAsStream("/com/examverse/assets/icons/app-icon.png")));
+        // Handle application close
+        stage.setOnCloseRequest(event -> {
+            System.out.println("🛑 Application closing...");
+            DatabaseConfig.closeConnection();
+        });
 
         stage.show();
+
+        System.out.println("✅ ExamVerse loaded successfully!");
+    }
+
+    @Override
+    public void stop() {
+        // Cleanup when app closes
+        System.out.println("🧹 Cleaning up...");
+        DatabaseConfig.closeConnection();
     }
 
     public static Stage getPrimaryStage() {

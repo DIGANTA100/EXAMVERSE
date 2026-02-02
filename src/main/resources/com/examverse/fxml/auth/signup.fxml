@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.geometry.Insets?>
+
+<StackPane xmlns="http://javafx.com/javafx/21"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.examverse.controller.auth.SignupController"
+           stylesheets="@../../css/auth.css"
+           styleClass="auth-root">
+
+    <!-- Background Gradient - Fills entire screen -->
+    <VBox alignment="CENTER" styleClass="background-gradient"
+          StackPane.alignment="CENTER"/>
+
+    <!-- Card Container - Centers the signup card -->
+    <VBox alignment="CENTER" spacing="0"
+          StackPane.alignment="CENTER">
+
+        <!-- Signup Card - Fixed Width in Center -->
+        <VBox alignment="CENTER"
+              spacing="20"
+              styleClass="login-card"
+              maxWidth="520"
+              minWidth="520">
+
+            <padding>
+                <Insets top="40" bottom="40" left="60" right="60"/>
+            </padding>
+
+            <!-- Header Section -->
+            <VBox alignment="CENTER" spacing="8">
+                <HBox alignment="CENTER" styleClass="logo-container">
+                    <VBox alignment="CENTER" styleClass="logo-circle">
+                        <padding>
+                            <Insets top="20" bottom="20" left="20" right="20"/>
+                        </padding>
+                    </VBox>
+                </HBox>
+
+                <Label text="Create Account" styleClass="auth-title"/>
+                <Label text="Join ExamVerse and start your learning journey"
+                       styleClass="auth-subtitle"/>
+            </VBox>
+
+            <!-- Error / Success Message -->
+            <Label fx:id="errorLabel"
+                   text=""
+                   styleClass="message-label"
+                   wrapText="true"
+                   maxWidth="400"/>
+
+            <!-- Form Section -->
+            <VBox spacing="16"
+                  styleClass="form-section"
+                  maxWidth="400">
+
+                <!-- Full Name -->
+                <VBox spacing="6">
+                    <Label text="Full Name" styleClass="field-label"/>
+                    <TextField fx:id="fullNameField"
+                               promptText="Enter your full name"
+                               styleClass="input-field">
+                        <padding>
+                            <Insets top="12" bottom="12" left="16" right="16"/>
+                        </padding>
+                    </TextField>
+                </VBox>
+
+                <!-- Username -->
+                <VBox spacing="6">
+                    <Label text="Username" styleClass="field-label"/>
+                    <TextField fx:id="usernameField"
+                               promptText="Choose a username"
+                               styleClass="input-field">
+                        <padding>
+                            <Insets top="12" bottom="12" left="16" right="16"/>
+                        </padding>
+                    </TextField>
+                </VBox>
+
+                <!-- Email -->
+                <VBox spacing="6">
+                    <Label text="Email Address" styleClass="field-label"/>
+                    <TextField fx:id="emailField"
+                               promptText="Enter your email"
+                               styleClass="input-field">
+                        <padding>
+                            <Insets top="12" bottom="12" left="16" right="16"/>
+                        </padding>
+                    </TextField>
+                </VBox>
+
+                <!-- Password -->
+                <VBox spacing="6">
+                    <Label text="Password" styleClass="field-label"/>
+                    <PasswordField fx:id="passwordField"
+                                   promptText="Create a password (min 6 characters)"
+                                   styleClass="input-field">
+                        <padding>
+                            <Insets top="12" bottom="12" left="16" right="16"/>
+                        </padding>
+                    </PasswordField>
+                </VBox>
+
+                <!-- Confirm Password -->
+                <VBox spacing="6">
+                    <Label text="Confirm Password" styleClass="field-label"/>
+                    <PasswordField fx:id="confirmPasswordField"
+                                   promptText="Re-enter your password"
+                                   styleClass="input-field">
+                        <padding>
+                            <Insets top="12" bottom="12" left="16" right="16"/>
+                        </padding>
+                    </PasswordField>
+                </VBox>
+
+                <!-- Terms -->
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <CheckBox fx:id="termsCheckbox" styleClass="checkbox-custom"/>
+                    <Label text="I agree to the " styleClass="terms-text"/>
+                    <Button text="Terms &amp; Conditions"
+                            styleClass="link-button-small"/>
+                </HBox>
+
+            </VBox>
+
+            <!-- Signup Button -->
+            <Button fx:id="signupButton"
+                    text="Sign Up"
+                    styleClass="btn-login"
+                    onAction="#handleSignup"
+                    maxWidth="400">
+                <padding>
+                    <Insets top="16" bottom="16" left="35" right="35"/>
+                </padding>
+            </Button>
+
+            <!-- Divider -->
+            <HBox alignment="CENTER"
+                  spacing="12"
+                  styleClass="divider-container"
+                  maxWidth="400">
+                <Region styleClass="divider-line" HBox.hgrow="ALWAYS"/>
+                <Label text="OR" styleClass="divider-text"/>
+                <Region styleClass="divider-line" HBox.hgrow="ALWAYS"/>
+            </HBox>
+
+            <!-- Login Link -->
+            <HBox alignment="CENTER" spacing="6">
+                <Label text="Already have an account?"
+                       styleClass="signup-text"/>
+                <Button fx:id="loginLinkButton"
+                        text="Log In"
+                        styleClass="link-button"
+                        onAction="#handleLoginLink"/>
+            </HBox>
+
+            <!-- Back -->
+            <Button text="← Back to Home"
+                    styleClass="back-button"
+                    onAction="#handleBack">
+                <padding>
+                    <Insets top="10" bottom="10" left="20" right="20"/>
+                </padding>
+            </Button>
+
+        </VBox>
+
+    </VBox>
+
+</StackPane>

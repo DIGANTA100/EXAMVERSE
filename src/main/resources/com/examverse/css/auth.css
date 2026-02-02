@@ -1,0 +1,315 @@
+/* ============================================
+   EXAMVERSE - AUTHENTICATION SCREENS CSS
+   Professional Login/Signup Design
+   Cyan/Blue Tech Theme
+   ============================================ */
+
+/* ==================== ROOT & BACKGROUND ==================== */
+
+.auth-root {
+    -fx-background-color: #020617;
+}
+
+.background-gradient {
+    -fx-background-color: linear-gradient(135deg, #0a1628 0%, #020617 50%, #0f172a 100%);
+}
+
+/* ==================== CARD CONTAINER ==================== */
+
+.card-container {
+    -fx-background-color: transparent;
+}
+
+.login-card {
+    -fx-background-color: rgba(15, 23, 42, 0.85);
+    -fx-background-radius: 16;
+    -fx-border-color: rgba(51, 65, 85, 0.5);
+    -fx-border-width: 1;
+    -fx-border-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 40, 0.4, 0, 8);
+}
+
+/* ==================== HEADER SECTION ==================== */
+
+.logo-container {
+    -fx-background-color: transparent;
+}
+
+.logo-circle {
+    -fx-background-color: rgba(34, 211, 238, 0.1);
+    -fx-border-color: rgba(34, 211, 238, 0.4);
+    -fx-border-width: 2;
+    -fx-border-radius: 50%;
+    -fx-background-radius: 50%;
+    -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.3), 15, 0.5, 0, 0);
+}
+
+.auth-title {
+    -fx-font-size: 28px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #f1f5f9;
+    -fx-font-family: "Segoe UI Semibold", "Arial", sans-serif;
+}
+
+.auth-subtitle {
+    -fx-font-size: 14px;
+    -fx-font-weight: 300;
+    -fx-text-fill: #94a3b8;
+    -fx-font-family: "Segoe UI Light", "Arial", sans-serif;
+}
+
+/* ==================== FORM ELEMENTS ==================== */
+
+.form-section {
+    -fx-background-color: transparent;
+}
+
+.field-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #cbd5e1;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+}
+
+/* Input Fields */
+.input-field {
+    -fx-background-color: rgba(30, 41, 59, 0.6);
+    -fx-border-color: rgba(71, 85, 105, 0.5);
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-text-fill: #e2e8f0;
+    -fx-font-size: 14px;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-prompt-text-fill: #64748b;
+}
+
+.input-field:focused {
+    -fx-background-color: rgba(30, 41, 59, 0.8);
+    -fx-border-color: rgba(34, 211, 238, 0.6);
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.2), 10, 0.4, 0, 0);
+}
+
+.input-field:hover {
+    -fx-border-color: rgba(71, 85, 105, 0.7);
+}
+
+/* ==================== BUTTONS ==================== */
+
+/* Primary Login/Signup Button */
+.btn-login {
+    -fx-background-color: #22d3ee;
+    -fx-text-fill: #0f172a;
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+    -fx-font-family: "Segoe UI Semibold", "Arial", sans-serif;
+    -fx-background-radius: 8;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.4), 15, 0.5, 0, 0);
+}
+
+.btn-login:hover {
+    -fx-background-color: #06b6d4;
+    -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.6), 20, 0.6, 0, 0);
+    -fx-scale-x: 1.02;
+    -fx-scale-y: 1.02;
+}
+
+.btn-login:pressed {
+    -fx-background-color: #0891b2;
+    -fx-translate-y: 1;
+}
+
+.btn-login:disabled {
+    -fx-background-color: rgba(34, 211, 238, 0.4);
+    -fx-text-fill: rgba(15, 23, 42, 0.6);
+    -fx-opacity: 0.6;
+    -fx-cursor: default;
+}
+
+/* Link Buttons */
+.link-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #22d3ee;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-font-family: "Segoe UI Semibold", "Arial", sans-serif;
+    -fx-cursor: hand;
+    -fx-underline: false;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.link-button:hover {
+    -fx-text-fill: #06b6d4;
+    -fx-underline: true;
+}
+
+.link-button-small {
+    -fx-background-color: transparent;
+    -fx-text-fill: #22d3ee;
+    -fx-font-size: 12px;
+    -fx-font-weight: 500;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-cursor: hand;
+    -fx-underline: false;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.link-button-small:hover {
+    -fx-text-fill: #06b6d4;
+    -fx-underline: true;
+}
+
+/* Back Button */
+.back-button {
+    -fx-background-color: rgba(30, 41, 59, 0.4);
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 13px;
+    -fx-font-weight: 400;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-cursor: hand;
+}
+
+.back-button:hover {
+    -fx-background-color: rgba(30, 41, 59, 0.6);
+    -fx-text-fill: #cbd5e1;
+}
+
+/* ==================== CHECKBOX ==================== */
+
+.checkbox-custom {
+    -fx-text-fill: #cbd5e1;
+    -fx-font-size: 13px;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+}
+
+.checkbox-custom .box {
+    -fx-background-color: rgba(30, 41, 59, 0.6);
+    -fx-border-color: rgba(71, 85, 105, 0.5);
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+.checkbox-custom:selected .box {
+    -fx-background-color: #22d3ee;
+    -fx-border-color: #22d3ee;
+}
+
+.checkbox-custom .mark {
+    -fx-background-color: #0f172a;
+}
+
+.checkbox-custom:hover .box {
+    -fx-border-color: rgba(34, 211, 238, 0.5);
+}
+
+/* ==================== MESSAGES ==================== */
+
+.message-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-padding: 10 15 10 15;
+    -fx-background-color: rgba(30, 41, 59, 0.4);
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-min-height: 0;
+}
+
+/* ==================== DIVIDER ==================== */
+
+.divider-container {
+    -fx-background-color: transparent;
+}
+
+.divider-line {
+    -fx-background-color: rgba(71, 85, 105, 0.3);
+    -fx-min-height: 1;
+    -fx-pref-height: 1;
+}
+
+.divider-text {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748b;
+    -fx-font-weight: 500;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+}
+
+/* ==================== MISC TEXT ==================== */
+
+.signup-text {
+    -fx-font-size: 14px;
+    -fx-text-fill: #94a3b8;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+}
+
+.terms-text {
+    -fx-font-size: 13px;
+    -fx-text-fill: #94a3b8;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+}
+
+/* ==================== RESPONSIVE ADJUSTMENTS ==================== */
+
+@media (max-width: 768px) {
+    .login-card {
+        -fx-min-width: 340px;
+        -fx-max-width: 360px;
+    }
+
+    .auth-title {
+        -fx-font-size: 24px;
+    }
+
+    .input-field {
+        -fx-font-size: 13px;
+    }
+}
+
+/* ==================== ANIMATIONS ==================== */
+
+.fade-in {
+    -fx-opacity: 0;
+}
+
+.fade-in-active {
+    -fx-opacity: 1;
+    -fx-transition: opacity 0.5s ease-in;
+}
+
+/* ==================== SCROLLBAR (if needed) ==================== */
+
+.scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane .scroll-bar:vertical .track {
+    -fx-background-color: rgba(30, 41, 59, 0.3);
+    -fx-background-radius: 4;
+}
+
+.scroll-pane .scroll-bar:vertical .thumb {
+    -fx-background-color: rgba(71, 85, 105, 0.5);
+    -fx-background-radius: 4;
+}
+
+.scroll-pane .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: rgba(71, 85, 105, 0.7);
+}
