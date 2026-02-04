@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane fx:id="rootPane" xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.examverse.controller.dashboard.StudentDashboardController"
+            stylesheets="@../../css/student-dashboard.css"
+            styleClass="root-pane">
+
+    <!-- ============================================
+         LEFT SIDEBAR - Navigation
+         ============================================ -->
+    <left>
+        <VBox fx:id="sidebarPane" styleClass="sidebar-pane" spacing="5">
+            <padding>
+                <Insets top="30" right="0" bottom="30" left="0"/>
+            </padding>
+
+            <!-- Logo/Brand Section -->
+            <VBox styleClass="sidebar-brand" alignment="CENTER" spacing="5">
+                <VBox.margin>
+                    <Insets bottom="30"/>
+                </VBox.margin>
+
+                <Label text="EXAMVERSE" styleClass="brand-title"/>
+                <Label text="STUDENT PORTAL" styleClass="brand-subtitle"/>
+            </VBox>
+
+            <Separator styleClass="sidebar-separator"/>
+
+            <!-- Navigation Buttons -->
+            <VBox styleClass="sidebar-nav" spacing="8">
+                <VBox.margin>
+                    <Insets top="20"/>
+                </VBox.margin>
+
+                <Button fx:id="dashboardBtn" text="📊  Dashboard"
+                        styleClass="sidebar-btn" onAction="#handleDashboard"/>
+
+                <Button fx:id="myExamsBtn" text="📚  My Exams"
+                        styleClass="sidebar-btn" onAction="#handleMyExams"/>
+
+                <Button fx:id="practiceBtn" text="💪  Practice"
+                        styleClass="sidebar-btn" onAction="#handlePractice"/>
+
+                <Button fx:id="resultsBtn" text="📈  Results"
+                        styleClass="sidebar-btn" onAction="#handleResults"/>
+
+                <Button fx:id="profileBtn" text="👤  Profile"
+                        styleClass="sidebar-btn" onAction="#handleProfile"/>
+            </VBox>
+
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <!-- Logout Button (Bottom) -->
+            <VBox styleClass="sidebar-bottom" spacing="10">
+                <VBox.margin>
+                    <Insets top="20"/>
+                </VBox.margin>
+
+                <Separator styleClass="sidebar-separator"/>
+
+                <Button fx:id="logoutBtn" text="🚪  Logout"
+                        styleClass="sidebar-btn-logout" onAction="#handleLogout"/>
+            </VBox>
+        </VBox>
+    </left>
+
+    <!-- ============================================
+         CENTER CONTENT - Main Dashboard Area
+         ============================================ -->
+    <center>
+        <VBox styleClass="content-container">
+
+            <!-- Top Header Bar -->
+            <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="20">
+                <padding>
+                    <Insets top="20" right="30" bottom="20" left="30"/>
+                </padding>
+
+                <!-- Welcome Message -->
+                <VBox spacing="2" HBox.hgrow="ALWAYS">
+                    <Label fx:id="welcomeLabel" text="Welcome back, Student"
+                           styleClass="welcome-label"/>
+
+                    <Label fx:id="dateTimeLabel" text="Monday, January 01, 2024 • 12:00:00 PM"
+                           styleClass="datetime-label"/>
+                </VBox>
+
+                <!-- Notifications -->
+                <HBox alignment="CENTER" spacing="15">
+                    <!-- Notification Icon with Badge -->
+                    <StackPane>
+                        <Button text="🔔" styleClass="notification-btn"/>
+                        <Label fx:id="notificationBadge" text="0"
+                               styleClass="notification-badge" visible="false"/>
+                    </StackPane>
+
+                    <!-- User Avatar (placeholder) -->
+                    <Label text="👤" styleClass="user-avatar"/>
+                </HBox>
+            </HBox>
+
+            <!-- Content Area (Dynamic) -->
+            <ScrollPane fx:id="contentScrollPane" fitToWidth="true"
+                        styleClass="content-scroll" VBox.vgrow="ALWAYS">
+                <VBox fx:id="contentPane" styleClass="content-pane">
+                    <!-- Content loaded dynamically by controller -->
+                </VBox>
+            </ScrollPane>
+
+        </VBox>
+    </center>
+
+</BorderPane>

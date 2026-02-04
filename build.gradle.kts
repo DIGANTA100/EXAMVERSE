@@ -33,6 +33,10 @@ dependencies {
     // MySQL Database Connector
     implementation("com.mysql:mysql-connector-j:8.2.0")
 
+    // JavaMail API for Email Functionality
+    implementation("com.sun.mail:javax.mail:1.6.2")
+    implementation("javax.activation:activation:1.1.1")
+
     // Testing dependencies (optional)
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

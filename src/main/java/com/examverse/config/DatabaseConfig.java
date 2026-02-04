@@ -8,6 +8,7 @@ import java.sql.Statement;
 /**
  * DatabaseConfig - Manages MySQL database connection
  * Handles connection pooling and database initialization
+ * UPDATED WITH EXAM TABLES
  */
 public class DatabaseConfig {
 
@@ -82,7 +83,9 @@ public class DatabaseConfig {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
 
-            // Create users table
+            // ============================================
+            // 1. USERS TABLE
+            // ============================================
             String createUsersTable = """
                 CREATE TABLE IF NOT EXISTS users (
                     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -98,11 +101,114 @@ public class DatabaseConfig {
                     INDEX idx_email (email)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """;
-
             stmt.executeUpdate(createUsersTable);
             System.out.println("✅ Users table created/verified!");
 
-            // Create default admin account if not exists
+            // ============================================
+            // 2. EXAMS TABLE
+            // ============================================
+            String createExamsTable = """
+                CREATE TABLE IF NOT EXISTS exams (
+                    exam_id INT PRIMARY KEY AUTO_INCREMENT,
+                    exam_title VARCHAR(200) NOT NULL,
+                    subject VARCHAR(100) NOT NULL,
+                    description TEXT,
+                    difficulty ENUM('EASY', 'MEDIUM', 'HARD') DEFAULT 'MEDIUM',
+                    total_questions INT NOT NULL,
+                    total_marks INT NOT NULL,
+                    duration_minutes INT NOT NULL,
+                    passing_marks INT NOT NULL,
+                    status ENUM('ACTIVE', 'INACTIVE', 'ARCHIVED') DEFAULT 'ACTIVE',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    start_date DATETIME NULL,
+                    end_date DATETIME NULL,
+                    created_by INT,
+                    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+                    INDEX idx_subject (subject),
+                    INDEX idx_difficulty (difficulty),
+                    INDEX idx_status (status)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                """;
+            stmt.executeUpdate(createExamsTable);
+            System.out.println("✅ Exams table created/verified!");
+
+            // ============================================
+            // 3. STUDENT_EXAM_ATTEMPTS TABLE
+            // ============================================
+            String createAttemptsTable = """
+                CREATE TABLE IF NOT EXISTS student_exam_attempts (
+                    attempt_id INT PRIMARY KEY AUTO_INCREMENT,
+                    student_id INT NOT NULL,
+                    exam_id INT NOT NULL,
+                    status ENUM('ONGOING', 'COMPLETED', 'ABANDONED') DEFAULT 'ONGOING',
+                    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    submitted_at TIMESTAMP NULL,
+                    time_spent_minutes INT DEFAULT 0,
+                    obtained_marks INT DEFAULT 0,
+                    total_marks INT NOT NULL,
+                    passing_marks INT NOT NULL,
+                    accuracy DECIMAL(5,2) DEFAULT 0.00,
+                    result ENUM('PASSED', 'FAILED', 'PENDING') DEFAULT 'PENDING',
+                    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+                    FOREIGN KEY (exam_id) REFERENCES exams(exam_id) ON DELETE CASCADE,
+                    INDEX idx_student (student_id),
+                    INDEX idx_exam (exam_id),
+                    INDEX idx_status (status)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                """;
+            stmt.executeUpdate(createAttemptsTable);
+            System.out.println("✅ Student exam attempts table created/verified!");
+
+            // ============================================
+            // 4. QUESTIONS TABLE
+            // ============================================
+            String createQuestionsTable = """
+                CREATE TABLE IF NOT EXISTS questions (
+                    question_id INT PRIMARY KEY AUTO_INCREMENT,
+                    exam_id INT NOT NULL,
+                    question_text TEXT NOT NULL,
+                    option_a VARCHAR(500) NOT NULL,
+                    option_b VARCHAR(500) NOT NULL,
+                    option_c VARCHAR(500) NOT NULL,
+                    option_d VARCHAR(500) NOT NULL,
+                    correct_answer ENUM('A', 'B', 'C', 'D') NOT NULL,
+                    marks INT DEFAULT 1,
+                    explanation TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (exam_id) REFERENCES exams(exam_id) ON DELETE CASCADE,
+                    INDEX idx_exam (exam_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                """;
+            stmt.executeUpdate(createQuestionsTable);
+            System.out.println("✅ Questions table created/verified!");
+
+            // ============================================
+            // 5. STUDENT_ANSWERS TABLE
+            // ============================================
+            String createAnswersTable = """
+                CREATE TABLE IF NOT EXISTS student_answers (
+                    answer_id INT PRIMARY KEY AUTO_INCREMENT,
+                    attempt_id INT NOT NULL,
+                    question_id INT NOT NULL,
+                    selected_answer ENUM('A', 'B', 'C', 'D'),
+                    is_correct BOOLEAN DEFAULT FALSE,
+                    marks_obtained INT DEFAULT 0,
+                    time_spent_seconds INT DEFAULT 0,
+                    answered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (attempt_id) REFERENCES student_exam_attempts(attempt_id) ON DELETE CASCADE,
+                    FOREIGN KEY (question_id) REFERENCES questions(question_id) ON DELETE CASCADE,
+                    UNIQUE KEY unique_attempt_question (attempt_id, question_id),
+                    INDEX idx_attempt (attempt_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                """;
+            stmt.executeUpdate(createAnswersTable);
+            System.out.println("✅ Student answers table created/verified!");
+
+            // ============================================
+            // DEFAULT DATA INSERTION
+            // ============================================
+
+            // Check and create default admin account
             String checkAdmin = "SELECT COUNT(*) FROM users WHERE user_type = 'ADMIN'";
             var rs = stmt.executeQuery(checkAdmin);
             rs.next();
@@ -115,6 +221,26 @@ public class DatabaseConfig {
                 stmt.executeUpdate(insertAdmin);
                 System.out.println("✅ Default admin account created!");
                 System.out.println("   Username: admin | Password: admin123");
+            }
+
+            // Check and insert sample exams
+            String checkExams = "SELECT COUNT(*) FROM exams";
+            rs = stmt.executeQuery(checkExams);
+            rs.next();
+
+            if (rs.getInt(1) == 0) {
+                // Sample exam data
+                String insertSampleExams = """
+                    INSERT INTO exams (exam_title, subject, description, difficulty, total_questions, 
+                                      total_marks, duration_minutes, passing_marks, created_by) VALUES
+                    ('Java Fundamentals Quiz', 'Programming', 'Test your knowledge of Java basics', 'EASY', 20, 100, 30, 40, 1),
+                    ('Data Structures Assessment', 'Computer Science', 'Arrays, Linked Lists, Trees, and more', 'MEDIUM', 25, 100, 45, 50, 1),
+                    ('Advanced Algorithms', 'Computer Science', 'Sorting, Searching, Dynamic Programming', 'HARD', 30, 150, 60, 75, 1),
+                    ('Database Management Quiz', 'Database', 'SQL, Normalization, Transactions', 'MEDIUM', 20, 100, 40, 50, 1),
+                    ('Web Development Basics', 'Web Development', 'HTML, CSS, JavaScript fundamentals', 'EASY', 15, 75, 25, 30, 1)
+                    """;
+                stmt.executeUpdate(insertSampleExams);
+                System.out.println("✅ Sample exams created!");
             }
 
         } catch (SQLException e) {

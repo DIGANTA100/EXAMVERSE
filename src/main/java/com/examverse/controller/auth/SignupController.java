@@ -4,6 +4,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import com.examverse.service.auth.EmailService;
 import com.examverse.service.auth.UserDAO;
 import com.examverse.util.SceneManager;
 import com.examverse.util.Validator;
@@ -13,6 +14,7 @@ import java.util.ResourceBundle;
 
 /**
  * SignupController - Handles signup/registration screen logic
+ * Updated with email notification feature
  */
 public class SignupController implements Initializable {
 
@@ -47,10 +49,12 @@ public class SignupController implements Initializable {
     private CheckBox termsCheckbox;
 
     private UserDAO userDAO;
+    private EmailService emailService;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         userDAO = new UserDAO();
+        emailService = EmailService.getInstance();
         errorLabel.setVisible(false);
 
         // Setup enter key listeners
@@ -108,31 +112,60 @@ public class SignupController implements Initializable {
             return;
         }
 
-        // Attempt registration
-        boolean success = userDAO.registerUser(username, email, password, fullName);
+        // Perform registration in a background thread
+        new Thread(() -> {
+            try {
+                // Attempt registration
+                boolean registrationSuccess = userDAO.registerUser(username, email, password, fullName);
 
-        if (success) {
-            // Registration successful
-            showSuccess("Account created successfully! Redirecting to login...");
-
-            // Redirect to login after 2 seconds
-            new Thread(() -> {
-                try {
-                    Thread.sleep(2000);
+                if (registrationSuccess) {
+                    // Update UI on JavaFX thread
                     javafx.application.Platform.runLater(() -> {
-                        SceneManager.switchScene("/com/examverse/fxml/auth/login.fxml");
+                        signupButton.setText("Sending confirmation email...");
                     });
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }).start();
 
-        } else {
-            // Registration failed
-            showError("Registration failed. Please try again.");
-            signupButton.setDisable(false);
-            signupButton.setText("Sign Up");
-        }
+                    // Send welcome email
+                    boolean emailSent = emailService.sendWelcomeEmail(email, fullName, username);
+
+                    // Update UI based on results
+                    javafx.application.Platform.runLater(() -> {
+                        if (emailSent) {
+                            showSuccess("Account created! Check your email for confirmation.");
+                        } else {
+                            showWarning("Account created, but email notification failed.");
+                        }
+
+                        // Redirect to login after delay
+                        new Thread(() -> {
+                            try {
+                                Thread.sleep(3000);
+                                javafx.application.Platform.runLater(() -> {
+                                    SceneManager.switchScene("/com/examverse/fxml/auth/login.fxml");
+                                });
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }).start();
+                    });
+
+                } else {
+                    // Registration failed
+                    javafx.application.Platform.runLater(() -> {
+                        showError("Registration failed. Please try again.");
+                        signupButton.setDisable(false);
+                        signupButton.setText("Sign Up");
+                    });
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                javafx.application.Platform.runLater(() -> {
+                    showError("An error occurred. Please try again.");
+                    signupButton.setDisable(false);
+                    signupButton.setText("Sign Up");
+                });
+            }
+        }).start();
     }
 
     /**
@@ -242,5 +275,14 @@ public class SignupController implements Initializable {
         errorLabel.setText("✅ " + message);
         errorLabel.setVisible(true);
         errorLabel.setStyle("-fx-text-fill: #22d3ee;");
+    }
+
+    /**
+     * Show warning message
+     */
+    private void showWarning(String message) {
+        errorLabel.setText("⚠️ " + message);
+        errorLabel.setVisible(true);
+        errorLabel.setStyle("-fx-text-fill: #f59e0b;");
     }
 }

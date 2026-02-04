@@ -14,6 +14,7 @@ import java.util.ResourceBundle;
 
 /**
  * LoginController - Handles login screen logic
+ * UPDATED: Now navigates to student dashboard after login
  */
 public class LoginController implements Initializable {
 
@@ -89,27 +90,34 @@ public class LoginController implements Initializable {
             // Navigate based on user type
             if (user.isAdmin()) {
                 System.out.println("🔐 Admin logged in - Navigating to admin dashboard");
-                // TODO: Navigate to admin dashboard when ready
                 showSuccess("Welcome Admin " + user.getFullName() + "!");
-                // SceneManager.switchScene("/com/examverse/fxml/admin/admin_dashboard.fxml");
+                // TODO: Navigate to admin dashboard when ready (coming soon)
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(1500);
+                        javafx.application.Platform.runLater(() -> {
+                            SceneManager.switchScene("/com/examverse/fxml/dashboard/dashboard-landing.fxml");
+                        });
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }).start();
             } else {
                 System.out.println("🔐 Student logged in - Navigating to student dashboard");
-                // TODO: Navigate to student dashboard when ready
                 showSuccess("Welcome " + user.getFullName() + "!");
-                // SceneManager.switchScene("/com/examverse/fxml/dashboard/student_dashboard.fxml");
-            }
 
-            // For now, go back to landing page (temporary)
-            new Thread(() -> {
-                try {
-                    Thread.sleep(1500);
-                    javafx.application.Platform.runLater(() -> {
-                        SceneManager.switchScene("/com/examverse/fxml/dashboard/dashboard-landing.fxml");
-                    });
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }).start();
+                // Navigate to student dashboard
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(1500);
+                        javafx.application.Platform.runLater(() -> {
+                            SceneManager.switchScene("/com/examverse/fxml/dashboard/student-dashboard.fxml");
+                        });
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+            }
 
         } else {
             // Login failed
