@@ -94,7 +94,7 @@ public class LoginController implements Initializable {
                 // TODO: Navigate to admin dashboard when ready (coming soon)
                 new Thread(() -> {
                     try {
-                        Thread.sleep(1500);
+                        Thread.sleep(1000);
                         javafx.application.Platform.runLater(() -> {
                             SceneManager.switchScene("/com/examverse/fxml/dashboard/dashboard-landing.fxml");
                         });
@@ -109,7 +109,7 @@ public class LoginController implements Initializable {
                 // Navigate to student dashboard
                 new Thread(() -> {
                     try {
-                        Thread.sleep(1500);
+                        Thread.sleep(1000);
                         javafx.application.Platform.runLater(() -> {
                             SceneManager.switchScene("/com/examverse/fxml/dashboard/student-dashboard.fxml");
                         });

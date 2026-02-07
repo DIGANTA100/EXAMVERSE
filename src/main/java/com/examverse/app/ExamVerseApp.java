@@ -91,6 +91,7 @@ public class ExamVerseApp extends Application {
     }
 
     public static void main(String[] args) {
+
         launch(args);
     }
 }

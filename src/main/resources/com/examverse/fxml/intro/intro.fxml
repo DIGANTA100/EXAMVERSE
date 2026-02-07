@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.media.MediaView?>
 <?import javafx.geometry.Insets?>
 
@@ -20,33 +22,87 @@
                smooth="true"
                styleClass="media-view"/>
 
-    <!-- Overlay Layer with Get Started Button -->
-    <VBox alignment="CENTER"
-          spacing="0"
-          styleClass="overlay-container">
+    <!-- Main Overlay Container -->
+    <HBox alignment="CENTER" spacing="0" styleClass="overlay-container">
 
-        <!-- Spacer to push button down (after "Redefining Academic Intelligence" text) -->
-        <!-- The video text appears at ~60% height, button should be below that -->
-        <VBox VBox.vgrow="ALWAYS" minHeight="620"/>
+        <!-- LEFT SIDE - Academic Quotes Panel -->
+        <VBox alignment="TOP_LEFT" spacing="30" styleClass="left-panel">
+            <padding>
+                <Insets top="120" bottom="80" left="60" right="40"/>
+            </padding>
 
-        <!-- Get Started Button Container -->
-        <VBox alignment="CENTER" spacing="30" styleClass="button-container">
+            <!-- Quote 1 -->
+            <VBox spacing="8" styleClass="quote-container">
+                <Label fx:id="leftQuote1" text="" styleClass="quote-text" wrapText="true" maxWidth="350"/>
+                <Label text="— Albert Einstein" styleClass="quote-author"/>
+            </VBox>
 
-            <!-- Get Started Button -->
-            <Button fx:id="getStartedButton"
-                    text="GET STARTED"
-                    styleClass="get-started-button"
-                    onAction="#handleGetStarted">
-                <VBox.margin>
-                    <Insets top="50" bottom="40"/>
-                </VBox.margin>
-            </Button>
+            <!-- Quote 2 -->
+            <VBox spacing="8" styleClass="quote-container">
+                <Label fx:id="leftQuote2" text="" styleClass="quote-text" wrapText="true" maxWidth="350"/>
+                <Label text="— Nelson Mandela" styleClass="quote-author"/>
+            </VBox>
 
+            <!-- Quote 3 -->
+            <VBox spacing="8" styleClass="quote-container">
+                <Label fx:id="leftQuote3" text="" styleClass="quote-text" wrapText="true" maxWidth="350"/>
+                <Label text="— Aristotle" styleClass="quote-author"/>
+            </VBox>
         </VBox>
 
-        <!-- Bottom Spacer -->
-        <VBox VBox.vgrow="ALWAYS" minHeight="100"/>
+        <!-- CENTER - Get Started Button (Below cubes) -->
+        <VBox alignment="CENTER" spacing="0" styleClass="center-panel" HBox.hgrow="ALWAYS">
+            <!-- Spacer to push button down -->
+            <VBox VBox.vgrow="ALWAYS" minHeight="650"/>
 
-    </VBox>
+            <!-- Get Started Button Container -->
+            <VBox alignment="CENTER" spacing="20" styleClass="button-container">
+
+                <!-- Tagline above button -->
+                <Label fx:id="tagline" text="" styleClass="tagline-text"
+       maxWidth="600" textAlignment="CENTER" wrapText="true" alignment="CENTER"/>
+
+                <!-- Get Started Button -->
+                <Button fx:id="getStartedButton"
+                        text="GET STARTED"
+                        styleClass="get-started-button"
+                        onAction="#handleGetStarted">
+                    <VBox.margin>
+                        <Insets top="10" bottom="40"/>
+                    </VBox.margin>
+                </Button>
+
+            </VBox>
+
+            <!-- Bottom Spacer -->
+            <VBox VBox.vgrow="ALWAYS" minHeight="100"/>
+        </VBox>
+
+        <!-- RIGHT SIDE - Academic Quotes Panel -->
+        <VBox alignment="TOP_RIGHT" spacing="30" styleClass="right-panel">
+            <padding>
+                <Insets top="120" bottom="80" left="40" right="60"/>
+            </padding>
+
+            <!-- Quote 4 -->
+            <VBox spacing="8" styleClass="quote-container" alignment="TOP_RIGHT">
+                <Label fx:id="rightQuote1" text="" styleClass="quote-text" wrapText="true" maxWidth="350" textAlignment="RIGHT"/>
+                <Label text="— Benjamin Franklin" styleClass="quote-author-right"/>
+            </VBox>
+
+            <!-- Quote 5 -->
+            <VBox spacing="8" styleClass="quote-container" alignment="TOP_RIGHT">
+                <Label fx:id="rightQuote2" text="" styleClass="quote-text" wrapText="true" maxWidth="350" textAlignment="RIGHT"/>
+                <Label text="— Confucius" styleClass="quote-author-right"/>
+            </VBox>
+
+            <!-- Quote 6 -->
+            <VBox spacing="8" styleClass="quote-container" alignment="TOP_RIGHT">
+                <Label fx:id="rightQuote3" text="" styleClass="quote-text" wrapText="true" maxWidth="350" textAlignment="RIGHT"/>
+                <Label text="— Steve Jobs" styleClass="quote-author-right"/>
+            </VBox>
+        </VBox>
+
+    </HBox>
 
 </StackPane>

@@ -1,8 +1,11 @@
 package com.examverse.controller.intro;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
@@ -15,8 +18,8 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 /**
- * IntroController - Controls the intro screen with video background
- * Handles video playback and navigation to next screen
+ * IntroController - Enhanced intro screen with animated quotes
+ * Features professional typewriter animation for academic quotes
  */
 public class IntroController implements Initializable {
 
@@ -29,17 +32,56 @@ public class IntroController implements Initializable {
     @FXML
     private Button getStartedButton;
 
+    // Left side quotes
+    @FXML
+    private Label leftQuote1;
+
+    @FXML
+    private Label leftQuote2;
+
+    @FXML
+    private Label leftQuote3;
+
+    // Right side quotes
+    @FXML
+    private Label rightQuote1;
+
+    @FXML
+    private Label rightQuote2;
+
+    @FXML
+    private Label rightQuote3;
+
+    // Tagline
+    @FXML
+    private Label tagline;
+
     private MediaPlayer mediaPlayer;
+
+    // Academic quotes content
+    private static final String[] LEFT_QUOTES = {
+            "Education is not the learning of facts, but the training of the mind to think.",
+            "Education is the most powerful weapon which you can use to change the world.",
+            "The roots of education are bitter, but the fruit is sweet."
+    };
+
+    private static final String[] RIGHT_QUOTES = {
+            "An investment in knowledge pays the best interest.",
+            "Real knowledge is to know the extent of one's ignorance.",
+            "The only way to do great work is to love what you do."
+    };
+
+    private static final String TAGLINE_TEXT = "Empowering minds through intelligent assessment";
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setupVideoPlayer();
         setupGetStartedButton();
+        startAnimations();
     }
 
     /**
      * Setup video player with looping and auto-play
-     * Enhanced error handling and multiple path resolution methods
      */
     private void setupVideoPlayer() {
         try {
@@ -98,13 +140,11 @@ public class IntroController implements Initializable {
 
             // Configure media player
             mediaPlayer.setAutoPlay(true);
-            mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE); // Loop continuously
-            mediaPlayer.setVolume(0.7); // 70% volume
+            mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+            mediaPlayer.setVolume(0.7);
 
             // Bind MediaView to the video
             mediaView.setMediaPlayer(mediaPlayer);
-
-            // Make video fit the screen while maintaining aspect ratio
             mediaView.setPreserveRatio(true);
             mediaView.setSmooth(true);
 
@@ -112,7 +152,7 @@ public class IntroController implements Initializable {
             mediaView.fitWidthProperty().bind(rootPane.widthProperty());
             mediaView.fitHeightProperty().bind(rootPane.heightProperty());
 
-            // Handle video errors with detailed logging
+            // Handle video errors
             mediaPlayer.setOnError(() -> {
                 if (mediaPlayer.getError() != null) {
                     System.err.println("Media Error: " + mediaPlayer.getError().getMessage());
@@ -141,18 +181,71 @@ public class IntroController implements Initializable {
     }
 
     /**
-     * Setup Get Started button with hover effects
+     * Setup Get Started button
      */
     private void setupGetStartedButton() {
-        // Add hover effect using CSS pseudo-classes (handled in CSS)
-        // Button will have glow effect on hover
-
         getStartedButton.setOnAction(event -> handleGetStarted());
     }
 
     /**
+     * Start all text animations in sequence
+     */
+    private void startAnimations() {
+        // Start tagline animation immediately
+        animateTypewriter(tagline, TAGLINE_TEXT, 50, 500);
+
+        // Left side quotes with delays
+        animateTypewriter(leftQuote1, LEFT_QUOTES[0], 40, 1500);
+        animateTypewriter(leftQuote2, LEFT_QUOTES[1], 40, 6000);
+        animateTypewriter(leftQuote3, LEFT_QUOTES[2], 40, 11000);
+
+        // Right side quotes with delays
+        animateTypewriter(rightQuote1, RIGHT_QUOTES[0], 40, 2500);
+        animateTypewriter(rightQuote2, RIGHT_QUOTES[1], 40, 7500);
+        animateTypewriter(rightQuote3, RIGHT_QUOTES[2], 40, 12500);
+    }
+
+    /**
+     * Typewriter animation effect
+     * @param label Label to animate
+     * @param fullText Complete text to display
+     * @param charDelay Delay between characters in milliseconds
+     * @param startDelay Initial delay before starting animation
+     */
+    private void animateTypewriter(Label label, String fullText, int charDelay, int startDelay) {
+        // Clear initial text
+        label.setText("");
+
+        // Create timeline for character-by-character animation
+        Timeline timeline = new Timeline();
+
+        for (int i = 0; i <= fullText.length(); i++) {
+            final int index = i;
+            KeyFrame keyFrame = new KeyFrame(
+                    Duration.millis(startDelay + (i * charDelay)),
+                    event -> {
+                        if (index <= fullText.length()) {
+                            label.setText(fullText.substring(0, index));
+                        }
+                    }
+            );
+            timeline.getKeyFrames().add(keyFrame);
+        }
+
+        // Add pause at the end (1 second)
+        KeyFrame pauseFrame = new KeyFrame(
+                Duration.millis(startDelay + (fullText.length() * charDelay) + 1000),
+                event -> {
+                    // Animation complete, text stays visible
+                }
+        );
+        timeline.getKeyFrames().add(pauseFrame);
+
+        timeline.play();
+    }
+
+    /**
      * Handle Get Started button click
-     * Navigate to dashboard landing screen
      */
     @FXML
     private void handleGetStarted() {
