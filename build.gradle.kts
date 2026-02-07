@@ -16,6 +16,7 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+
 javafx {
     version = "21.0.1"
     modules = listOf(

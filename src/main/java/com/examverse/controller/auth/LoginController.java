@@ -14,7 +14,7 @@ import java.util.ResourceBundle;
 
 /**
  * LoginController - Handles login screen logic
- * UPDATED: Now navigates to student dashboard after login
+ * UPDATED: Added forgot password navigation
  */
 public class LoginController implements Initializable {
 
@@ -148,11 +148,12 @@ public class LoginController implements Initializable {
     }
 
     /**
-     * Handle forgot password (placeholder)
+     * Handle forgot password - NOW FUNCTIONAL!
      */
     @FXML
     private void handleForgotPassword() {
-        showError("Password recovery feature coming soon!");
+        System.out.println("Navigate to forgot password page");
+        SceneManager.switchScene("/com/examverse/fxml/auth/forgot-password.fxml");
     }
 
     /**

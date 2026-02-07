@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 /**
  * UserDAO - Data Access Object for User operations
  * Handles all database operations related to users
- * UPDATED: Added debugging and password trimming
+ * UPDATED: Added password reset functionality
  */
 public class UserDAO {
 
@@ -32,7 +32,7 @@ public class UserDAO {
 
             if (rowsAffected > 0) {
                 System.out.println("✅ User registered successfully: " + username);
-                System.out.println("📝 Stored password length: " + password.length() + " chars");
+                System.out.println("🔐 Stored password length: " + password.length() + " chars");
                 return true;
             }
 
@@ -175,6 +175,70 @@ public class UserDAO {
     }
 
     /**
+     * Get user by email (for password reset)
+     * @param email User's email address
+     * @return User object if found, null otherwise
+     */
+    public User getUserByEmail(String email) {
+        String sql = "SELECT * FROM users WHERE email = ? AND is_active = TRUE";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, email.trim());
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setUsername(rs.getString("username"));
+                user.setEmail(rs.getString("email"));
+                user.setFullName(rs.getString("full_name"));
+                user.setUserType(rs.getString("user_type"));
+                return user;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error getting user by email!");
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /**
+     * Update user's password
+     * @param email User's email
+     * @param newPassword New password
+     * @return true if successful, false otherwise
+     */
+    public boolean updatePassword(String email, String newPassword) {
+        String sql = "UPDATE users SET password = ? WHERE email = ?";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, newPassword);
+            pstmt.setString(2, email.trim());
+
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("✅ Password updated successfully for: " + email);
+                return true;
+            } else {
+                System.err.println("❌ Password update failed - user not found: " + email);
+                return false;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Password update failed!");
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
      * Update last login timestamp
      */
     private void updateLastLogin(int userId) {
@@ -232,7 +296,7 @@ public class UserDAO {
              ResultSet rs = pstmt.executeQuery()) {
 
             System.out.println("\n🔍 DEBUG: All users in database:");
-            System.out.println("═══════════════════════════════════════════════");
+            System.out.println("╔═══════════════════════════════════════════════╗");
 
             while (rs.next()) {
                 System.out.println("ID: " + rs.getInt("id"));

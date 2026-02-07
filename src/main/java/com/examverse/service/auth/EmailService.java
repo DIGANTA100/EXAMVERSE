@@ -10,6 +10,7 @@ import java.util.Properties;
 /**
  * EmailService - Handles sending emails using JavaMail API
  * Supports HTML emails, welcome emails, password reset, etc.
+ * UPDATED: Added password reset email functionality
  */
 public class EmailService {
 
@@ -134,6 +135,55 @@ public class EmailService {
     }
 
     /**
+     * Send password reset email with verification code
+     *
+     * @param recipientEmail User's email address
+     * @param fullName User's full name
+     * @param resetCode 6-digit reset code
+     * @return true if email sent successfully, false otherwise
+     */
+    public boolean sendPasswordResetEmail(String recipientEmail, String fullName, String resetCode) {
+        try {
+            System.out.println("🔐 Preparing password reset email for: " + recipientEmail);
+
+            // Create message
+            Message message = new MimeMessage(mailSession);
+
+            // Set sender
+            message.setFrom(new InternetAddress(
+                    EmailConfig.SENDER_EMAIL,
+                    EmailConfig.SENDER_NAME
+            ));
+
+            // Set recipient
+            message.setRecipients(
+                    Message.RecipientType.TO,
+                    InternetAddress.parse(recipientEmail)
+            );
+
+            // Set subject
+            message.setSubject(EmailConfig.RESET_PASSWORD_SUBJECT);
+
+            // Set HTML content
+            String htmlContent = EmailConfig.getPasswordResetEmailTemplate(fullName, resetCode);
+            message.setContent(htmlContent, "text/html; charset=utf-8");
+
+            // Send message
+            System.out.println("📤 Sending password reset email...");
+            Transport.send(message);
+
+            System.out.println("✅ Password reset email sent successfully to: " + recipientEmail);
+            return true;
+
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send password reset email to: " + recipientEmail);
+            System.err.println("Error: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
      * Send a generic email (for future use)
      *
      * @param recipientEmail Recipient's email
@@ -169,15 +219,6 @@ public class EmailService {
             e.printStackTrace();
             return false;
         }
-    }
-
-    /**
-     * Send password reset email (placeholder for future implementation)
-     */
-    public boolean sendPasswordResetEmail(String recipientEmail, String resetToken) {
-        // TODO: Implement password reset email
-        System.out.println("🔐 Password reset email feature - Coming soon!");
-        return false;
     }
 
     /**
