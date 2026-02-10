@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane fx:id="rootPane" xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.examverse.controller.exam.ExamController"
+            stylesheets="@../../css/student-dashboard.css"
+            styleClass="root-pane">
+
+    <!-- Define ToggleGroup at ROOT level (not as a child of any container) -->
+    <fx:define>
+        <ToggleGroup fx:id="optionsGroup"/>
+    </fx:define>
+
+    <!-- ============================================
+         TOP BAR - Exam Title, Timer, Progress
+         ============================================ -->
+    <top>
+        <VBox styleClass="header-bar">
+            <padding>
+                <Insets top="20" right="30" bottom="20" left="30"/>
+            </padding>
+
+            <!-- Title and Timer Row -->
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label fx:id="examTitleLabel" text="Exam Title"
+                       styleClass="welcome-label" HBox.hgrow="ALWAYS"/>
+
+                <Label fx:id="timerLabel" text="⏱️ 01:00:00"
+                       style="-fx-text-fill: #22d3ee; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+            </HBox>
+
+            <!-- Progress Bar -->
+            <VBox spacing="8">
+                <VBox.margin>
+                    <Insets top="10"/>
+                </VBox.margin>
+
+                <HBox alignment="CENTER_LEFT" spacing="15">
+                    <Label fx:id="questionCounterLabel" text="Progress: 0/20"
+                           styleClass="datetime-label"/>
+                </HBox>
+
+                <ProgressBar fx:id="progressBar" prefWidth="Infinity" maxWidth="Infinity"
+                             styleClass="exam-progress" progress="0.0"/>
+            </VBox>
+        </VBox>
+    </top>
+
+    <!-- ============================================
+         CENTER - Question Display
+         ============================================ -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="content-scroll">
+            <VBox spacing="30">
+                <padding>
+                    <Insets top="30" right="40" bottom="30" left="40"/>
+                </padding>
+
+                <!-- Question Card -->
+                <VBox spacing="20" styleClass="exam-card">
+                    <padding>
+                        <Insets top="30" right="30" bottom="30" left="30"/>
+                    </padding>
+
+                    <!-- Question Number -->
+                    <Label fx:id="questionNumberLabel" text="Question 1"
+                           style="-fx-text-fill: #22d3ee; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+                    <!-- Question Text -->
+                    <Label fx:id="questionTextLabel" text="Question text will appear here..."
+                           wrapText="true"
+                           style="-fx-text-fill: white; -fx-font-size: 18px; -fx-line-spacing: 5px;"/>
+
+                    <!-- Options -->
+                    <VBox spacing="15">
+                        <padding>
+                            <Insets top="20"/>
+                        </padding>
+
+                        <!-- Radio buttons reference the ToggleGroup defined above -->
+                        <RadioButton fx:id="optionA" text="A) Option A" toggleGroup="$optionsGroup"
+                                     wrapText="true" maxWidth="Infinity"
+                                     styleClass="option-radio"/>
+
+                        <RadioButton fx:id="optionB" text="B) Option B" toggleGroup="$optionsGroup"
+                                     wrapText="true" maxWidth="Infinity"
+                                     styleClass="option-radio"/>
+
+                        <RadioButton fx:id="optionC" text="C) Option C" toggleGroup="$optionsGroup"
+                                     wrapText="true" maxWidth="Infinity"
+                                     styleClass="option-radio"/>
+
+                        <RadioButton fx:id="optionD" text="D) Option D" toggleGroup="$optionsGroup"
+                                     wrapText="true" maxWidth="Infinity"
+                                     styleClass="option-radio"/>
+                    </VBox>
+                </VBox>
+
+                <!-- Navigation Buttons -->
+                <HBox spacing="15" alignment="CENTER">
+                    <Button fx:id="previousBtn" text="← Previous"
+                            styleClass="btn-secondary" onAction="#handlePrevious">
+                        <padding>
+                            <Insets top="12" right="25" bottom="12" left="25"/>
+                        </padding>
+                    </Button>
+
+                    <Region HBox.hgrow="ALWAYS"/>
+
+                    <Button fx:id="nextBtn" text="Next →"
+                            styleClass="btn-primary" onAction="#handleNext">
+                        <padding>
+                            <Insets top="12" right="25" bottom="12" left="25"/>
+                        </padding>
+                    </Button>
+
+                    <Button fx:id="submitBtn" text="📝 Submit Exam"
+                            styleClass="btn-success" onAction="#handleSubmit">
+                        <padding>
+                            <Insets top="12" right="25" bottom="12" left="25"/>
+                        </padding>
+                    </Button>
+                </HBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+    <!-- ============================================
+         RIGHT SIDEBAR - Question Palette
+         ============================================ -->
+    <right>
+        <VBox styleClass="sidebar-pane" spacing="15" prefWidth="220">
+            <padding>
+                <Insets top="30" right="20" bottom="30" left="20"/>
+            </padding>
+
+            <Label text="Question Palette"
+                   style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+            <Separator styleClass="sidebar-separator"/>
+
+            <ScrollPane fitToWidth="true" styleClass="content-scroll">
+                <FlowPane fx:id="questionPalettePane" hgap="8" vgap="8">
+                    <!-- Question buttons will be added dynamically -->
+                </FlowPane>
+            </ScrollPane>
+
+            <VBox spacing="10">
+                <Label text="Legend:" style="-fx-text-fill: #94a3b8; -fx-font-size: 12px;"/>
+
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label text="⬜" style="-fx-font-size: 14px;"/>
+                    <Label text="Not Answered" style="-fx-text-fill: #94a3b8; -fx-font-size: 11px;"/>
+                </HBox>
+
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label text="✅" style="-fx-font-size: 14px;"/>
+                    <Label text="Answered" style="-fx-text-fill: #94a3b8; -fx-font-size: 11px;"/>
+                </HBox>
+
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label text="🔵" style="-fx-font-size: 14px;"/>
+                    <Label text="Current" style="-fx-text-fill: #94a3b8; -fx-font-size: 11px;"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </right>
+
+</BorderPane>

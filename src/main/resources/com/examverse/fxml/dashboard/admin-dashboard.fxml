@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane fx:id="rootPane" xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.examverse.controller.admin.AdminDashboardController"
+            stylesheets="@../../css/student-dashboard.css"
+            styleClass="root-pane">
+
+    <!-- ============================================
+         LEFT SIDEBAR - Navigation
+         ============================================ -->
+    <left>
+        <VBox fx:id="sidebarPane" styleClass="sidebar-pane" spacing="5">
+            <padding>
+                <Insets top="30" right="0" bottom="30" left="0"/>
+            </padding>
+
+            <!-- Logo/Brand Section -->
+            <VBox styleClass="sidebar-brand" alignment="CENTER" spacing="5">
+                <VBox.margin>
+                    <Insets bottom="30"/>
+                </VBox.margin>
+
+                <Label text="EXAMVERSE" styleClass="brand-title"/>
+                <Label text="ADMIN PANEL" styleClass="brand-subtitle"/>
+            </VBox>
+
+            <Separator styleClass="sidebar-separator"/>
+
+            <!-- Navigation Buttons -->
+            <VBox styleClass="sidebar-nav" spacing="8">
+                <VBox.margin>
+                    <Insets top="20" left="15" right="15"/>
+                </VBox.margin>
+
+                <Button fx:id="dashboardBtn" text="📊  Dashboard"
+                        styleClass="sidebar-btn, sidebar-btn-active" onAction="#handleDashboard"/>
+
+                <Button fx:id="examsBtn" text="📚  All Exams"
+                        styleClass="sidebar-btn" onAction="#handleExams"/>
+
+                <Button fx:id="createExamBtn" text="➕  Create Exam"
+                        styleClass="sidebar-btn" onAction="#handleCreateExam"/>
+
+                <Button fx:id="questionsBtn" text="❓  Questions"
+                        styleClass="sidebar-btn" onAction="#handleQuestions"/>
+
+                <Button fx:id="studentsBtn" text="👥  Students"
+                        styleClass="sidebar-btn" onAction="#handleStudents"/>
+
+                <Button fx:id="resultsBtn" text="📈  Results"
+                        styleClass="sidebar-btn" onAction="#handleResults"/>
+            </VBox>
+
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <!-- Logout Button (Bottom) -->
+            <VBox styleClass="sidebar-bottom" spacing="10">
+                <VBox.margin>
+                    <Insets top="20" left="15" right="15"/>
+                </VBox.margin>
+
+                <Separator styleClass="sidebar-separator"/>
+
+                <Button fx:id="logoutBtn" text="🚪  Logout"
+                        styleClass="sidebar-btn-logout" onAction="#handleLogout"/>
+            </VBox>
+        </VBox>
+    </left>
+
+    <!-- ============================================
+         CENTER CONTENT - Main Dashboard Area
+         ============================================ -->
+    <center>
+        <VBox styleClass="content-container">
+
+            <!-- Top Header Bar -->
+            <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="20">
+                <padding>
+                    <Insets top="20" right="30" bottom="20" left="30"/>
+                </padding>
+
+                <!-- Welcome Message -->
+                <VBox spacing="2" HBox.hgrow="ALWAYS">
+                    <Label fx:id="welcomeLabel" text="Welcome back, Admin"
+                           styleClass="welcome-label"/>
+
+                    <Label fx:id="dateTimeLabel" text="Monday, January 01, 2024 • 12:00:00 PM"
+                           styleClass="datetime-label"/>
+                </VBox>
+
+                <!-- User Avatar -->
+                <HBox alignment="CENTER" spacing="15">
+                    <Label fx:id="userAvatar" text="A" styleClass="user-avatar"/>
+                </HBox>
+            </HBox>
+
+            <!-- Main Content Area with ScrollPane -->
+            <ScrollPane fx:id="contentScroll" styleClass="content-scroll"
+                        fitToWidth="true" VBox.vgrow="ALWAYS">
+
+                <VBox fx:id="contentPane" styleClass="content-pane" spacing="25">
+                    <padding>
+                        <Insets top="30" right="30" bottom="30" left="30"/>
+                    </padding>
+
+                    <!-- Stats Cards Row -->
+                    <HBox spacing="20" alignment="CENTER">
+                        <!-- Total Exams Card -->
+                        <VBox styleClass="stat-card" spacing="10" HBox.hgrow="ALWAYS">
+                            <Label text="📚 Total Exams" styleClass="label-caption"/>
+                            <Label fx:id="totalExamsLabel" text="0" styleClass="label-title"/>
+                            <Label text="Active exams in system" styleClass="label-body"/>
+                        </VBox>
+
+                        <!-- Total Questions Card -->
+                        <VBox styleClass="stat-card" spacing="10" HBox.hgrow="ALWAYS">
+                            <Label text="❓ Total Questions" styleClass="label-caption"/>
+                            <Label fx:id="totalQuestionsLabel" text="0" styleClass="label-title"/>
+                            <Label text="Questions created" styleClass="label-body"/>
+                        </VBox>
+
+                        <!-- Total Students Card -->
+                        <VBox styleClass="stat-card" spacing="10" HBox.hgrow="ALWAYS">
+                            <Label text="👥 Total Students" styleClass="label-caption"/>
+                            <Label fx:id="totalStudentsLabel" text="0" styleClass="label-title"/>
+                            <Label text="Registered students" styleClass="label-body"/>
+                        </VBox>
+
+                        <!-- Attempts Card -->
+                        <VBox styleClass="stat-card" spacing="10" HBox.hgrow="ALWAYS">
+                            <Label text="📊 Exam Attempts" styleClass="label-caption"/>
+                            <Label fx:id="totalAttemptsLabel" text="0" styleClass="label-title"/>
+                            <Label text="Total attempts" styleClass="label-body"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Quick Actions Section -->
+                    <VBox spacing="15">
+                        <Label text="Quick Actions" styleClass="label-subtitle"/>
+
+                        <HBox spacing="15">
+                            <Button text="➕ Create New Exam" styleClass="btn-primary"
+                                    onAction="#handleCreateExam">
+                                <padding>
+                                    <Insets top="15" right="25" bottom="15" left="25"/>
+                                </padding>
+                            </Button>
+
+                            <Button text="❓ Add Questions" styleClass="btn-secondary"
+                                    onAction="#handleQuestions">
+                                <padding>
+                                    <Insets top="15" right="25" bottom="15" left="25"/>
+                                </padding>
+                            </Button>
+
+                            <Button text="📊 View Reports" styleClass="btn-secondary"
+                                    onAction="#handleResults">
+                                <padding>
+                                    <Insets top="15" right="25" bottom="15" left="25"/>
+                                </padding>
+                            </Button>
+                        </HBox>
+                    </VBox>
+
+                    <!-- Recent Exams Section -->
+                    <VBox spacing="15">
+                        <HBox alignment="CENTER_LEFT" spacing="15">
+                            <Label text="Recent Exams" styleClass="label-subtitle" HBox.hgrow="ALWAYS"/>
+
+                            <Button text="View All →" styleClass="btn-secondary"
+                                    onAction="#handleExams">
+                                <padding>
+                                    <Insets top="10" right="20" bottom="10" left="20"/>
+                                </padding>
+                            </Button>
+                        </HBox>
+
+                        <!-- Exams List Container -->
+                        <VBox fx:id="examsListContainer" spacing="15">
+                            <!-- Dynamic exam cards will be added here -->
+                            <Label text="Loading exams..." styleClass="label-body"/>
+                        </VBox>
+                    </VBox>
+
+                </VBox>
+            </ScrollPane>
+
+        </VBox>
+    </center>
+
+</BorderPane>

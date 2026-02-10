@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.examverse.controller.exam.ResultController"
+            stylesheets="@../../css/student-dashboard.css"
+            styleClass="root-pane">
+
+    <!-- ============================================
+         CENTER - Results Display
+         ============================================ -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="content-scroll">
+            <VBox spacing="30" alignment="TOP_CENTER">
+                <padding>
+                    <Insets top="50" right="40" bottom="50" left="40"/>
+                </padding>
+
+                <!-- Header -->
+                <VBox spacing="15" alignment="CENTER">
+                    <Label text="🎓 Exam Results"
+                           style="-fx-text-fill: #22d3ee; -fx-font-size: 36px; -fx-font-weight: bold;"/>
+
+                    <Label fx:id="examTitleLabel" text="Exam Title"
+                           style="-fx-text-fill: white; -fx-font-size: 24px;"/>
+                </VBox>
+
+                <!-- Result Status -->
+                <VBox spacing="10" alignment="CENTER" styleClass="exam-card" maxWidth="600">
+                    <padding>
+                        <Insets top="40" right="40" bottom="40" left="40"/>
+                    </padding>
+
+                    <Label fx:id="resultLabel" text="✅ PASSED"
+                           style="-fx-text-fill: #22c55e; -fx-font-size: 32px; -fx-font-weight: bold;"/>
+
+                    <Label fx:id="scoreLabel" text="85/100"
+                           style="-fx-text-fill: white; -fx-font-size: 48px; -fx-font-weight: bold;"/>
+
+                    <Label fx:id="percentageLabel" text="85.0%"
+                           style="-fx-text-fill: #22d3ee; -fx-font-size: 28px;"/>
+
+                    <ProgressBar fx:id="scoreProgressBar" prefWidth="400" progress="0.85"
+                                 style="-fx-accent: #22d3ee;"/>
+                </VBox>
+
+                <!-- Statistics Cards -->
+                <HBox spacing="20" alignment="CENTER">
+                    <!-- Accuracy Card -->
+                    <VBox styleClass="stat-card" spacing="10" alignment="CENTER" prefWidth="180">
+                        <padding>
+                            <Insets top="20" right="20" bottom="20" left="20"/>
+                        </padding>
+                        <Label text="🎯 Accuracy" styleClass="label-caption"/>
+                        <Label fx:id="accuracyLabel" text="85%" styleClass="label-title"/>
+                    </VBox>
+
+                    <!-- Time Spent Card -->
+                    <VBox styleClass="stat-card" spacing="10" alignment="CENTER" prefWidth="180">
+                        <padding>
+                            <Insets top="20" right="20" bottom="20" left="20"/>
+                        </padding>
+                        <Label text="⏱️ Time Spent" styleClass="label-caption"/>
+                        <Label fx:id="timeSpentLabel" text="45 min" styleClass="label-title"/>
+                    </VBox>
+
+                    <!-- Total Questions Card -->
+                    <VBox styleClass="stat-card" spacing="10" alignment="CENTER" prefWidth="180">
+                        <padding>
+                            <Insets top="20" right="20" bottom="20" left="20"/>
+                        </padding>
+                        <Label text="📝 Total Questions" styleClass="label-caption"/>
+                        <Label fx:id="totalQuestionsLabel" text="20" styleClass="label-title"/>
+                    </VBox>
+                </HBox>
+
+                <!-- Correct/Wrong Answers -->
+                <HBox spacing="20" alignment="CENTER">
+                    <!-- Correct Answers -->
+                    <VBox styleClass="stat-card" spacing="10" alignment="CENTER" prefWidth="250">
+                        <padding>
+                            <Insets top="20" right="20" bottom="20" left="20"/>
+                        </padding>
+                        <Label text="✅ Correct Answers"
+                               style="-fx-text-fill: #22c55e; -fx-font-size: 14px;"/>
+                        <Label fx:id="correctAnswersLabel" text="17"
+                               style="-fx-text-fill: #22c55e; -fx-font-size: 36px; -fx-font-weight: bold;"/>
+                    </VBox>
+
+                    <!-- Wrong Answers -->
+                    <VBox styleClass="stat-card" spacing="10" alignment="CENTER" prefWidth="250">
+                        <padding>
+                            <Insets top="20" right="20" bottom="20" left="20"/>
+                        </padding>
+                        <Label text="❌ Wrong Answers"
+                               style="-fx-text-fill: #ef4444; -fx-font-size: 14px;"/>
+                        <Label fx:id="wrongAnswersLabel" text="3"
+                               style="-fx-text-fill: #ef4444; -fx-font-size: 36px; -fx-font-weight: bold;"/>
+                    </VBox>
+                </HBox>
+
+                <!-- Action Buttons -->
+                <HBox spacing="15" alignment="CENTER">
+                    <VBox.margin>
+                        <Insets top="20"/>
+                    </VBox.margin>
+
+                    <Button text="🏠 Back to Dashboard" styleClass="btn-primary"
+                            onAction="#handleBackToDashboard">
+                        <padding>
+                            <Insets top="15" right="30" bottom="15" left="30"/>
+                        </padding>
+                    </Button>
+
+                    <Button text="📋 View Answers" styleClass="btn-secondary"
+                            onAction="#handleViewAnswers">
+                        <padding>
+                            <Insets top="15" right="30" bottom="15" left="30"/>
+                        </padding>
+                    </Button>
+                </HBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>
