@@ -900,8 +900,13 @@ public class StudentDashboardController implements Initializable {
 
                 if (attemptId > 0) {
                     System.out.println("✅ Starting exam - Attempt ID: " + attemptId);
-                    // TODO: Navigate to exam screen
-                    showComingSoon("Exam Screen");
+
+                    // Store data in session for ExamController
+                    SessionManager.getInstance().setAttribute("attemptId", attemptId);
+                    SessionManager.getInstance().setAttribute("examId", exam.getExamId());
+
+                    // Navigate to exam screen
+                    SceneManager.switchScene("/com/examverse/fxml/exam/exam-taking.fxml");
                 } else {
                     Alert error = new Alert(Alert.AlertType.ERROR);
                     error.setContentText("Failed to start exam. Please try again.");

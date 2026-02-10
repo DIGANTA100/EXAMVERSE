@@ -313,3 +313,62 @@
 .scroll-pane .scroll-bar:vertical .thumb:hover {
     -fx-background-color: rgba(71, 85, 105, 0.7);
 }
+
+
+/* ========================================
+   ADD THESE STYLES TO YOUR auth.css FILE
+   ======================================== */
+
+/* Role ComboBox Styling */
+.role-combo {
+    -fx-background-color: rgba(30, 41, 59, 0.5);
+    -fx-text-fill: #e2e8f0;
+    -fx-font-size: 14px;
+    -fx-padding: 12px 15px;
+    -fx-border-color: #475569;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+}
+
+.role-combo:hover {
+    -fx-border-color: #22d3ee;
+    -fx-background-color: rgba(34, 211, 238, 0.1);
+}
+
+.role-combo:focused {
+    -fx-border-color: #22d3ee;
+    -fx-border-width: 2px;
+}
+
+/* ComboBox Arrow Button */
+.role-combo .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.role-combo .arrow {
+    -fx-background-color: #22d3ee;
+}
+
+/* ComboBox Popup List */
+.role-combo .list-cell {
+    -fx-background-color: #1e293b;
+    -fx-text-fill: #e2e8f0;
+    -fx-padding: 10px 15px;
+}
+
+.role-combo .list-cell:hover {
+    -fx-background-color: rgba(34, 211, 238, 0.2);
+}
+
+.role-combo .list-cell:selected {
+    -fx-background-color: #22d3ee;
+    -fx-text-fill: #0f172a;
+}
+
+/* Field Label Styling (if not already present) */
+.field-label {
+    -fx-text-fill: #cbd5e1;
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+}

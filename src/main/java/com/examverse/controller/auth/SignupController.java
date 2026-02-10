@@ -14,12 +14,15 @@ import java.util.ResourceBundle;
 
 /**
  * SignupController - Handles signup/registration screen logic
- * Updated with email notification feature
+ * UPDATED: Added role selection for Student/Admin signup
  */
 public class SignupController implements Initializable {
 
     @FXML
     private VBox rootPane;
+
+    @FXML
+    private ComboBox<String> roleComboBox;  // NEW: Role selection
 
     @FXML
     private TextField fullNameField;
@@ -57,6 +60,12 @@ public class SignupController implements Initializable {
         emailService = EmailService.getInstance();
         errorLabel.setVisible(false);
 
+        // Populate role ComboBox
+        roleComboBox.getItems().addAll("Student", "Admin/Teacher");
+
+        // Set default to Student
+        roleComboBox.getSelectionModel().selectFirst();
+
         // Setup enter key listeners
         confirmPasswordField.setOnAction(e -> handleSignup());
     }
@@ -68,6 +77,17 @@ public class SignupController implements Initializable {
     private void handleSignup() {
         // Clear previous messages
         errorLabel.setVisible(false);
+
+        // Get selected role
+        String selectedRole = roleComboBox.getValue();
+        if (selectedRole == null || selectedRole.isEmpty()) {
+            showError("Please select your role (Student or Admin)");
+            roleComboBox.requestFocus();
+            return;
+        }
+
+        // Determine if signing up as admin
+        boolean isAdminSignup = selectedRole.equals("Admin/Teacher");
 
         // Get input values
         String fullName = fullNameField.getText().trim();
@@ -115,8 +135,8 @@ public class SignupController implements Initializable {
         // Perform registration in a background thread
         new Thread(() -> {
             try {
-                // Attempt registration
-                boolean registrationSuccess = userDAO.registerUser(username, email, password, fullName);
+                // Attempt registration with role
+                boolean registrationSuccess = userDAO.registerUser(username, email, password, fullName, isAdminSignup);
 
                 if (registrationSuccess) {
                     // Update UI on JavaFX thread
@@ -125,14 +145,15 @@ public class SignupController implements Initializable {
                     });
 
                     // Send welcome email
+                    String roleText = isAdminSignup ? "Admin/Teacher" : "Student";
                     boolean emailSent = emailService.sendWelcomeEmail(email, fullName, username);
 
                     // Update UI based on results
                     javafx.application.Platform.runLater(() -> {
                         if (emailSent) {
-                            showSuccess("Account created! Check your email for confirmation.");
+                            showSuccess("✅ " + roleText + " account created! Check your email for confirmation.");
                         } else {
-                            showWarning("Account created, but email notification failed.");
+                            showWarning("⚠️ " + roleText + " account created, but email notification failed.");
                         }
 
                         // Redirect to login after delay
@@ -272,7 +293,7 @@ public class SignupController implements Initializable {
      * Show success message
      */
     private void showSuccess(String message) {
-        errorLabel.setText("✅ " + message);
+        errorLabel.setText(message);
         errorLabel.setVisible(true);
         errorLabel.setStyle("-fx-text-fill: #22d3ee;");
     }
@@ -281,7 +302,7 @@ public class SignupController implements Initializable {
      * Show warning message
      */
     private void showWarning(String message) {
-        errorLabel.setText("⚠️ " + message);
+        errorLabel.setText(message);
         errorLabel.setVisible(true);
         errorLabel.setStyle("-fx-text-fill: #f59e0b;");
     }

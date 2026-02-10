@@ -15,7 +15,7 @@ public class DatabaseConfig {
     // Database credentials - CHANGE THESE to match your MySQL setup
     private static final String DB_URL = "jdbc:mysql://localhost:3306/examverse_db";
     private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "Jls32wkksedie@..sdk"; // Change this to your MySQL password
+    private static final String DB_PASSWORD = "#Ihatenone2103"; // Change this to your MySQL password
 
     // Alternative: If database doesn't exist yet, use this for initial connection
     private static final String DB_URL_NO_DB = "jdbc:mysql://localhost:3306/";

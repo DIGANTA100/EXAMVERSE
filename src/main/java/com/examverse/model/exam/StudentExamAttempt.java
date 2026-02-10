@@ -177,14 +177,14 @@ public class StudentExamAttempt {
     }
 
     public String getResultBadge() {
-        if (result == null) return "⏳";
+        if (result == null) return "â³";
         switch (result.toUpperCase()) {
             case "PASSED":
-                return "✅";
+                return "âœ…";
             case "FAILED":
-                return "❌";
+                return "âŒ";
             default:
-                return "⏳";
+                return "â³";
         }
     }
 

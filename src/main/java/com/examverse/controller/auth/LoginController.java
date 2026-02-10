@@ -14,12 +14,15 @@ import java.util.ResourceBundle;
 
 /**
  * LoginController - Handles login screen logic
- * UPDATED: Added forgot password navigation
+ * UPDATED: Fixed admin dashboard navigation
  */
 public class LoginController implements Initializable {
 
     @FXML
     private VBox rootPane;
+
+    @FXML
+    private ComboBox<String> roleComboBox;  // Role selection dropdown
 
     @FXML
     private TextField usernameField;
@@ -29,9 +32,6 @@ public class LoginController implements Initializable {
 
     @FXML
     private Button loginButton;
-
-    @FXML
-    private Button signupLinkButton;
 
     @FXML
     private Label errorLabel;
@@ -46,18 +46,32 @@ public class LoginController implements Initializable {
         userDAO = new UserDAO();
         errorLabel.setVisible(false);
 
+        // Populate ComboBox with role options
+        roleComboBox.getItems().addAll("Student", "Admin/Teacher");
+
+        // Set default role to "Student"
+        roleComboBox.getSelectionModel().selectFirst();
+
         // Setup enter key listener
         passwordField.setOnAction(e -> handleLogin());
         usernameField.setOnAction(e -> passwordField.requestFocus());
     }
 
     /**
-     * Handle login button click
+     * Handle login button click with role validation
      */
     @FXML
     private void handleLogin() {
         // Clear previous error
         errorLabel.setVisible(false);
+
+        // Get selected role
+        String selectedRole = roleComboBox.getValue();
+        if (selectedRole == null || selectedRole.isEmpty()) {
+            showError("Please select your role (Student or Admin)");
+            roleComboBox.requestFocus();
+            return;
+        }
 
         // Get input values
         String usernameOrEmail = usernameField.getText().trim();
@@ -84,19 +98,39 @@ public class LoginController implements Initializable {
         User user = userDAO.loginUser(usernameOrEmail, password);
 
         if (user != null) {
-            // Login successful
+            // Check if user role matches selected role
+            boolean isAdminLogin = selectedRole.equals("Admin/Teacher");
+            boolean isUserAdmin = user.isAdmin();
+
+            if (isAdminLogin && !isUserAdmin) {
+                // User selected Admin but account is Student
+                showError("❌ This account is not an Admin account. Please select 'Student' role.");
+                loginButton.setDisable(false);
+                loginButton.setText("Log In");
+                return;
+            } else if (!isAdminLogin && isUserAdmin) {
+                // User selected Student but account is Admin
+                showError("❌ This is an Admin account. Please select 'Admin/Teacher' role.");
+                loginButton.setDisable(false);
+                loginButton.setText("Log In");
+                return;
+            }
+
+            // Role matches - Login successful
             SessionManager.getInstance().setCurrentUser(user);
 
             // Navigate based on user type
             if (user.isAdmin()) {
                 System.out.println("🔐 Admin logged in - Navigating to admin dashboard");
                 showSuccess("Welcome Admin " + user.getFullName() + "!");
-                // TODO: Navigate to admin dashboard when ready (coming soon)
+
+                // Navigate to ADMIN dashboard
                 new Thread(() -> {
                     try {
                         Thread.sleep(1000);
                         javafx.application.Platform.runLater(() -> {
-                            SceneManager.switchScene("/com/examverse/fxml/dashboard/dashboard-landing.fxml");
+                            // FIXED: Navigate to admin-dashboard.fxml (NOT student-dashboard.fxml)
+                            SceneManager.switchScene("/com/examverse/fxml/dashboard/admin-dashboard.fxml");
                         });
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -106,7 +140,7 @@ public class LoginController implements Initializable {
                 System.out.println("🔐 Student logged in - Navigating to student dashboard");
                 showSuccess("Welcome " + user.getFullName() + "!");
 
-                // Navigate to student dashboard
+                // Navigate to STUDENT dashboard
                 new Thread(() -> {
                     try {
                         Thread.sleep(1000);
@@ -148,7 +182,7 @@ public class LoginController implements Initializable {
     }
 
     /**
-     * Handle forgot password - NOW FUNCTIONAL!
+     * Handle forgot password
      */
     @FXML
     private void handleForgotPassword() {
@@ -160,7 +194,7 @@ public class LoginController implements Initializable {
      * Show error message
      */
     private void showError(String message) {
-        errorLabel.setText("❌ " + message);
+        errorLabel.setText(message);
         errorLabel.setVisible(true);
         errorLabel.setStyle("-fx-text-fill: #ef4444;");
     }
@@ -169,7 +203,7 @@ public class LoginController implements Initializable {
      * Show success message
      */
     private void showSuccess(String message) {
-        errorLabel.setText("✅ " + message);
+        errorLabel.setText(message);
         errorLabel.setVisible(true);
         errorLabel.setStyle("-fx-text-fill: #22d3ee;");
     }

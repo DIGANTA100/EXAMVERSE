@@ -9,16 +9,30 @@ import java.time.LocalDateTime;
 /**
  * UserDAO - Data Access Object for User operations
  * Handles all database operations related to users
- * UPDATED: Added password reset functionality
+ * UPDATED: Added role-based registration (Student/Admin)
  */
 public class UserDAO {
 
     /**
-     * Register a new user
+     * Register a new user (defaults to STUDENT)
      * @return true if registration successful, false otherwise
      */
     public boolean registerUser(String username, String email, String password, String fullName) {
-        String sql = "INSERT INTO users (username, email, password, full_name, user_type) VALUES (?, ?, ?, ?, 'STUDENT')";
+        return registerUser(username, email, password, fullName, false); // Default to Student
+    }
+
+    /**
+     * Register a new user with specific role
+     * @param username User's username
+     * @param email User's email
+     * @param password User's password
+     * @param fullName User's full name
+     * @param isAdmin true for Admin, false for Student
+     * @return true if registration successful, false otherwise
+     */
+    public boolean registerUser(String username, String email, String password, String fullName, boolean isAdmin) {
+        String userType = isAdmin ? "ADMIN" : "STUDENT";
+        String sql = "INSERT INTO users (username, email, password, full_name, user_type) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -27,12 +41,13 @@ public class UserDAO {
             pstmt.setString(2, email.trim());
             pstmt.setString(3, password); // Store password as-is (trim handled in controller)
             pstmt.setString(4, fullName.trim());
+            pstmt.setString(5, userType);
 
             int rowsAffected = pstmt.executeUpdate();
 
             if (rowsAffected > 0) {
-                System.out.println("✅ User registered successfully: " + username);
-                System.out.println("🔐 Stored password length: " + password.length() + " chars");
+                System.out.println("✅ " + userType + " user registered successfully: " + username);
+                System.out.println("🔒 Stored password length: " + password.length() + " chars");
                 return true;
             }
 
@@ -97,7 +112,7 @@ public class UserDAO {
                     user.setFullName(fullName);
                     user.setUserType(userType);
 
-                    System.out.println("✅ Login successful: " + user.getUsername());
+                    System.out.println("✅ Login successful: " + user.getUsername() + " (Role: " + userType + ")");
                     return user;
                 } else {
                     System.err.println("❌ Password mismatch!");
@@ -289,7 +304,7 @@ public class UserDAO {
      * REMOVE THIS IN PRODUCTION!
      */
     public void debugListAllUsers() {
-        String sql = "SELECT id, username, email, password FROM users";
+        String sql = "SELECT id, username, email, password, user_type FROM users";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -303,6 +318,7 @@ public class UserDAO {
                 System.out.println("Username: " + rs.getString("username"));
                 System.out.println("Email: " + rs.getString("email"));
                 System.out.println("Password: '" + rs.getString("password") + "' (length: " + rs.getString("password").length() + ")");
+                System.out.println("User Type: " + rs.getString("user_type")); // Added user_type to debug
                 System.out.println("───────────────────────────────────────────────");
             }
 

@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
@@ -62,6 +63,19 @@
             <VBox spacing="16"
                   styleClass="form-section"
                   maxWidth="400">
+
+                <!-- Role Selection - NEW! -->
+                <VBox spacing="6">
+                    <Label text="Sign Up As" styleClass="field-label"/>
+                    <ComboBox fx:id="roleComboBox"
+                              promptText="Select your role"
+                              styleClass="role-combo"
+                              maxWidth="Infinity">
+                        <padding>
+                            <Insets top="12" bottom="12" left="16" right="16"/>
+                        </padding>
+                    </ComboBox>
+                </VBox>
 
                 <!-- Full Name -->
                 <VBox spacing="6">

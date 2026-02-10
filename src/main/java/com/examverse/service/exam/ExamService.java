@@ -12,11 +12,14 @@ import java.util.List;
 
 /**
  * ExamService - Handles all exam-related database operations
+ * MERGED: Student exam functionality + Admin exam management
  */
 public class ExamService {
 
+    // ==================== STUDENT EXAM METHODS ====================
+
     /**
-     * Get all available/active exams
+     * Get all available/active exams (for students)
      */
     public List<Exam> getAllActiveExams() {
         List<Exam> exams = new ArrayList<>();
@@ -298,6 +301,217 @@ public class ExamService {
         return subjects;
     }
 
+    // ==================== ADMIN EXAM MANAGEMENT METHODS ====================
+
+    /**
+     * Get ALL exams (for admin - including inactive)
+     */
+    public List<Exam> getAllExams() {
+        List<Exam> exams = new ArrayList<>();
+        String sql = "SELECT * FROM exams ORDER BY created_at DESC";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                exams.add(extractExamFromResultSet(rs));
+            }
+
+            System.out.println("✅ Loaded " + exams.size() + " exams (admin view)");
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error loading exams!");
+            e.printStackTrace();
+        }
+
+        return exams;
+    }
+
+    /**
+     * Get exams by status (for admin)
+     */
+    public List<Exam> getExamsByStatus(String status) {
+        List<Exam> exams = new ArrayList<>();
+        String sql = "SELECT * FROM exams WHERE status = ? ORDER BY created_at DESC";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, status);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                exams.add(extractExamFromResultSet(rs));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return exams;
+    }
+
+    /**
+     * Create a new exam (admin only)
+     */
+    public boolean createExam(Exam exam) {
+        String sql = """
+            INSERT INTO exams (exam_title, subject, description, difficulty, 
+                             total_questions, total_marks, duration_minutes, 
+                             passing_marks, status, created_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """;
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            pstmt.setString(1, exam.getExamTitle());
+            pstmt.setString(2, exam.getSubject());
+            pstmt.setString(3, exam.getDescription());
+            pstmt.setString(4, exam.getDifficulty());
+            pstmt.setInt(5, exam.getTotalQuestions());
+            pstmt.setInt(6, exam.getTotalMarks());
+            pstmt.setInt(7, exam.getDurationMinutes());
+            pstmt.setInt(8, exam.getPassingMarks());
+            pstmt.setString(9, exam.getStatus() != null ? exam.getStatus() : "ACTIVE");
+            pstmt.setInt(10, exam.getCreatedBy());
+
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                ResultSet generatedKeys = pstmt.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    exam.setExamId(generatedKeys.getInt(1));
+                }
+                System.out.println("✅ Exam created: " + exam.getExamTitle());
+                return true;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Failed to create exam!");
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    /**
+     * Update an existing exam (admin only)
+     */
+    public boolean updateExam(Exam exam) {
+        String sql = """
+            UPDATE exams SET 
+                exam_title = ?, 
+                subject = ?, 
+                description = ?, 
+                difficulty = ?,
+                total_questions = ?, 
+                total_marks = ?, 
+                duration_minutes = ?, 
+                passing_marks = ?,
+                status = ?
+            WHERE exam_id = ?
+            """;
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, exam.getExamTitle());
+            pstmt.setString(2, exam.getSubject());
+            pstmt.setString(3, exam.getDescription());
+            pstmt.setString(4, exam.getDifficulty());
+            pstmt.setInt(5, exam.getTotalQuestions());
+            pstmt.setInt(6, exam.getTotalMarks());
+            pstmt.setInt(7, exam.getDurationMinutes());
+            pstmt.setInt(8, exam.getPassingMarks());
+            pstmt.setString(9, exam.getStatus());
+            pstmt.setInt(10, exam.getExamId());
+
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("✅ Exam updated: " + exam.getExamTitle());
+                return true;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Failed to update exam!");
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    /**
+     * Delete an exam (admin only)
+     */
+    public boolean deleteExam(int examId) {
+        String sql = "DELETE FROM exams WHERE exam_id = ?";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, examId);
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("✅ Exam deleted: " + examId);
+                return true;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Failed to delete exam!");
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    /**
+     * Get total number of active exams (for admin stats)
+     */
+    public int getTotalExamsCount() {
+        String sql = "SELECT COUNT(*) FROM exams WHERE status = 'ACTIVE'";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    /**
+     * Get total exam attempts count (for admin stats)
+     */
+    public int getTotalAttemptsCount() {
+        String sql = "SELECT COUNT(*) FROM student_exam_attempts";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    // ==================== UTILITY METHODS ====================
+
     /**
      * Extract Exam object from ResultSet
      */
@@ -313,6 +527,7 @@ public class ExamService {
         exam.setDurationMinutes(rs.getInt("duration_minutes"));
         exam.setPassingMarks(rs.getInt("passing_marks"));
         exam.setStatus(rs.getString("status"));
+        exam.setCreatedBy(rs.getInt("created_by"));
 
         Timestamp createdAt = rs.getTimestamp("created_at");
         if (createdAt != null) {
