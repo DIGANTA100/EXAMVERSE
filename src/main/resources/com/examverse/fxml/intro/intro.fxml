@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.media.MediaView?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.geometry.Insets?>
 
 <StackPane fx:id="rootPane" xmlns="http://javafx.com/javafx/21"
@@ -14,8 +14,8 @@
            stylesheets="@../../css/intro.css"
            styleClass="root-pane">
 
-    <!-- Background Video Layer -->
-    <MediaView fx:id="mediaView"
+    <!-- Background Image Sequence Layer (replaces MediaView) -->
+    <ImageView fx:id="mediaView"
                fitWidth="1920"
                fitHeight="1080"
                preserveRatio="true"
@@ -60,7 +60,7 @@
 
                 <!-- Tagline above button -->
                 <Label fx:id="tagline" text="" styleClass="tagline-text"
-       maxWidth="600" textAlignment="CENTER" wrapText="true" alignment="CENTER"/>
+                       maxWidth="600" textAlignment="CENTER" wrapText="true" alignment="CENTER"/>
 
                 <!-- Get Started Button -->
                 <Button fx:id="getStartedButton"

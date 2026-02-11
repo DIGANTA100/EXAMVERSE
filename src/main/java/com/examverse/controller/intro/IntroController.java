@@ -1,25 +1,30 @@
 package com.examverse.controller.intro;
 
+import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import javafx.scene.media.MediaView;
 import javafx.util.Duration;
 import com.examverse.util.SceneManager;
 
-import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * IntroController - Enhanced intro screen with animated quotes
  * Features professional typewriter animation for academic quotes
+ * Using IMAGE SEQUENCE (300 frames @ 30fps) instead of video
  */
 public class IntroController implements Initializable {
 
@@ -27,7 +32,7 @@ public class IntroController implements Initializable {
     private StackPane rootPane;
 
     @FXML
-    private MediaView mediaView;
+    private ImageView mediaView;  // Using same fx:id as before for compatibility
 
     @FXML
     private Button getStartedButton;
@@ -56,7 +61,22 @@ public class IntroController implements Initializable {
     @FXML
     private Label tagline;
 
-    private MediaPlayer mediaPlayer;
+    // Image sequence data
+    private List<Image> frames;
+    private AnimationTimer animationTimer;
+    private int currentFrameIndex = 0;
+    private long lastFrameTime = 0;
+
+    // 30 FPS = 33.33ms per frame
+    private static final long FRAME_DURATION_NANOS = 16_666_667L;
+
+    // Frame configuration
+    private static final int TOTAL_FRAMES = 331;
+    private static final String FRAME_PATH_PATTERN = "/com/examverse/assets/video/frames/frame_%04d.png";
+
+    // Loading state
+    private boolean isLoading = true;
+    private ExecutorService executor;
 
     // Academic quotes content
     private static final String[] LEFT_QUOTES = {
@@ -75,109 +95,136 @@ public class IntroController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        setupVideoPlayer();
+        setupImageView();
+        loadFramesAsync();
         setupGetStartedButton();
         startAnimations();
     }
 
     /**
-     * Setup video player with looping and auto-play
+     * Setup ImageView for frame display
      */
-    private void setupVideoPlayer() {
-        try {
-            Media media = null;
-            String videoPath = null;
+    private void setupImageView() {
+        // Make ImageView fill the entire pane
+        mediaView.setPreserveRatio(true);
+        mediaView.setSmooth(true);
+        mediaView.fitWidthProperty().bind(rootPane.widthProperty());
+        mediaView.fitHeightProperty().bind(rootPane.heightProperty());
 
-            // Method 1: Try loading from resources using getResource
+        System.out.println("ImageView setup complete - ready for frame sequence");
+    }
+
+    /**
+     * Load all frames asynchronously to avoid blocking UI
+     */
+    private void loadFramesAsync() {
+        executor = Executors.newSingleThreadExecutor();
+
+        executor.submit(() -> {
             try {
-                URL videoURL = getClass().getResource("/com/examverse/assets/video/intro.mp4");
-                if (videoURL != null) {
-                    videoPath = videoURL.toExternalForm();
-                    System.out.println("Video path (Method 1): " + videoPath);
-                    media = new Media(videoPath);
+                System.out.println("Loading " + TOTAL_FRAMES + " frames...");
+                frames = new ArrayList<>(TOTAL_FRAMES);
+
+                int loadedCount = 0;
+                int failedCount = 0;
+
+                for (int i = 1; i <= TOTAL_FRAMES; i++) {
+                    String framePath = String.format(FRAME_PATH_PATTERN, i);
+
+                    try {
+                        URL frameURL = getClass().getResource(framePath);
+
+                        if (frameURL != null) {
+                            Image image = new Image(frameURL.toExternalForm(), true); // Background loading
+                            frames.add(image);
+                            loadedCount++;
+
+                            // Update progress every 50 frames
+                            if (i % 50 == 0) {
+                                final int progress = i;
+                                Platform.runLater(() ->
+                                        System.out.println("Loading progress: " + progress + "/" + TOTAL_FRAMES)
+                                );
+                            }
+                        } else {
+                            System.err.println("Frame not found: " + framePath);
+                            // Add a placeholder or skip
+                            frames.add(null);
+                            failedCount++;
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error loading frame " + i + ": " + e.getMessage());
+                        frames.add(null);
+                        failedCount++;
+                    }
                 }
+
+                final int finalLoaded = loadedCount;
+                final int finalFailed = failedCount;
+
+                Platform.runLater(() -> {
+                    System.out.println("✅ Frame loading complete!");
+                    System.out.println("   Loaded: " + finalLoaded + " frames");
+                    if (finalFailed > 0) {
+                        System.out.println("   Failed: " + finalFailed + " frames");
+                    }
+
+                    isLoading = false;
+                    startFrameAnimation();
+                });
+
             } catch (Exception e) {
-                System.err.println("Method 1 failed: " + e.getMessage());
+                System.err.println("Error during frame loading: " + e.getMessage());
+                e.printStackTrace();
+
+                Platform.runLater(() -> {
+                    System.err.println("❌ Frame loading failed! Check frame paths.");
+                    isLoading = false;
+                });
             }
+        });
+    }
 
-            // Method 2: Try loading from file system (fallback)
-            if (media == null) {
-                try {
-                    File videoFile = new File("src/main/resources/com/examverse/assets/video/intro.mp4");
-                    if (videoFile.exists()) {
-                        videoPath = videoFile.toURI().toString();
-                        System.out.println("Video path (Method 2): " + videoPath);
-                        media = new Media(videoPath);
-                    }
-                } catch (Exception e) {
-                    System.err.println("Method 2 failed: " + e.getMessage());
-                }
-            }
-
-            // Method 3: Try classpath loader (another fallback)
-            if (media == null) {
-                try {
-                    ClassLoader classLoader = getClass().getClassLoader();
-                    URL videoURL = classLoader.getResource("com/examverse/assets/video/intro.mp4");
-                    if (videoURL != null) {
-                        videoPath = videoURL.toExternalForm();
-                        System.out.println("Video path (Method 3): " + videoPath);
-                        media = new Media(videoPath);
-                    }
-                } catch (Exception e) {
-                    System.err.println("Method 3 failed: " + e.getMessage());
-                }
-            }
-
-            if (media == null) {
-                System.err.println("CRITICAL: Could not load intro video from any method!");
-                System.err.println("Please ensure intro.mp4 is located at: src/main/resources/com/examverse/assets/video/intro.mp4");
-                return;
-            }
-
-            // Create media player
-            mediaPlayer = new MediaPlayer(media);
-
-            // Configure media player
-            mediaPlayer.setAutoPlay(true);
-            mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
-            mediaPlayer.setVolume(0.7);
-
-            // Bind MediaView to the video
-            mediaView.setMediaPlayer(mediaPlayer);
-            mediaView.setPreserveRatio(true);
-            mediaView.setSmooth(true);
-
-            // Bind video dimensions to root pane
-            mediaView.fitWidthProperty().bind(rootPane.widthProperty());
-            mediaView.fitHeightProperty().bind(rootPane.heightProperty());
-
-            // Handle video errors
-            mediaPlayer.setOnError(() -> {
-                if (mediaPlayer.getError() != null) {
-                    System.err.println("Media Error: " + mediaPlayer.getError().getMessage());
-                    System.err.println("Error Type: " + mediaPlayer.getError().getType());
-                }
-            });
-
-            // Handle successful video ready
-            mediaPlayer.setOnReady(() -> {
-                System.out.println("Intro video loaded successfully!");
-                System.out.println("Video duration: " + mediaPlayer.getTotalDuration());
-            });
-
-            // Seamless loop
-            mediaPlayer.setOnEndOfMedia(() -> {
-                mediaPlayer.seek(Duration.ZERO);
-                mediaPlayer.play();
-            });
-
-            System.out.println("Intro video player setup complete");
-
-        } catch (Exception e) {
-            System.err.println("Error loading intro video: " + e.getMessage());
-            e.printStackTrace();
+    /**
+     * Start the frame-by-frame animation
+     */
+    private void startFrameAnimation() {
+        if (frames == null || frames.isEmpty()) {
+            System.err.println("No frames loaded - cannot start animation");
+            return;
         }
+
+        // Display first frame immediately
+        if (frames.get(0) != null) {
+            mediaView.setImage(frames.get(0));
+        }
+
+        // Start animation timer
+        animationTimer = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                // Check if enough time has passed for next frame
+                if (now - lastFrameTime >= FRAME_DURATION_NANOS) {
+                    lastFrameTime = now;
+
+                    // Get current frame
+                    if (currentFrameIndex < frames.size() && frames.get(currentFrameIndex) != null) {
+                        mediaView.setImage(frames.get(currentFrameIndex));
+                    }
+
+                    // Move to next frame
+                    currentFrameIndex++;
+
+                    // Loop back to start
+                    if (currentFrameIndex >= frames.size()) {
+                        currentFrameIndex = 0;
+                    }
+                }
+            }
+        };
+
+        animationTimer.start();
+        System.out.println("Frame animation started - playing at 30 FPS (looping)");
     }
 
     /**
@@ -249,11 +296,8 @@ public class IntroController implements Initializable {
      */
     @FXML
     private void handleGetStarted() {
-        // Stop the video
-        if (mediaPlayer != null) {
-            mediaPlayer.stop();
-            mediaPlayer.dispose();
-        }
+        // Stop the animation
+        cleanup();
 
         // Navigate to dashboard landing page
         System.out.println("Get Started clicked! Navigating to dashboard...");
@@ -264,9 +308,17 @@ public class IntroController implements Initializable {
      * Cleanup resources when controller is destroyed
      */
     public void cleanup() {
-        if (mediaPlayer != null) {
-            mediaPlayer.stop();
-            mediaPlayer.dispose();
+        if (animationTimer != null) {
+            animationTimer.stop();
+        }
+
+        if (executor != null && !executor.isShutdown()) {
+            executor.shutdown();
+        }
+
+        // Clear frames from memory
+        if (frames != null) {
+            frames.clear();
         }
     }
 }

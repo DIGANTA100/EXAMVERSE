@@ -12,63 +12,73 @@ repositories {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
 }
 
-
+/* =======================
+   JavaFX Configuration
+   ======================= */
 javafx {
     version = "21.0.1"
     modules = listOf(
         "javafx.controls",
         "javafx.fxml",
-        "javafx.media",
         "javafx.graphics",
-        "javafx.swing"
+        "javafx.media",
+        "javafx.web"      // ✅ REQUIRED for WebView
     )
 }
 
+/* =======================
+   Dependencies
+   ======================= */
 dependencies {
-    // JavaFX dependencies (handled by javafx plugin)
 
-    // MySQL Database Connector
+    // MySQL Connector
     implementation("com.mysql:mysql-connector-j:8.2.0")
 
-    // JavaMail API for Email Functionality
+    // Java Mail (Email / OTP / Reset Password)
     implementation("com.sun.mail:javax.mail:1.6.2")
     implementation("javax.activation:activation:1.1.1")
 
-    // Testing dependencies (optional)
+    // Testing
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+/* =======================
+   Application Config
+   ======================= */
 application {
     mainClass.set("com.examverse.app.Launcher")
 
-    // JVM arguments for JavaFX - Enhanced with module fixes
+    // Minimal JVM args (JavaFX plugin already handles module-path)
     applicationDefaultJvmArgs = listOf(
-        "--add-opens=javafx.graphics/javafx.scene=ALL-UNNAMED",
-        "--add-opens=javafx.controls/javafx.scene.control=ALL-UNNAMED",
-        "--add-opens=javafx.base/com.sun.javafx.runtime=ALL-UNNAMED",
-        "--add-opens=javafx.graphics/com.sun.javafx.application=ALL-UNNAMED",
-        "--add-modules=javafx.controls,javafx.fxml,javafx.media,javafx.graphics",
-        "-Dprism.verbose=false",
-        "-Djavafx.verbose=false"
+        "--add-modules=javafx.controls,javafx.fxml,javafx.graphics,javafx.media,javafx.web",
+        "-Xmx4G",  // Increase heap to 4GB
+        "-Xms2G"   // Start with 2GB
     )
 }
 
+/* =======================
+   Tasks
+   ======================= */
 tasks {
+
     test {
         useJUnitPlatform()
     }
 
-    // Custom task to run the application
-    register("runApp") {
-        dependsOn("run")
+    // Run app using Gradle
+    register<JavaExec>("runApp") {
+        group = "application"
+        description = "Run ExamVerse Application"
+        classpath = sourceSets["main"].runtimeClasspath
+        mainClass.set("com.examverse.app.Launcher")
     }
 
-    // Configure JAR task
+    // Fat JAR (optional but useful)
     jar {
         manifest {
             attributes(
@@ -77,20 +87,21 @@ tasks {
             )
         }
 
-        // Include dependencies in JAR (Fat JAR)
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+        from(
+            configurations.runtimeClasspath.get().map {
+                if (it.isDirectory) it else zipTree(it)
+            }
+        )
     }
 }
 
-// Configure source and resources directories
+/* =======================
+   Source Sets
+   ======================= */
 sourceSets {
     main {
-        java {
-            setSrcDirs(listOf("src/main/java"))
-        }
-        resources {
-            setSrcDirs(listOf("src/main/resources"))
-        }
+        java.setSrcDirs(listOf("src/main/java"))
+        resources.setSrcDirs(listOf("src/main/resources"))
     }
 }

@@ -159,7 +159,7 @@ public class SignupController implements Initializable {
                         // Redirect to login after delay
                         new Thread(() -> {
                             try {
-                                Thread.sleep(3000);
+                                Thread.sleep(1000);
                                 javafx.application.Platform.runLater(() -> {
                                     SceneManager.switchScene("/com/examverse/fxml/auth/login.fxml");
                                 });
