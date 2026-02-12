@@ -2,12 +2,14 @@ package com.examverse.controller.auth;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import com.examverse.model.user.User;
 import com.examverse.service.auth.EmailService;
@@ -21,9 +23,12 @@ import java.util.ResourceBundle;
 
 /**
  * ResetPasswordController - Handles password reset screen
- * Validates reset code and updates password
+ * IMPROVED: Added field reset and smooth transitions
  */
 public class ResetPasswordController implements Initializable {
+
+    @FXML
+    private VBox rootPane;
 
     @FXML
     private TextField codeField;
@@ -66,10 +71,17 @@ public class ResetPasswordController implements Initializable {
         emailService = EmailService.getInstance();
         resetService = PasswordResetService.getInstance();
 
+        // Reset fields
+        resetFields();
+
         // Display masked email
         if (!userEmail.isEmpty()) {
             emailLabel.setText("Code sent to " + maskEmail(userEmail));
         }
+
+        // Hide message label initially
+        messageLabel.setVisible(false);
+        messageLabel.setManaged(false);
 
         // Setup enter key listener
         confirmPasswordField.setOnAction(e -> handleResetPassword());
@@ -86,6 +98,42 @@ public class ResetPasswordController implements Initializable {
                 codeField.setText(newValue.substring(0, 6));
             }
         });
+
+        // Add fade-in animation
+        applyFadeInAnimation();
+    }
+
+    /**
+     * Reset all form fields
+     */
+    private void resetFields() {
+        if (codeField != null) codeField.clear();
+        if (newPasswordField != null) newPasswordField.clear();
+        if (confirmPasswordField != null) confirmPasswordField.clear();
+        if (messageLabel != null) {
+            messageLabel.setVisible(false);
+            messageLabel.setManaged(false);
+        }
+        if (resetButton != null) {
+            resetButton.setDisable(false);
+            resetButton.setText("Reset Password");
+        }
+        if (resendCodeButton != null) {
+            resendCodeButton.setDisable(false);
+            resendCodeButton.setText("Resend");
+        }
+    }
+
+    /**
+     * Apply fade-in animation to the root pane
+     */
+    private void applyFadeInAnimation() {
+        if (rootPane != null) {
+            FadeTransition fade = new FadeTransition(Duration.millis(400), rootPane);
+            fade.setFromValue(0.0);
+            fade.setToValue(1.0);
+            fade.play();
+        }
     }
 
     /**
@@ -102,6 +150,7 @@ public class ResetPasswordController implements Initializable {
     private void handleResetPassword() {
         // Clear previous messages
         messageLabel.setVisible(false);
+        messageLabel.setManaged(false);
 
         // Get input values
         String code = codeField.getText().trim();
@@ -110,37 +159,37 @@ public class ResetPasswordController implements Initializable {
 
         // Validate inputs
         if (code.isEmpty()) {
-            showError("Please enter the verification code");
+            showError("❌ Please enter the verification code");
             codeField.requestFocus();
             return;
         }
 
         if (code.length() != 6) {
-            showError("Verification code must be 6 digits");
+            showError("❌ Verification code must be 6 digits");
             codeField.requestFocus();
             return;
         }
 
         if (newPassword.isEmpty()) {
-            showError("Please enter a new password");
+            showError("❌ Please enter a new password");
             newPasswordField.requestFocus();
             return;
         }
 
         if (!Validator.isValidPassword(newPassword)) {
-            showError("Password must be at least 6 characters");
+            showError("❌ Password must be at least 6 characters long");
             newPasswordField.requestFocus();
             return;
         }
 
         if (confirmPassword.isEmpty()) {
-            showError("Please confirm your new password");
+            showError("❌ Please confirm your new password");
             confirmPasswordField.requestFocus();
             return;
         }
 
         if (!newPassword.equals(confirmPassword)) {
-            showError("Passwords do not match");
+            showError("❌ Passwords do not match. Please try again.");
             confirmPasswordField.clear();
             confirmPasswordField.requestFocus();
             return;
@@ -154,7 +203,7 @@ public class ResetPasswordController implements Initializable {
         boolean isValidCode = resetService.validateResetCode(userEmail, code);
 
         if (!isValidCode) {
-            showError("Invalid or expired verification code");
+            showError("❌ Invalid or expired verification code");
             resetButton.setDisable(false);
             resetButton.setText("Reset Password");
             codeField.clear();
@@ -175,14 +224,16 @@ public class ResetPasswordController implements Initializable {
             }
 
             // Show success message
-            showSuccess("Password reset successful! Redirecting to login...");
+            showSuccess("✅ Password reset successful! Redirecting to login...");
 
-            // Navigate to login after 2 seconds
+            // Navigate to login after 2 seconds with fade transition
             new Thread(() -> {
                 try {
                     Thread.sleep(2000);
                     javafx.application.Platform.runLater(() -> {
-                        SceneManager.switchScene("/com/examverse/fxml/auth/login.fxml");
+                        applyFadeOutTransition(() -> {
+                            SceneManager.switchScene("/com/examverse/fxml/auth/login.fxml");
+                        });
                     });
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -190,7 +241,7 @@ public class ResetPasswordController implements Initializable {
             }).start();
 
         } else {
-            showError("Failed to reset password. Please try again.");
+            showError("❌ Failed to reset password. Please try again.");
             resetButton.setDisable(false);
             resetButton.setText("Reset Password");
         }
@@ -220,7 +271,7 @@ public class ResetPasswordController implements Initializable {
             );
 
             if (emailSent) {
-                showSuccess("New verification code sent!");
+                showSuccess("✅ New verification code sent!");
 
                 // Reset timer
                 remainingSeconds = 600;
@@ -239,7 +290,7 @@ public class ResetPasswordController implements Initializable {
                     }
                 }).start();
             } else {
-                showError("Failed to resend code");
+                showError("❌ Failed to resend code. Please try again.");
                 resendCodeButton.setDisable(false);
                 resendCodeButton.setText("Resend");
             }
@@ -254,7 +305,24 @@ public class ResetPasswordController implements Initializable {
         if (countdown != null) {
             countdown.stop();
         }
-        SceneManager.switchScene("/com/examverse/fxml/auth/login.fxml");
+        applyFadeOutTransition(() -> {
+            SceneManager.switchScene("/com/examverse/fxml/auth/login.fxml");
+        });
+    }
+
+    /**
+     * Apply fade-out transition before scene change
+     */
+    private void applyFadeOutTransition(Runnable onFinished) {
+        if (rootPane != null) {
+            FadeTransition fade = new FadeTransition(Duration.millis(300), rootPane);
+            fade.setFromValue(1.0);
+            fade.setToValue(0.0);
+            fade.setOnFinished(e -> onFinished.run());
+            fade.play();
+        } else {
+            onFinished.run();
+        }
     }
 
     /**
@@ -275,13 +343,13 @@ public class ResetPasswordController implements Initializable {
 
             if (remainingSeconds <= 60) {
                 // Last minute - change color to red
-                timerLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #ef4444; -fx-font-weight: 600;");
+                timerLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #ef4444; -fx-font-weight: 600;");
             }
 
             if (remainingSeconds <= 0) {
                 countdown.stop();
                 timerLabel.setText("⏱️ Expired");
-                showError("Verification code expired. Please request a new one.");
+                showError("❌ Verification code expired. Please request a new one.");
                 resetButton.setDisable(true);
             }
         }));
@@ -313,8 +381,9 @@ public class ResetPasswordController implements Initializable {
      * Show error message
      */
     private void showError(String message) {
-        messageLabel.setText("❌ " + message);
+        messageLabel.setText(message);
         messageLabel.setVisible(true);
+        messageLabel.setManaged(true);
         messageLabel.setStyle("-fx-text-fill: #ef4444;");
     }
 
@@ -322,8 +391,9 @@ public class ResetPasswordController implements Initializable {
      * Show success message
      */
     private void showSuccess(String message) {
-        messageLabel.setText("✅ " + message);
+        messageLabel.setText(message);
         messageLabel.setVisible(true);
+        messageLabel.setManaged(true);
         messageLabel.setStyle("-fx-text-fill: #22d3ee;");
     }
 }

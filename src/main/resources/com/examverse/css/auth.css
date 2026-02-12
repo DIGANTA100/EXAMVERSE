@@ -14,6 +14,36 @@
     -fx-background-color: linear-gradient(135deg, #0a1628 0%, #020617 50%, #0f172a 100%);
 }
 
+/* ==================== SCROLLPANE ==================== */
+
+.auth-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+
+.auth-scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+.auth-scroll-pane .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8px;
+}
+
+.auth-scroll-pane .scroll-bar:vertical .track {
+    -fx-background-color: rgba(30, 41, 59, 0.3);
+    -fx-background-radius: 4;
+}
+
+.auth-scroll-pane .scroll-bar:vertical .thumb {
+    -fx-background-color: rgba(71, 85, 105, 0.5);
+    -fx-background-radius: 4;
+}
+
+.auth-scroll-pane .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: rgba(71, 85, 105, 0.7);
+}
+
 /* ==================== CARD CONTAINER ==================== */
 
 .card-container {
@@ -95,6 +125,55 @@
     -fx-border-color: rgba(71, 85, 105, 0.7);
 }
 
+/* ==================== ROLE COMBOBOX ==================== */
+
+.role-combo {
+    -fx-background-color: rgba(30, 41, 59, 0.6);
+    -fx-text-fill: #e2e8f0;
+    -fx-font-size: 14px;
+    -fx-border-color: rgba(71, 85, 105, 0.5);
+    -fx-border-width: 1;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+}
+
+.role-combo:hover {
+    -fx-border-color: rgba(71, 85, 105, 0.7);
+}
+
+.role-combo:focused {
+    -fx-background-color: rgba(30, 41, 59, 0.8);
+    -fx-border-color: rgba(34, 211, 238, 0.6);
+    -fx-border-width: 2px;
+    -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.2), 10, 0.4, 0, 0);
+}
+
+/* ComboBox Arrow Button */
+.role-combo .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.role-combo .arrow {
+    -fx-background-color: #22d3ee;
+}
+
+/* ComboBox Popup List */
+.role-combo .list-cell {
+    -fx-background-color: #1e293b;
+    -fx-text-fill: #e2e8f0;
+    -fx-padding: 10px 15px;
+}
+
+.role-combo .list-cell:hover {
+    -fx-background-color: rgba(34, 211, 238, 0.2);
+}
+
+.role-combo .list-cell:selected {
+    -fx-background-color: #22d3ee;
+    -fx-text-fill: #0f172a;
+}
+
 /* ==================== BUTTONS ==================== */
 
 /* Primary Login/Signup Button */
@@ -166,12 +245,12 @@
 
 /* Back Button */
 .back-button {
-    -fx-background-color: rgba(30, 41, 59, 0.4);
-    -fx-border-color: transparent;
+    -fx-background-color: rgba(30, 41, 59, 0.5);
+    -fx-border-color: rgba(71, 85, 105, 0.3);
     -fx-border-width: 1;
     -fx-border-radius: 6;
     -fx-background-radius: 6;
-    -fx-text-fill: #94a3b8;
+    -fx-text-fill: #cbd5e1;
     -fx-font-size: 13px;
     -fx-font-weight: 400;
     -fx-font-family: "Segoe UI", "Arial", sans-serif;
@@ -179,8 +258,13 @@
 }
 
 .back-button:hover {
-    -fx-background-color: rgba(30, 41, 59, 0.6);
-    -fx-text-fill: #cbd5e1;
+    -fx-background-color: rgba(30, 41, 59, 0.7);
+    -fx-border-color: rgba(71, 85, 105, 0.5);
+    -fx-text-fill: #e2e8f0;
+}
+
+.back-button:pressed {
+    -fx-background-color: rgba(30, 41, 59, 0.8);
 }
 
 /* ==================== CHECKBOX ==================== */
@@ -258,6 +342,15 @@
     -fx-font-family: "Segoe UI", "Arial", sans-serif;
 }
 
+.community-text {
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: rgba(34, 211, 238, 0.6);
+    -fx-letter-spacing: 2px;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-padding: 5 0 0 0;
+}
+
 /* ==================== RESPONSIVE ADJUSTMENTS ==================== */
 
 @media (max-width: 768px) {
@@ -312,63 +405,4 @@
 
 .scroll-pane .scroll-bar:vertical .thumb:hover {
     -fx-background-color: rgba(71, 85, 105, 0.7);
-}
-
-
-/* ========================================
-   ADD THESE STYLES TO YOUR auth.css FILE
-   ======================================== */
-
-/* Role ComboBox Styling */
-.role-combo {
-    -fx-background-color: rgba(30, 41, 59, 0.5);
-    -fx-text-fill: #e2e8f0;
-    -fx-font-size: 14px;
-    -fx-padding: 12px 15px;
-    -fx-border-color: #475569;
-    -fx-border-radius: 8px;
-    -fx-background-radius: 8px;
-    -fx-cursor: hand;
-}
-
-.role-combo:hover {
-    -fx-border-color: #22d3ee;
-    -fx-background-color: rgba(34, 211, 238, 0.1);
-}
-
-.role-combo:focused {
-    -fx-border-color: #22d3ee;
-    -fx-border-width: 2px;
-}
-
-/* ComboBox Arrow Button */
-.role-combo .arrow-button {
-    -fx-background-color: transparent;
-}
-
-.role-combo .arrow {
-    -fx-background-color: #22d3ee;
-}
-
-/* ComboBox Popup List */
-.role-combo .list-cell {
-    -fx-background-color: #1e293b;
-    -fx-text-fill: #e2e8f0;
-    -fx-padding: 10px 15px;
-}
-
-.role-combo .list-cell:hover {
-    -fx-background-color: rgba(34, 211, 238, 0.2);
-}
-
-.role-combo .list-cell:selected {
-    -fx-background-color: #22d3ee;
-    -fx-text-fill: #0f172a;
-}
-
-/* Field Label Styling (if not already present) */
-.field-label {
-    -fx-text-fill: #cbd5e1;
-    -fx-font-size: 13px;
-    -fx-font-weight: 500;
 }

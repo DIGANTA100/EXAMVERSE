@@ -8,13 +8,15 @@ import com.examverse.model.user.User;
 import com.examverse.service.auth.UserDAO;
 import com.examverse.util.SceneManager;
 import com.examverse.util.SessionManager;
+import javafx.animation.FadeTransition;
+import javafx.util.Duration;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
 /**
  * LoginController - Handles login screen logic
- * UPDATED: Fixed admin dashboard navigation
+ * IMPROVED: Added field reset, better error messages, and smooth transitions
  */
 public class LoginController implements Initializable {
 
@@ -22,7 +24,7 @@ public class LoginController implements Initializable {
     private VBox rootPane;
 
     @FXML
-    private ComboBox<String> roleComboBox;  // Role selection dropdown
+    private ComboBox<String> roleComboBox;
 
     @FXML
     private TextField usernameField;
@@ -44,7 +46,13 @@ public class LoginController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         userDAO = new UserDAO();
+
+        // Reset all fields when the page loads
+        resetFields();
+
+        // Hide error label initially
         errorLabel.setVisible(false);
+        errorLabel.setManaged(false);
 
         // Populate ComboBox with role options
         roleComboBox.getItems().addAll("Student", "Admin/Teacher");
@@ -55,6 +63,41 @@ public class LoginController implements Initializable {
         // Setup enter key listener
         passwordField.setOnAction(e -> handleLogin());
         usernameField.setOnAction(e -> passwordField.requestFocus());
+
+        // Add fade-in animation
+        applyFadeInAnimation();
+    }
+
+    /**
+     * Reset all form fields
+     */
+    private void resetFields() {
+        if (roleComboBox != null) {
+            roleComboBox.getSelectionModel().selectFirst();
+        }
+        if (usernameField != null) usernameField.clear();
+        if (passwordField != null) passwordField.clear();
+        if (rememberMeCheckbox != null) rememberMeCheckbox.setSelected(false);
+        if (errorLabel != null) {
+            errorLabel.setVisible(false);
+            errorLabel.setManaged(false);
+        }
+        if (loginButton != null) {
+            loginButton.setDisable(false);
+            loginButton.setText("Log In");
+        }
+    }
+
+    /**
+     * Apply fade-in animation to the root pane
+     */
+    private void applyFadeInAnimation() {
+        if (rootPane != null) {
+            FadeTransition fade = new FadeTransition(Duration.millis(400), rootPane);
+            fade.setFromValue(0.0);
+            fade.setToValue(1.0);
+            fade.play();
+        }
     }
 
     /**
@@ -64,11 +107,12 @@ public class LoginController implements Initializable {
     private void handleLogin() {
         // Clear previous error
         errorLabel.setVisible(false);
+        errorLabel.setManaged(false);
 
         // Get selected role
         String selectedRole = roleComboBox.getValue();
         if (selectedRole == null || selectedRole.isEmpty()) {
-            showError("Please select your role (Student or Admin)");
+            showError("❌ Please select your role (Student or Admin)");
             roleComboBox.requestFocus();
             return;
         }
@@ -79,13 +123,13 @@ public class LoginController implements Initializable {
 
         // Validate inputs
         if (usernameOrEmail.isEmpty()) {
-            showError("Please enter username or email");
+            showError("❌ Please enter your username or email");
             usernameField.requestFocus();
             return;
         }
 
         if (password.isEmpty()) {
-            showError("Please enter password");
+            showError("❌ Please enter your password");
             passwordField.requestFocus();
             return;
         }
@@ -122,15 +166,16 @@ public class LoginController implements Initializable {
             // Navigate based on user type
             if (user.isAdmin()) {
                 System.out.println("🔐 Admin logged in - Navigating to admin dashboard");
-                showSuccess("Welcome Admin " + user.getFullName() + "!");
+                showSuccess("✅ Welcome Admin " + user.getFullName() + "!");
 
-                // Navigate to ADMIN dashboard
+                // Navigate to ADMIN dashboard with fade transition
                 new Thread(() -> {
                     try {
                         Thread.sleep(1000);
                         javafx.application.Platform.runLater(() -> {
-                            // FIXED: Navigate to admin-dashboard.fxml (NOT student-dashboard.fxml)
-                            SceneManager.switchScene("/com/examverse/fxml/dashboard/admin-dashboard.fxml");
+                            applyFadeOutTransition(() -> {
+                                SceneManager.switchScene("/com/examverse/fxml/dashboard/admin-dashboard.fxml");
+                            });
                         });
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -138,14 +183,16 @@ public class LoginController implements Initializable {
                 }).start();
             } else {
                 System.out.println("🔐 Student logged in - Navigating to student dashboard");
-                showSuccess("Welcome " + user.getFullName() + "!");
+                showSuccess("✅ Welcome " + user.getFullName() + "!");
 
-                // Navigate to STUDENT dashboard
+                // Navigate to STUDENT dashboard with fade transition
                 new Thread(() -> {
                     try {
                         Thread.sleep(1000);
                         javafx.application.Platform.runLater(() -> {
-                            SceneManager.switchScene("/com/examverse/fxml/dashboard/student-dashboard.fxml");
+                            applyFadeOutTransition(() -> {
+                                SceneManager.switchScene("/com/examverse/fxml/dashboard/student-dashboard.fxml");
+                            });
                         });
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -155,7 +202,7 @@ public class LoginController implements Initializable {
 
         } else {
             // Login failed
-            showError("Invalid username/email or password");
+            showError("❌ Invalid username/email or password. Please try again.");
             loginButton.setDisable(false);
             loginButton.setText("Log In");
             passwordField.clear();
@@ -169,7 +216,9 @@ public class LoginController implements Initializable {
     @FXML
     private void handleSignupLink() {
         System.out.println("Navigate to signup page");
-        SceneManager.switchScene("/com/examverse/fxml/auth/signup.fxml");
+        applyFadeOutTransition(() -> {
+            SceneManager.switchScene("/com/examverse/fxml/auth/signup.fxml");
+        });
     }
 
     /**
@@ -178,7 +227,9 @@ public class LoginController implements Initializable {
     @FXML
     private void handleBack() {
         System.out.println("Back to landing page");
-        SceneManager.switchScene("/com/examverse/fxml/dashboard/dashboard-landing.fxml");
+        applyFadeOutTransition(() -> {
+            SceneManager.switchScene("/com/examverse/fxml/dashboard/dashboard-landing.fxml");
+        });
     }
 
     /**
@@ -187,7 +238,24 @@ public class LoginController implements Initializable {
     @FXML
     private void handleForgotPassword() {
         System.out.println("Navigate to forgot password page");
-        SceneManager.switchScene("/com/examverse/fxml/auth/forgot-password.fxml");
+        applyFadeOutTransition(() -> {
+            SceneManager.switchScene("/com/examverse/fxml/auth/forgot-password.fxml");
+        });
+    }
+
+    /**
+     * Apply fade-out transition before scene change
+     */
+    private void applyFadeOutTransition(Runnable onFinished) {
+        if (rootPane != null) {
+            FadeTransition fade = new FadeTransition(Duration.millis(300), rootPane);
+            fade.setFromValue(1.0);
+            fade.setToValue(0.0);
+            fade.setOnFinished(e -> onFinished.run());
+            fade.play();
+        } else {
+            onFinished.run();
+        }
     }
 
     /**
@@ -196,6 +264,7 @@ public class LoginController implements Initializable {
     private void showError(String message) {
         errorLabel.setText(message);
         errorLabel.setVisible(true);
+        errorLabel.setManaged(true);
         errorLabel.setStyle("-fx-text-fill: #ef4444;");
     }
 
@@ -205,6 +274,7 @@ public class LoginController implements Initializable {
     private void showSuccess(String message) {
         errorLabel.setText(message);
         errorLabel.setVisible(true);
+        errorLabel.setManaged(true);
         errorLabel.setStyle("-fx-text-fill: #22d3ee;");
     }
 }
