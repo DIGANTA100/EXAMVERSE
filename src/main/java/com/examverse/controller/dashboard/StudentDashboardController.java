@@ -397,7 +397,7 @@ public class StudentDashboardController implements Initializable {
     // ─────────────────────────────────────────────────────────────────────────
 
     private void setActiveButton(Button activeBtn) {
-      for (Button b : new Button[]{dashboardBtn, myExamsBtn, practiceBtn, resultsBtn, profileBtn, aiAssistantBtn}) {
+        for (Button b : new Button[]{dashboardBtn, myExamsBtn, practiceBtn, resultsBtn, profileBtn, aiAssistantBtn}) {
 
             if (b == null) continue;
             b.getStyleClass().removeAll("sidebar-btn-active");
@@ -704,8 +704,21 @@ public class StudentDashboardController implements Initializable {
         FlowPane examGrid = new FlowPane();
         examGrid.setHgap(20);
         examGrid.setVgap(20);
-        examGrid.setAlignment(Pos.TOP_LEFT);        // Add this
-        examGrid.setColumnHalignment(HPos.LEFT);     // Add this - prevents stretching
+        examGrid.setAlignment(Pos.TOP_LEFT);
+        examGrid.setColumnHalignment(HPos.LEFT);
+        // FIX: constrain FlowPane so cards wrap within the visible content area
+        // instead of stretching indefinitely to the right.
+        examGrid.setMaxWidth(Double.MAX_VALUE);
+        examGrid.setPrefWrapLength(900); // fallback; binding below overrides it
+        // Bind the wrap length to the ScrollPane viewport so it always fits on screen.
+        // We use contentScrollPane which has fitToWidth=true; subtracting the
+        // horizontal padding of the outer VBox (36*2 = 72) keeps it flush.
+        contentScrollPane.widthProperty().addListener((obs, oldW, newW) ->
+                examGrid.setPrefWrapLength(newW.doubleValue() - 72));
+        // Set immediately in case the scene is already laid out
+        if (contentScrollPane.getWidth() > 0) {
+            examGrid.setPrefWrapLength(contentScrollPane.getWidth() - 72);
+        }
         // All active exams
         List<Exam> allExams = examService.getAllActiveExams();
         final List<Exam> examRef = new java.util.ArrayList<>(allExams);
@@ -785,7 +798,8 @@ public class StudentDashboardController implements Initializable {
     private VBox createExamCard(Exam exam) {
         VBox card = new VBox(14);
         card.setPrefWidth(440);
-        card.setMaxWidth(440);
+        card.setMaxWidth(520);   // allow slight growth but never blow out the row
+        card.setMinWidth(300);   // shrink gracefully on small viewports
         card.setPadding(new Insets(22));
         String baseStyle = """
             -fx-background-color: rgba(30,41,59,0.72);
@@ -1966,4 +1980,3 @@ public class StudentDashboardController implements Initializable {
         a.showAndWait();
     }
 }
-
