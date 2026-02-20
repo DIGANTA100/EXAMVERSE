@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import javafx.geometry.HPos;
+import com.examverse.service.ai.GeminiService;
+import javafx.concurrent.Task;
 
 /**
  * StudentDashboardController — Fixed & Fully Featured
@@ -66,6 +68,7 @@ public class StudentDashboardController implements Initializable {
     @FXML private Button resultsBtn;
     @FXML private Button profileBtn;
     @FXML private Button logoutBtn;
+    @FXML private Button aiAssistantBtn;
 
     // Header
     @FXML private Label  welcomeLabel;
@@ -82,6 +85,15 @@ public class StudentDashboardController implements Initializable {
     private ExamService     examService;
     private QuestionService questionService;
     private AnswerService   answerService;
+
+    private GeminiService geminiService;
+
+    // AI chat state
+    private VBox          chatMessagesBox;    // scrollable message history container
+    private ScrollPane    chatScrollPane;     // so we can auto-scroll to bottom
+    private TextField     chatInputField;     // reuse across messages
+    private Button        chatSendBtn;        // to enable/disable during API call
+
 
     private User         currentUser;
     private StudentStats studentStats;
@@ -105,6 +117,7 @@ public class StudentDashboardController implements Initializable {
         examService     = new ExamService();
         questionService = new QuestionService();
         answerService   = new AnswerService();
+        geminiService = new GeminiService();
 
         currentUser = SessionManager.getInstance().getCurrentUser();
         if (currentUser == null) {
@@ -215,6 +228,7 @@ public class StudentDashboardController implements Initializable {
     @FXML private void handlePractice()   { setActiveButton(practiceBtn);  loadPracticeMode(); }
     @FXML private void handleResults()    { setActiveButton(resultsBtn);   loadResultsAnalytics(); }
     @FXML private void handleProfile()    { setActiveButton(profileBtn);   loadProfile(); }
+    @FXML private void handleAiAssistant() { setActiveButton(aiAssistantBtn); loadAiAssistant(); }
 
     @FXML
     private void handleLogout() {
@@ -383,7 +397,8 @@ public class StudentDashboardController implements Initializable {
     // ─────────────────────────────────────────────────────────────────────────
 
     private void setActiveButton(Button activeBtn) {
-        for (Button b : new Button[]{dashboardBtn, myExamsBtn, practiceBtn, resultsBtn, profileBtn}) {
+      for (Button b : new Button[]{dashboardBtn, myExamsBtn, practiceBtn, resultsBtn, profileBtn, aiAssistantBtn}) {
+
             if (b == null) continue;
             b.getStyleClass().removeAll("sidebar-btn-active");
             if (!b.getStyleClass().contains("sidebar-btn")) {
@@ -1687,6 +1702,262 @@ public class StudentDashboardController implements Initializable {
         a.showAndWait();
     }
 
+
+    private void loadAiAssistant() {
+        // Reset per-view state so switching away and back gives a fresh UI
+        // (the GeminiService keeps history across navigation — intentional)
+        chatMessagesBox = null;
+        chatScrollPane  = null;
+        chatInputField  = null;
+        chatSendBtn     = null;
+
+        VBox root = new VBox(0);
+        root.setPadding(new Insets(30));
+
+        // ── Title row ────────────────────────────────────────────────────────
+        HBox titleRow = new HBox(14);
+        titleRow.setAlignment(Pos.CENTER_LEFT);
+        VBox.setMargin(titleRow, new Insets(0, 0, 20, 0));
+
+        Label icon  = new Label("🤖");
+        icon.setStyle("-fx-font-size: 32px;");
+        VBox titleText = new VBox(2);
+        Label title = sectionTitle("AI Assistant");
+        Label sub   = new Label("Powered by Gemini • Ask anything about your studies");
+        sub.setStyle("-fx-text-fill: #64748b; -fx-font-size: 13px;");
+        titleText.getChildren().addAll(title, sub);
+
+        // New Chat button (top-right)
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        Button newChatBtn = miniBtn("✨  New Chat", "#22d3ee");
+        newChatBtn.setOnAction(e -> {
+            geminiService.clearHistory();
+            loadAiAssistant();
+        });
+
+        titleRow.getChildren().addAll(icon, titleText, spacer, newChatBtn);
+
+        // ── Suggestion chips ─────────────────────────────────────────────────
+        HBox chips = new HBox(10);
+        chips.setAlignment(Pos.CENTER_LEFT);
+        VBox.setMargin(chips, new Insets(0, 0, 18, 0));
+
+        String[] suggestions = {
+                "📖  Explain a concept",
+                "📝  Help me study",
+                "🧮  Solve a problem",
+                "💡  Study tips"
+        };
+        for (String s : suggestions) {
+            Button chip = new Button(s);
+            chip.getStyleClass().add("suggestion-chip");
+            chip.setOnAction(e -> sendAiMessage(s.replaceAll("^[^ ]+ {2}", "")));
+            chips.getChildren().add(chip);
+        }
+
+        // ── Chat messages container ───────────────────────────────────────────
+        chatMessagesBox = new VBox(14);
+        chatMessagesBox.setPadding(new Insets(20));
+        chatMessagesBox.setFillWidth(true);
+
+        chatScrollPane = new ScrollPane(chatMessagesBox);
+        chatScrollPane.setFitToWidth(true);
+        chatScrollPane.setFitToHeight(false);
+        chatScrollPane.setPrefHeight(420);
+        chatScrollPane.setMinHeight(300);
+        VBox.setVgrow(chatScrollPane, Priority.ALWAYS);
+        chatScrollPane.setStyle("""
+        -fx-background-color: rgba(15,23,42,0.6);
+        -fx-background-radius: 14;
+        -fx-border-color: rgba(51,65,85,0.4);
+        -fx-border-width: 1;
+        -fx-border-radius: 14;
+        -fx-padding: 0;
+        """);
+        chatScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        chatScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+        // Welcome message
+        appendAiMessage("👋  Hello! I'm **ExamVerse AI**, your personal study assistant.\n\n" +
+                "I can help you understand concepts, solve practice problems, " +
+                "create study plans, and answer questions about any subject. " +
+                "What would you like to explore today?");
+
+        // ── Input bar ─────────────────────────────────────────────────────────
+        HBox inputBar = new HBox(10);
+        inputBar.setAlignment(Pos.CENTER);
+        VBox.setMargin(inputBar, new Insets(14, 0, 0, 0));
+
+        chatInputField = new TextField();
+        chatInputField.setPromptText("Ask anything about your studies…");
+        chatInputField.getStyleClass().add("chat-input-field");
+        HBox.setHgrow(chatInputField, Priority.ALWAYS);
+        chatInputField.setOnAction(e -> sendAiMessage(chatInputField.getText()));
+
+        chatSendBtn = new Button("➤");
+        chatSendBtn.getStyleClass().add("chat-send-btn");
+        chatSendBtn.setOnAction(e -> sendAiMessage(chatInputField.getText()));
+
+        inputBar.getChildren().addAll(chatInputField, chatSendBtn);
+
+        // ── Assemble ─────────────────────────────────────────────────────────
+        root.getChildren().addAll(titleRow, chips, chatScrollPane, inputBar);
+
+        setContentWithAnimation(root);
+
+        // Focus the input field after layout
+        Platform.runLater(() -> chatInputField.requestFocus());
+    }
+
+    /**
+     * Sends a message to Gemini and appends the response bubble.
+     * The API call runs on a background thread to keep the UI responsive.
+     */
+    private void sendAiMessage(String text) {
+        if (text == null || text.isBlank()) return;
+        if (chatMessagesBox == null)        return; // guard: AI view not active
+
+        String message = text.trim();
+
+        // Show user bubble
+        appendUserMessage(message);
+        chatInputField.clear();
+        chatInputField.setDisable(true);
+        chatSendBtn.setDisable(true);
+
+        // Show typing indicator
+        HBox typingRow = buildTypingIndicator();
+        chatMessagesBox.getChildren().add(typingRow);
+        scrollChatToBottom();
+
+        // ── Background task ───────────────────────────────────────────────────
+        Task<String> task = new Task<>() {
+            @Override
+            protected String call() {
+                return geminiService.sendMessage(message);
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            chatMessagesBox.getChildren().remove(typingRow);
+            String reply = task.getValue();
+            if (reply != null && reply.startsWith("ERROR:")) {
+                appendErrorMessage(reply.substring(6).trim());
+            } else {
+                appendAiMessage(reply != null ? reply : "No response received.");
+            }
+            chatInputField.setDisable(false);
+            chatSendBtn.setDisable(false);
+            chatInputField.requestFocus();
+            scrollChatToBottom();
+        });
+
+        task.setOnFailed(e -> {
+            chatMessagesBox.getChildren().remove(typingRow);
+            appendErrorMessage("Connection failed. Please check your internet and try again.");
+            chatInputField.setDisable(false);
+            chatSendBtn.setDisable(false);
+            scrollChatToBottom();
+        });
+
+        Thread t = new Thread(task, "gemini-api-thread");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    /** Append a user chat bubble (right-aligned). */
+    private void appendUserMessage(String text) {
+        Label bubble = new Label(text);
+        bubble.getStyleClass().add("chat-bubble-user");
+        bubble.setWrapText(true);
+
+        HBox row = new HBox(bubble);
+        row.setAlignment(Pos.CENTER_RIGHT);
+        chatMessagesBox.getChildren().add(row);
+        scrollChatToBottom();
+    }
+
+    /** Append an AI chat bubble (left-aligned). */
+    private void appendAiMessage(String text) {
+        // Replace **bold** markers since JavaFX Label doesn't render markdown
+        String clean = text.replaceAll("\\*\\*(.*?)\\*\\*", "$1");
+
+        HBox avatarBox = new HBox(8);
+        avatarBox.setAlignment(Pos.TOP_LEFT);
+
+        Label avatar = new Label("🤖");
+        avatar.setStyle("-fx-font-size: 20px; -fx-padding: 2 0 0 0;");
+
+        Label bubble = new Label(clean);
+        bubble.getStyleClass().add("chat-bubble-ai");
+        bubble.setWrapText(true);
+
+        avatarBox.getChildren().addAll(avatar, bubble);
+
+        HBox row = new HBox(avatarBox);
+        row.setAlignment(Pos.CENTER_LEFT);
+        chatMessagesBox.getChildren().add(row);
+        scrollChatToBottom();
+    }
+
+    /** Append an error bubble. */
+    private void appendErrorMessage(String errorText) {
+        Label bubble = new Label("⚠️  " + errorText);
+        bubble.getStyleClass().add("chat-bubble-error");
+        bubble.setWrapText(true);
+
+        HBox row = new HBox(bubble);
+        row.setAlignment(Pos.CENTER_LEFT);
+        chatMessagesBox.getChildren().add(row);
+        scrollChatToBottom();
+    }
+
+    /** Animated three-dot typing indicator. */
+    private HBox buildTypingIndicator() {
+        HBox dotsBox = new HBox(5);
+        dotsBox.setAlignment(Pos.CENTER_LEFT);
+        dotsBox.setPadding(new Insets(10, 16, 10, 16));
+        dotsBox.setStyle("""
+        -fx-background-color: rgba(30,41,59,0.85);
+        -fx-background-radius: 18 18 18 4;
+        -fx-border-color: rgba(51,65,85,0.5);
+        -fx-border-width: 1;
+        -fx-border-radius: 18 18 18 4;
+        """);
+
+        for (int i = 0; i < 3; i++) {
+            Circle dot = new Circle(4);
+            dot.setFill(javafx.scene.paint.Color.web("#22d3ee"));
+            FadeTransition ft = new FadeTransition(Duration.millis(500), dot);
+            ft.setFromValue(0.2);
+            ft.setToValue(1.0);
+            ft.setCycleCount(Animation.INDEFINITE);
+            ft.setAutoReverse(true);
+            ft.setDelay(Duration.millis(i * 180));
+            ft.play();
+            dotsBox.getChildren().add(dot);
+        }
+
+        Label avatar = new Label("🤖");
+        avatar.setStyle("-fx-font-size: 20px; -fx-padding: 2 8 0 0;");
+
+        HBox row = new HBox(8, avatar, dotsBox);
+        row.setAlignment(Pos.CENTER_LEFT);
+        return row;
+    }
+
+    /** Scroll the chat ScrollPane to the very bottom. */
+    private void scrollChatToBottom() {
+        Platform.runLater(() -> {
+            if (chatScrollPane != null) {
+                chatScrollPane.layout();
+                chatScrollPane.setVvalue(1.0);
+            }
+        });
+    }
+
+
     private void showInfoAlert(String title, String msg) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle(title);
@@ -1695,3 +1966,4 @@ public class StudentDashboardController implements Initializable {
         a.showAndWait();
     }
 }
+

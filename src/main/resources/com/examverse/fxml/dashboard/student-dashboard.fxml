@@ -51,6 +51,8 @@
 
                 <Button fx:id="profileBtn" text="👤  Profile"
                         styleClass="sidebar-btn" onAction="#handleProfile"/>
+                <Button fx:id="aiAssistantBtn" text="🤖  AI Assistant"
+                        styleClass="sidebar-btn" onAction="#handleAiAssistant"/>
             </VBox>
 
             <Region VBox.vgrow="ALWAYS"/>
