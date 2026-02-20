@@ -32,7 +32,7 @@ public class EvaluationService {
     public boolean evaluateExam(int attemptId) {
         try {
             // Get all answers for this attempt
-            List<Answer> answers = answerService.getAnswersByAttemptId(attemptId);
+            List<Answer> answers = answerService.getDetailedAnswersByAttemptId(attemptId);
 
             int totalMarks = 0;
             int obtainedMarks = 0;

@@ -187,12 +187,14 @@ public class DashboardLandingController implements Initializable {
     private void handleLogin() {
         System.out.println("Login clicked - Navigate to login screen");
         SceneManager.switchScene("/com/examverse/fxml/auth/login.fxml");  // ← ADD THIS LINE
+        //SceneManager.switchScene("/com/examverse/fxml/auth/sliding-auth.fxml");
     }
 
     @FXML
     private void handleSignup() {
         System.out.println("Signup clicked - Navigate to signup screen");
         SceneManager.switchScene("/com/examverse/fxml/auth/signup.fxml");  // ← ADD THIS LINE
+       // SceneManager.switchScene("/com/examverse/fxml/auth/sliding-auth.fxml");
     }
 
     @FXML

@@ -42,7 +42,7 @@ public class EmailConfig {
      *
      * Example: "abcd efgh ijkl mnop" (remove spaces)
      */
-    public static final String SENDER_PASSWORD = "yhnkxrgyziqvzvau";
+    public static final String SENDER_PASSWORD = "dnlvwbartnmtqeeq";
 
     /**
      * Sender display name

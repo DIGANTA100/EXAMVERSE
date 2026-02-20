@@ -29,6 +29,21 @@
                 <Label fx:id="examTitleLabel" text="Exam Title"
                        styleClass="welcome-label" HBox.hgrow="ALWAYS"/>
 
+                <!-- Save & Exit button sits beside the timer so it's always visible -->
+                <Button fx:id="saveExitBtn"
+                        text="💾 Save &amp; Exit"
+                        onAction="#handleSaveAndExit"
+                        style="-fx-background-color: rgba(148,163,184,0.15);
+                               -fx-text-fill: #94a3b8;
+                               -fx-font-size: 13px;
+                               -fx-font-weight: 600;
+                               -fx-padding: 8 18;
+                               -fx-background-radius: 8;
+                               -fx-cursor: hand;
+                               -fx-border-color: rgba(148,163,184,0.35);
+                               -fx-border-width: 1;
+                               -fx-border-radius: 8;"/>
+
                 <Label fx:id="timerLabel" text="⏱️ 01:00:00"
                        style="-fx-text-fill: #22d3ee; -fx-font-size: 20px; -fx-font-weight: bold;"/>
             </HBox>
@@ -111,6 +126,7 @@
 
                     <Region HBox.hgrow="ALWAYS"/>
 
+                    <!-- Next / Review — label changes dynamically in controller -->
                     <Button fx:id="nextBtn" text="Next →"
                             styleClass="btn-primary" onAction="#handleNext">
                         <padding>
@@ -149,6 +165,7 @@
                 </FlowPane>
             </ScrollPane>
 
+            <!-- Legend -->
             <VBox spacing="10">
                 <Label text="Legend:" style="-fx-text-fill: #94a3b8; -fx-font-size: 12px;"/>
 
@@ -167,6 +184,22 @@
                     <Label text="Current" style="-fx-text-fill: #94a3b8; -fx-font-size: 11px;"/>
                 </HBox>
             </VBox>
+
+            <!-- Save & Exit in sidebar too — easier to find during exam -->
+            <Region VBox.vgrow="ALWAYS"/>
+            <Button text="💾 Save &amp; Exit"
+                    onAction="#handleSaveAndExit"
+                    maxWidth="Infinity"
+                    style="-fx-background-color: rgba(148,163,184,0.12);
+                           -fx-text-fill: #94a3b8;
+                           -fx-font-size: 12px;
+                           -fx-font-weight: 600;
+                           -fx-padding: 9 0;
+                           -fx-background-radius: 7;
+                           -fx-cursor: hand;
+                           -fx-border-color: rgba(148,163,184,0.3);
+                           -fx-border-width: 1;
+                           -fx-border-radius: 7;"/>
         </VBox>
     </right>
 

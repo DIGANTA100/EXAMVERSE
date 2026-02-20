@@ -117,7 +117,9 @@ public class SessionManager {
      * @param key Attribute name
      */
     public void removeAttribute(String key) {
-        attributes.remove(key);
+        if (key != null) {
+            attributes.remove(key);   // assuming your map is called "attributes"
+        }
     }
 
     /**

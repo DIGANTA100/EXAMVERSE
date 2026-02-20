@@ -13,12 +13,40 @@ import java.util.Objects;
 /**
  * SceneManager - Utility class for managing scene transitions
  * Handles switching between different screens in the application
+ *
+ * BUG FIX: sceneCache was returning the same Scene object for exam-taking.fxml
+ * on every retake in the same session. Because JavaFX only calls a controller's
+ * initialize() when FXMLLoader.load() is invoked, serving a cached scene meant
+ * ExamController.initialize() NEVER ran on retake — the old frozen timer, old
+ * question text, and old radio-button selections all stayed on screen unchanged.
+ *
+ * Fix: any path listed in NEVER_CACHE is always loaded via a fresh FXMLLoader,
+ * guaranteeing initialize() runs every time. All other scenes still benefit
+ * from caching as before — nothing else changes.
  */
 public class SceneManager {
 
     private static Stage primaryStage;
     private static Map<String, Scene> sceneCache = new HashMap<>();
     private static boolean cacheEnabled = true;
+
+    /**
+     * Paths that must NEVER be served from cache — their controllers must
+     * re-initialize on every visit (e.g. exam state must always be fresh).
+     */
+    private static final String[] NEVER_CACHE = {
+            "exam-taking",  // ExamController must re-initialize on every new/retake
+            "exam-result"   // ResultController must always show the latest result
+    };
+
+    /** Returns true if this path should always bypass the cache. */
+    private static boolean neverCache(String fxmlPath) {
+        if (fxmlPath == null) return false;
+        for (String key : NEVER_CACHE) {
+            if (fxmlPath.contains(key)) return true;
+        }
+        return false;
+    }
 
     /**
      * Initialize the SceneManager with primary stage
@@ -44,30 +72,37 @@ public class SceneManager {
         try {
             Scene scene;
 
-            // Check cache first
-            if (cacheEnabled && sceneCache.containsKey(fxmlPath)) {
+            // BUG FIX: skip cache for scenes that must re-initialize every time.
+            // For all other scenes, caching behaviour is unchanged.
+            boolean useCache = cacheEnabled && !neverCache(fxmlPath);
+
+            if (useCache && sceneCache.containsKey(fxmlPath)) {
+                // Serve from cache (login, dashboard, etc.)
                 scene = sceneCache.get(fxmlPath);
             } else {
-                // Load FXML
-                Parent root = FXMLLoader.load(
+                // Always use a brand-new FXMLLoader so initialize() is called.
+                // Previously: FXMLLoader.load(url) — static method, no controller access.
+                // Now:        new FXMLLoader(url).load() — same result, fresh every time.
+                FXMLLoader loader = new FXMLLoader(
                         Objects.requireNonNull(SceneManager.class.getResource(fxmlPath))
                 );
+                Parent root = loader.load();
                 scene = new Scene(root, primaryStage.getWidth(), primaryStage.getHeight());
 
                 // Apply CSS if provided
                 if (cssPath != null && !cssPath.isEmpty()) {
                     scene.getStylesheets().add(
-                            Objects.requireNonNull(SceneManager.class.getResource(cssPath)).toExternalForm()
+                            Objects.requireNonNull(
+                                    SceneManager.class.getResource(cssPath)).toExternalForm()
                     );
                 }
 
-                // Cache the scene
-                if (cacheEnabled) {
+                // Only cache if allowed for this path
+                if (useCache) {
                     sceneCache.put(fxmlPath, scene);
                 }
             }
 
-            // Set the scene
             primaryStage.setScene(scene);
 
         } catch (IOException e) {
