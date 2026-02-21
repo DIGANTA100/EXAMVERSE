@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+
+<StackPane styleClass="page-root" stylesheets="@../../css/landing-pages.css"
+           xmlns="http://javafx.com/javafx/17.0.12"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.examverse.controller.dashboard.AboutController">
+
+    <VBox styleClass="page-background" StackPane.alignment="CENTER" />
+
+    <!-- Full page scroll -->
+    <ScrollPane fitToWidth="true" styleClass="page-scroll" StackPane.alignment="TOP_CENTER">
+
+        <VBox spacing="0">
+
+            <!-- ====== NAV BAR ====== -->
+            <HBox alignment="CENTER_LEFT" spacing="20" styleClass="nav-bar">
+                <padding><Insets top="22" bottom="22" left="60" right="60"/></padding>
+
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <VBox alignment="CENTER_LEFT" spacing="2">
+                        <HBox styleClass="logo-box">
+                            <padding><Insets top="8" bottom="8" left="12" right="12"/></padding>
+                        </HBox>
+                    </VBox>
+                    <VBox alignment="CENTER_LEFT" spacing="-2">
+                        <Label text="EXAMVERSE" styleClass="brand-title"/>
+                        <Label text="Neural Core System" styleClass="brand-subtitle"/>
+                    </VBox>
+                </HBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <Button text="← Back to Home" onAction="#handleBack" styleClass="back-nav-button">
+                    <padding><Insets top="9" bottom="9" left="18" right="18"/></padding>
+                </Button>
+            </HBox>
+
+            <!-- ====== CONTENT ====== -->
+            <VBox fx:id="rootPane" alignment="TOP_CENTER" spacing="60">
+                <padding><Insets top="70" bottom="80" left="100" right="100"/></padding>
+
+                <!-- Page Header -->
+                <VBox alignment="CENTER" spacing="10" styleClass="page-header">
+                    <Label text="ABOUT" styleClass="page-eyebrow"/>
+                    <Label text="The Minds Behind ExamVerse" styleClass="page-title"/>
+                    <Label text="Built with passion by students of BUET, guided by excellence."
+                           styleClass="page-description" textAlignment="CENTER"/>
+                </VBox>
+
+                <Region prefHeight="10"/>
+
+                <!-- ====== SUPERVISOR SECTION ====== -->
+                <VBox spacing="18">
+                    <Label text="SUPERVISOR" styleClass="section-label"/>
+                    <Region styleClass="section-divider-glow" minWidth="60" maxWidth="60"/>
+
+                    <VBox styleClass="supervisor-card">
+                        <padding><Insets top="36" bottom="36" left="40" right="40"/></padding>
+                        <HBox alignment="CENTER_LEFT" spacing="40">
+
+                            <!-- Left: Title + Name -->
+                            <VBox spacing="14" HBox.hgrow="ALWAYS">
+
+                                <HBox styleClass="supervisor-badge">
+                                    <padding><Insets top="5" bottom="5" left="12" right="12"/></padding>
+                                    <Label text="PROJECT SUPERVISOR" styleClass="supervisor-badge-text"/>
+                                </HBox>
+
+                                <Label text="Khaled Mahmud Shahriar" styleClass="supervisor-name"/>
+                                <Label text="Assistant Professor, Department of CSE" styleClass="supervisor-title"/>
+
+                                <Region prefHeight="6"/>
+
+                                <!-- Education -->
+                                <VBox spacing="10">
+                                    <Label text="EDUCATION" styleClass="info-label"/>
+
+                                    <VBox spacing="3">
+                                        <Label text="M.Sc. in Computer Science and Engineering, 2008" styleClass="info-value"/>
+                                        <Label text="Bangladesh University of Engineering and Technology" styleClass="info-value-muted"/>
+                                    </VBox>
+                                    <VBox spacing="3">
+                                        <Label text="B.Sc. in Computer Science and Engineering, 2004" styleClass="info-value"/>
+                                        <Label text="Bangladesh University of Engineering and Technology" styleClass="info-value-muted"/>
+                                    </VBox>
+                                </VBox>
+
+                            </VBox>
+
+                            <!-- Right: Research Interests -->
+                            <VBox spacing="14" minWidth="220">
+                                <Label text="RESEARCH INTERESTS" styleClass="info-label"/>
+                                <VBox spacing="8">
+                                    <HBox styleClass="research-tag">
+                                        <padding><Insets top="7" bottom="7" left="14" right="14"/></padding>
+                                        <Label text="Graph Drawing" styleClass="research-tag-text"/>
+                                    </HBox>
+                                    <HBox styleClass="research-tag">
+                                        <padding><Insets top="7" bottom="7" left="14" right="14"/></padding>
+                                        <Label text="Networks" styleClass="research-tag-text"/>
+                                    </HBox>
+                                    <HBox styleClass="research-tag">
+                                        <padding><Insets top="7" bottom="7" left="14" right="14"/></padding>
+                                        <Label text="Computer Security" styleClass="research-tag-text"/>
+                                    </HBox>
+                                </VBox>
+
+                                <Region prefHeight="8"/>
+                                <Label text="INSTITUTION" styleClass="info-label"/>
+                                <Label text="BUET — Dhaka, Bangladesh" styleClass="info-value-muted"/>
+                            </VBox>
+
+                        </HBox>
+                    </VBox>
+                </VBox>
+
+                <!-- ====== DEVELOPERS SECTION ====== -->
+                <VBox spacing="18">
+                    <Label text="DEVELOPERS" styleClass="section-label"/>
+                    <Region styleClass="section-divider-glow" minWidth="60" maxWidth="60"/>
+
+                    <!-- Two developer cards side by side -->
+                    <HBox spacing="24" alignment="TOP_CENTER">
+
+
+                        <VBox styleClass="developer-card" HBox.hgrow="ALWAYS" spacing="0">
+                            <padding><Insets top="32" bottom="32" left="32" right="32"/></padding>
+                            <VBox spacing="20">
+
+                                <!-- Avatar + Name -->
+                                <VBox alignment="CENTER" spacing="14">
+                                    <StackPane>
+                                        <VBox alignment="CENTER" styleClass="dev-avatar" minWidth="110" minHeight="110" maxWidth="110" maxHeight="110">
+                                            <ImageView fx:id="prottoyImage" fitWidth="110" fitHeight="110" preserveRatio="false" smooth="true">
+                                                <clip>
+                                                    <!-- clipping done in controller -->
+                                                </clip>
+                                            </ImageView>
+                                        </VBox>
+                                    </StackPane>
+                                    <VBox alignment="CENTER" spacing="6">
+                                        <Label text="Prottoy Barua" styleClass="dev-name"/>
+                                        <Label text="ID: 2405099" styleClass="dev-id"/>
+                                        <HBox styleClass="dev-role-badge" alignment="CENTER">
+                                            <padding><Insets top="4" bottom="4" left="10" right="10"/></padding>
+                                            <Label text="BACKEND ENGINEER" styleClass="dev-role-text"/>
+                                        </HBox>
+                                    </VBox>
+                                </VBox>
+
+                                <Region styleClass="section-divider"/>
+
+                                <!-- Details -->
+                                <VBox spacing="12">
+                                    <VBox spacing="3">
+                                        <Label text="DEPARTMENT" styleClass="dev-detail-label"/>
+                                        <Label text="Computer Science &amp; Engineering" styleClass="dev-detail-value"/>
+                                        <Label text="Bangladesh University of Engineering and Technology" styleClass="dev-detail-value" wrapText="true"/>
+                                    </VBox>
+                                    <VBox spacing="3">
+                                        <Label text="LEVEL &amp; TERM" styleClass="dev-detail-label"/>
+                                        <Label text="Level 1, Term 2" styleClass="dev-detail-value"/>
+                                    </VBox>
+                                    <VBox spacing="3">
+                                        <Label text="EMAIL" styleClass="dev-detail-label"/>
+                                        <Label text="prottoybarua2103@gmail.com" styleClass="dev-detail-value"/>
+                                    </VBox>
+                                </VBox>
+
+                                <Region styleClass="section-divider"/>
+
+                                <!-- Contributions -->
+                                <VBox spacing="8">
+                                    <Label text="CONTRIBUTIONS" styleClass="dev-detail-label"/>
+                                    <Label text="→  Backend logic &amp; services" styleClass="dev-contrib-item"/>
+                                    <Label text="→  Database handling &amp; DAO layer" styleClass="dev-contrib-item"/>
+                                    <Label text="→  Authentication system" styleClass="dev-contrib-item"/>
+                                    <Label text="→  Exam engine &amp; evaluation logic" styleClass="dev-contrib-item"/>
+                                </VBox>
+
+                                <Region styleClass="section-divider"/>
+
+                                <!-- GitHub -->
+                                <Button text="⌥  github.com/prottoybarua99" styleClass="dev-github-link" maxWidth="Infinity">
+                                    <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
+                                </Button>
+
+                            </VBox>
+                        </VBox>
+
+
+                        <VBox styleClass="developer-card" HBox.hgrow="ALWAYS" spacing="0">
+                            <padding><Insets top="32" bottom="32" left="32" right="32"/></padding>
+                            <VBox spacing="20">
+
+                                <!-- Avatar + Name -->
+                                <VBox alignment="CENTER" spacing="14">
+                                    <StackPane>
+                                        <VBox alignment="CENTER" styleClass="dev-avatar" minWidth="110" minHeight="110" maxWidth="110" maxHeight="110">
+                                            <ImageView fx:id="digantaImage" fitWidth="110" fitHeight="110" preserveRatio="false" smooth="true"/>
+                                        </VBox>
+                                    </StackPane>
+                                    <VBox alignment="CENTER" spacing="6">
+                                        <Label text="Ajmain Fayek Diganta" styleClass="dev-name"/>
+                                        <Label text="ID: 2405100" styleClass="dev-id"/>
+                                        <HBox styleClass="dev-role-badge" alignment="CENTER">
+                                            <padding><Insets top="4" bottom="4" left="10" right="10"/></padding>
+                                            <Label text="FRONTEND ENGINEER" styleClass="dev-role-text"/>
+                                        </HBox>
+                                    </VBox>
+                                </VBox>
+
+                                <Region styleClass="section-divider"/>
+
+                                <!-- Details -->
+                                <VBox spacing="12">
+                                    <VBox spacing="3">
+                                        <Label text="DEPARTMENT" styleClass="dev-detail-label"/>
+                                        <Label text="Computer Science &amp; Engineering" styleClass="dev-detail-value"/>
+                                        <Label text="Bangladesh University of Engineering and Technology" styleClass="dev-detail-value" wrapText="true"/>
+                                    </VBox>
+                                    <VBox spacing="3">
+                                        <Label text="LEVEL &amp; TERM" styleClass="dev-detail-label"/>
+                                        <Label text="Level 1, Term 2" styleClass="dev-detail-value"/>
+                                    </VBox>
+                                    <VBox spacing="3">
+                                        <Label text="EMAIL" styleClass="dev-detail-label"/>
+                                        <Label text="ajmainfayekdiganta@gmail.com" styleClass="dev-detail-value"/>
+                                    </VBox>
+                                </VBox>
+
+                                <Region styleClass="section-divider"/>
+
+                                <!-- Contributions -->
+                                <VBox spacing="8">
+                                    <Label text="CONTRIBUTIONS" styleClass="dev-detail-label"/>
+                                    <Label text="→  Frontend UI — JavaFX, FXML, CSS" styleClass="dev-contrib-item"/>
+                                    <Label text="→  Scene transitions &amp; animations" styleClass="dev-contrib-item"/>
+                                    <Label text="→  Intro cinematic design" styleClass="dev-contrib-item"/>
+                                    <Label text="→  Visual design system" styleClass="dev-contrib-item"/>
+                                </VBox>
+
+                                <Region styleClass="section-divider"/>
+
+                                <!-- GitHub -->
+                                <Button text="⌥  github.com/DIGANTA100" styleClass="dev-github-link" maxWidth="Infinity">
+                                    <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
+                                </Button>
+
+                            </VBox>
+                        </VBox>
+
+                    </HBox>
+                </VBox>
+
+                <!-- ====== PROJECT INFO ====== -->
+                <VBox styleClass="project-info-card">
+                    <padding><Insets top="30" bottom="30" left="40" right="40"/></padding>
+                    <VBox spacing="22">
+
+                        <HBox alignment="CENTER_LEFT" spacing="40">
+
+                            <VBox spacing="18" HBox.hgrow="ALWAYS">
+                                <Label text="PROJECT DETAILS" styleClass="project-info-title"/>
+                                <HBox spacing="50">
+                                    <VBox spacing="4">
+                                        <Label text="TITLE" styleClass="dev-detail-label"/>
+                                        <Label text="ExamVerse" styleClass="info-value"/>
+                                    </VBox>
+                                    <VBox spacing="4">
+                                        <Label text="COURSE" styleClass="dev-detail-label"/>
+                                        <Label text="CSE Level 1, Term 2" styleClass="info-value"/>
+                                    </VBox>
+                                    <VBox spacing="4">
+                                        <Label text="INSTITUTION" styleClass="dev-detail-label"/>
+                                        <Label text="BUET, Dhaka" styleClass="info-value"/>
+                                    </VBox>
+                                    <VBox spacing="4">
+                                        <Label text="YEAR" styleClass="dev-detail-label"/>
+                                        <Label text="2026" styleClass="info-value"/>
+                                    </VBox>
+                                </HBox>
+                            </VBox>
+
+                        </HBox>
+
+                        <Region styleClass="section-divider"/>
+
+                        <!-- Tech Stack -->
+                        <VBox spacing="10">
+                            <Label text="TECHNOLOGIES" styleClass="project-info-title"/>
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="Java" styleClass="tech-chip-text"/></HBox>
+                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="JavaFX" styleClass="tech-chip-text"/></HBox>
+                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="FXML" styleClass="tech-chip-text"/></HBox>
+                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="CSS" styleClass="tech-chip-text"/></HBox>
+                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="Gradle" styleClass="tech-chip-text"/></HBox>
+                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="File Storage / DAO" styleClass="tech-chip-text"/></HBox>
+                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="MediaPlayer" styleClass="tech-chip-text"/></HBox>
+                            </HBox>
+                        </VBox>
+
+                        <Region styleClass="section-divider"/>
+
+                        <Label text="&quot;From gameplay to real-world systems — our journey from Space Shooter to ExamVerse.&quot;"
+                               styleClass="tagline-text" wrapText="true" textAlignment="CENTER" alignment="CENTER" maxWidth="Infinity"/>
+
+                    </VBox>
+                </VBox>
+
+            </VBox>
+
+            <!-- Footer -->
+            <HBox alignment="CENTER" styleClass="footer-bar">
+                <padding><Insets top="20" bottom="20" left="60" right="60"/></padding>
+                <Label text="© 2026 ExamVerse — Department of CSE, BUET" styleClass="copyright"/>
+            </HBox>
+
+        </VBox>
+    </ScrollPane>
+
+</StackPane>

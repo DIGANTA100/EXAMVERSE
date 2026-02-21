@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane styleClass="page-root" stylesheets="@../../css/landing-pages.css"
+           xmlns="http://javafx.com/javafx/17.0.12"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.examverse.controller.dashboard.FaqController">
+
+    <VBox styleClass="page-background" StackPane.alignment="CENTER"/>
+
+    <ScrollPane fitToWidth="true" styleClass="page-scroll" StackPane.alignment="TOP_CENTER">
+        <VBox spacing="0">
+
+            <!-- NAV BAR -->
+            <HBox alignment="CENTER_LEFT" spacing="20" styleClass="nav-bar">
+                <padding><Insets top="22" bottom="22" left="60" right="60"/></padding>
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <VBox alignment="CENTER_LEFT" spacing="2">
+                        <HBox styleClass="logo-box"><padding><Insets top="8" bottom="8" left="12" right="12"/></padding></HBox>
+                    </VBox>
+                    <VBox alignment="CENTER_LEFT" spacing="-2">
+                        <Label text="EXAMVERSE" styleClass="brand-title"/>
+                        <Label text="Neural Core System" styleClass="brand-subtitle"/>
+                    </VBox>
+                </HBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="← Back to Home" onAction="#handleBack" styleClass="back-nav-button">
+                    <padding><Insets top="9" bottom="9" left="18" right="18"/></padding>
+                </Button>
+            </HBox>
+
+            <!-- CONTENT -->
+            <VBox fx:id="rootPane" alignment="TOP_CENTER" spacing="60">
+                <padding><Insets top="70" bottom="80" left="120" right="120"/></padding>
+
+                <!-- Header -->
+                <VBox alignment="CENTER" spacing="10" styleClass="page-header">
+                    <Label text="FAQ" styleClass="page-eyebrow"/>
+                    <Label text="Frequently Asked Questions" styleClass="page-title"/>
+                    <Label text="Answers to the most common questions about ExamVerse."
+                           styleClass="page-description" textAlignment="CENTER"/>
+                </VBox>
+
+                <!-- ====== ACCOUNTS & ACCESS ====== -->
+                <VBox spacing="16">
+                    <Label text="ACCOUNTS &amp; ACCESS" styleClass="section-label"/>
+                    <Region styleClass="section-divider-glow" minWidth="60" maxWidth="60"/>
+
+                    <VBox styleClass="faq-card">
+                        <padding><Insets top="24" bottom="24" left="28" right="28"/></padding>
+                        <HBox spacing="20" alignment="TOP_LEFT">
+                            <Label text="01" styleClass="faq-number"/>
+                            <VBox spacing="10">
+                                <Label text="How do I create an account?" styleClass="faq-question"/>
+                                <Label text="Click 'Sign Up' on the landing page. Fill in your full name, username, email, and password. Select your role (Student or Admin/Teacher), accept the Terms and Conditions, and submit. You'll receive a confirmation email after successful registration."
+                                       styleClass="faq-answer" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
+                    <VBox styleClass="faq-card">
+                        <padding><Insets top="24" bottom="24" left="28" right="28"/></padding>
+                        <HBox spacing="20" alignment="TOP_LEFT">
+                            <Label text="02" styleClass="faq-number"/>
+                            <VBox spacing="10">
+                                <Label text="I selected the wrong role at signup. What do I do?" styleClass="faq-question"/>
+                                <Label text="You'll need to create a new account with the correct role selected. Role is locked at registration and cannot be changed after signup. Contact the admin if you need your account removed."
+                                       styleClass="faq-answer" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
+                    <VBox styleClass="faq-card">
+                        <padding><Insets top="24" bottom="24" left="28" right="28"/></padding>
+                        <HBox spacing="20" alignment="TOP_LEFT">
+                            <Label text="03" styleClass="faq-number"/>
+                            <VBox spacing="10">
+                                <Label text="I forgot my password. How do I reset it?" styleClass="faq-question"/>
+                                <Label text="On the Login page, click 'Forgot Password'. Enter your registered email address. You'll receive a password reset link by email. Click the link, enter your new password, and you're back in."
+                                       styleClass="faq-answer" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
+                    <VBox styleClass="faq-card">
+                        <padding><Insets top="24" bottom="24" left="28" right="28"/></padding>
+                        <HBox spacing="20" alignment="TOP_LEFT">
+                            <Label text="04" styleClass="faq-number"/>
+                            <VBox spacing="10">
+                                <Label text="Can I log in with my email instead of my username?" styleClass="faq-question"/>
+                                <Label text="Yes. The login screen accepts either your username or your registered email address in the username field."
+                                       styleClass="faq-answer" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </VBox>
+
+                <!-- ====== EXAMS ====== -->
+                <VBox spacing="16">
+                    <Label text="EXAMS &amp; RESULTS" styleClass="section-label"/>
+                    <Region styleClass="section-divider-glow" minWidth="60" maxWidth="60"/>
+
+                    <VBox styleClass="faq-card">
+                        <padding><Insets top="24" bottom="24" left="28" right="28"/></padding>
+                        <HBox spacing="20" alignment="TOP_LEFT">
+                            <Label text="05" styleClass="faq-number"/>
+                            <VBox spacing="10">
+                                <Label text="What happens if the timer runs out during an exam?" styleClass="faq-question"/>
+                                <Label text="When the countdown timer hits zero, the exam is automatically submitted with whatever answers you have selected. Your result is then immediately calculated and displayed."
+                                       styleClass="faq-answer" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
+                    <VBox styleClass="faq-card">
+                        <padding><Insets top="24" bottom="24" left="28" right="28"/></padding>
+                        <HBox spacing="20" alignment="TOP_LEFT">
+                            <Label text="06" styleClass="faq-number"/>
+                            <VBox spacing="10">
+                                <Label text="Can I retake an exam?" styleClass="faq-question"/>
+                                <Label text="Yes. After viewing your result, you can retake the exam from the result screen. Each attempt is tracked independently and the exam state is fully reset so you start fresh."
+                                       styleClass="faq-answer" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
+                    <VBox styleClass="faq-card">
+                        <padding><Insets top="24" bottom="24" left="28" right="28"/></padding>
+                        <HBox spacing="20" alignment="TOP_LEFT">
+                            <Label text="07" styleClass="faq-number"/>
+                            <VBox spacing="10">
+                                <Label text="Where can I see my past exam results?" styleClass="faq-question"/>
+                                <Label text="From your Student Dashboard, navigate to the Results section. All past attempts are listed with your score, date, and pass/fail status."
+                                       styleClass="faq-answer" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
+                    <VBox styleClass="faq-card">
+                        <padding><Insets top="24" bottom="24" left="28" right="28"/></padding>
+                        <HBox spacing="20" alignment="TOP_LEFT">
+                            <Label text="08" styleClass="faq-number"/>
+                            <VBox spacing="10">
+                                <Label text="What is Practice Mode?" styleClass="faq-question"/>
+                                <Label text="Practice Mode lets you go through questions without any time limit or grade. You receive immediate feedback on each answer. It is designed to help you prepare before taking a graded exam."
+                                       styleClass="faq-answer" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </VBox>
+
+                <!-- ====== ADMIN ====== -->
+                <VBox spacing="16">
+                    <Label text="ADMIN &amp; MANAGEMENT" styleClass="section-label"/>
+                    <Region styleClass="section-divider-glow" minWidth="60" maxWidth="60"/>
+
+                    <VBox styleClass="faq-card">
+                        <padding><Insets top="24" bottom="24" left="28" right="28"/></padding>
+                        <HBox spacing="20" alignment="TOP_LEFT">
+                            <Label text="09" styleClass="faq-number"/>
+                            <VBox spacing="10">
+                                <Label text="How does an Admin add new questions?" styleClass="faq-question"/>
+                                <Label text="Log in as Admin/Teacher, go to the Admin Dashboard, and open the Question Manager. Click 'Add Question', fill in the question text, four answer options, mark the correct answer, and assign a subject and difficulty. Save to add it to the question bank."
+                                       styleClass="faq-answer" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
+                    <VBox styleClass="faq-card">
+                        <padding><Insets top="24" bottom="24" left="28" right="28"/></padding>
+                        <HBox spacing="20" alignment="TOP_LEFT">
+                            <Label text="10" styleClass="faq-number"/>
+                            <VBox spacing="10">
+                                <Label text="Can a Student account be promoted to Admin?" styleClass="faq-question"/>
+                                <Label text="Not from within the application UI. Role assignment is done at registration. To change a user's role, it would need to be updated directly in the data store by a system administrator."
+                                       styleClass="faq-answer" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </VBox>
+
+                <!-- ====== TECHNICAL ====== -->
+                <VBox spacing="16">
+                    <Label text="TECHNICAL" styleClass="section-label"/>
+                    <Region styleClass="section-divider-glow" minWidth="60" maxWidth="60"/>
+
+                    <VBox styleClass="faq-card">
+                        <padding><Insets top="24" bottom="24" left="28" right="28"/></padding>
+                        <HBox spacing="20" alignment="TOP_LEFT">
+                            <Label text="11" styleClass="faq-number"/>
+                            <VBox spacing="10">
+                                <Label text="Does ExamVerse require an internet connection?" styleClass="faq-question"/>
+                                <Label text="The core exam and user management functionality works fully offline. An internet connection is only required for the email features (welcome email, password reset) and AI-powered question suggestions via Gemini."
+                                       styleClass="faq-answer" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
+                    <VBox styleClass="faq-card">
+                        <padding><Insets top="24" bottom="24" left="28" right="28"/></padding>
+                        <HBox spacing="20" alignment="TOP_LEFT">
+                            <Label text="12" styleClass="faq-number"/>
+                            <VBox spacing="10">
+                                <Label text="What are the system requirements to run ExamVerse?" styleClass="faq-question"/>
+                                <Label text="ExamVerse requires Java 17 or higher and JavaFX 17+. It runs on Windows, macOS, and Linux. A minimum of 512MB RAM is recommended. Build via Gradle — run './gradlew run' from the project root."
+                                       styleClass="faq-answer" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
+                    <VBox styleClass="faq-card">
+                        <padding><Insets top="24" bottom="24" left="28" right="28"/></padding>
+                        <HBox spacing="20" alignment="TOP_LEFT">
+                            <Label text="13" styleClass="faq-number"/>
+                            <VBox spacing="10">
+                                <Label text="The intro video isn't playing. What should I check?" styleClass="faq-question"/>
+                                <Label text="Ensure that the intro.mp4 file is placed at src/main/resources/com/examverse/assets/video/intro.mp4 and that JavaFX Media components are included in your build configuration. Check the Gradle dependencies for javafx.media."
+                                       styleClass="faq-answer" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </VBox>
+
+                <!-- Still have questions? -->
+                <VBox styleClass="project-info-card" alignment="CENTER">
+                    <padding><Insets top="30" bottom="30" left="40" right="40"/></padding>
+                    <VBox alignment="CENTER" spacing="12">
+                        <Label text="Still have a question?" styleClass="supervisor-name"/>
+                        <Label text="If your question isn't covered here, reach out to the team directly via the Contact page."
+                               styleClass="faq-answer" textAlignment="CENTER" wrapText="true" maxWidth="500"/>
+                    </VBox>
+                </VBox>
+
+            </VBox>
+
+            <!-- Footer -->
+            <HBox alignment="CENTER" styleClass="footer-bar">
+                <padding><Insets top="20" bottom="20" left="60" right="60"/></padding>
+                <Label text="© 2026 ExamVerse — Department of CSE, BUET" styleClass="copyright"/>
+            </HBox>
+
+        </VBox>
+    </ScrollPane>
+
+</StackPane>

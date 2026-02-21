@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane styleClass="page-root" stylesheets="@../../css/landing-pages.css"
+           xmlns="http://javafx.com/javafx/17.0.12"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.examverse.controller.dashboard.ContactController">
+
+    <VBox styleClass="page-background" StackPane.alignment="CENTER"/>
+
+    <ScrollPane fitToWidth="true" styleClass="page-scroll" StackPane.alignment="TOP_CENTER">
+        <VBox spacing="0">
+
+            <!-- NAV BAR -->
+            <HBox alignment="CENTER_LEFT" spacing="20" styleClass="nav-bar">
+                <padding><Insets top="22" bottom="22" left="60" right="60"/></padding>
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <VBox alignment="CENTER_LEFT" spacing="2">
+                        <HBox styleClass="logo-box"><padding><Insets top="8" bottom="8" left="12" right="12"/></padding></HBox>
+                    </VBox>
+                    <VBox alignment="CENTER_LEFT" spacing="-2">
+                        <Label text="EXAMVERSE" styleClass="brand-title"/>
+                        <Label text="Neural Core System" styleClass="brand-subtitle"/>
+                    </VBox>
+                </HBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="← Back to Home" onAction="#handleBack" styleClass="back-nav-button">
+                    <padding><Insets top="9" bottom="9" left="18" right="18"/></padding>
+                </Button>
+            </HBox>
+
+            <!-- CONTENT -->
+            <VBox fx:id="rootPane" alignment="TOP_CENTER" spacing="60">
+                <padding><Insets top="70" bottom="80" left="100" right="100"/></padding>
+
+                <!-- Header -->
+                <VBox alignment="CENTER" spacing="10" styleClass="page-header">
+                    <Label text="CONTACT" styleClass="page-eyebrow"/>
+                    <Label text="Get in Touch" styleClass="page-title"/>
+                    <Label text="Have a question, bug report, or feedback? Reach out to the ExamVerse team."
+                           styleClass="page-description" textAlignment="CENTER"/>
+                </VBox>
+
+                <!-- Two-column layout -->
+                <HBox spacing="30" alignment="TOP_LEFT">
+
+
+                    <VBox spacing="16" minWidth="280" maxWidth="280">
+
+                        <Label text="REACH US" styleClass="section-label"/>
+                        <Region styleClass="section-divider-glow" minWidth="50" maxWidth="50"/>
+
+                        <!-- Email - Prottoy -->
+                        <VBox styleClass="contact-info-card">
+                            <padding><Insets top="20" bottom="20" left="20" right="20"/></padding>
+                            <HBox spacing="16" alignment="CENTER_LEFT">
+                                <Label text="✉" styleClass="contact-info-icon"/>
+                                <VBox spacing="3">
+                                    <Label text="PROTTOY BARUA" styleClass="contact-info-label"/>
+                                    <Label text="prottoybarua2103@gmail.com" styleClass="contact-info-value" wrapText="true"/>
+                                    <Label text="Backend Engineer" styleClass="info-value-muted"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+
+                        <!-- Email - Diganta -->
+                        <VBox styleClass="contact-info-card">
+                            <padding><Insets top="20" bottom="20" left="20" right="20"/></padding>
+                            <HBox spacing="16" alignment="CENTER_LEFT">
+                                <Label text="✉" styleClass="contact-info-icon"/>
+                                <VBox spacing="3">
+                                    <Label text="AJMAIN FAYEK DIGANTA" styleClass="contact-info-label"/>
+                                    <Label text="ajmainfayekdiganta@gmail.com" styleClass="contact-info-value" wrapText="true"/>
+                                    <Label text="Frontend Engineer" styleClass="info-value-muted"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+
+                        <!-- GitHub -->
+                        <VBox styleClass="contact-info-card">
+                            <padding><Insets top="20" bottom="20" left="20" right="20"/></padding>
+                            <HBox spacing="16" alignment="CENTER_LEFT">
+                                <Label text="⌥" styleClass="contact-info-icon"/>
+                                <VBox spacing="5">
+                                    <Label text="GITHUB" styleClass="contact-info-label"/>
+                                    <Label text="github.com/prottoybarua99" styleClass="contact-info-value"/>
+                                    <Label text="github.com/DIGANTA100" styleClass="contact-info-value"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+
+                        <!-- Location -->
+                        <VBox styleClass="contact-info-card">
+                            <padding><Insets top="20" bottom="20" left="20" right="20"/></padding>
+                            <HBox spacing="16" alignment="CENTER_LEFT">
+                                <Label text="📍" styleClass="contact-info-icon"/>
+                                <VBox spacing="3">
+                                    <Label text="LOCATION" styleClass="contact-info-label"/>
+                                    <Label text="Department of CSE" styleClass="contact-info-value"/>
+                                    <Label text="Bangladesh University of Engineering and Technology" styleClass="info-value-muted" wrapText="true"/>
+                                    <Label text="Dhaka, Bangladesh" styleClass="info-value-muted"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+
+                        <Region prefHeight="4"/>
+                        <Label text="We typically respond within 24–48 hours." styleClass="contact-note" wrapText="true"/>
+
+                    </VBox>
+
+
+                    <VBox styleClass="contact-form-card" HBox.hgrow="ALWAYS">
+                        <padding><Insets top="36" bottom="36" left="36" right="36"/></padding>
+                        <VBox spacing="22">
+
+                            <Label text="SEND A MESSAGE" styleClass="section-label"/>
+
+                            <!-- Name + Email row -->
+                            <HBox spacing="16">
+                                <VBox spacing="7" HBox.hgrow="ALWAYS">
+                                    <Label text="Your Name" styleClass="form-field-label"/>
+                                    <TextField fx:id="nameField" promptText="Full name" styleClass="form-input">
+                                        <padding><Insets top="11" bottom="11" left="14" right="14"/></padding>
+                                    </TextField>
+                                </VBox>
+                                <VBox spacing="7" HBox.hgrow="ALWAYS">
+                                    <Label text="Your Email" styleClass="form-field-label"/>
+                                    <TextField fx:id="emailField" promptText="email@example.com" styleClass="form-input">
+                                        <padding><Insets top="11" bottom="11" left="14" right="14"/></padding>
+                                    </TextField>
+                                </VBox>
+                            </HBox>
+
+                            <!-- Subject -->
+                            <VBox spacing="7">
+                                <Label text="Subject" styleClass="form-field-label"/>
+                                <TextField fx:id="subjectField" promptText="What is this about?" styleClass="form-input">
+                                    <padding><Insets top="11" bottom="11" left="14" right="14"/></padding>
+                                </TextField>
+                            </VBox>
+
+                            <!-- Category -->
+                            <VBox spacing="7">
+                                <Label text="Category" styleClass="form-field-label"/>
+                                <ComboBox fx:id="categoryCombo" maxWidth="Infinity" promptText="Select a category" styleClass="form-input">
+                                    <padding><Insets top="11" bottom="11" left="14" right="14"/></padding>
+                                </ComboBox>
+                            </VBox>
+
+                            <!-- Message -->
+                            <VBox spacing="7">
+                                <Label text="Message" styleClass="form-field-label"/>
+                                <TextArea fx:id="messageArea" promptText="Describe your question or feedback in detail..."
+                                          styleClass="form-textarea" wrapText="true" prefRowCount="6">
+                                    <padding><Insets top="11" bottom="11" left="14" right="14"/></padding>
+                                </TextArea>
+                            </VBox>
+
+                            <!-- Status label -->
+                            <Label fx:id="statusLabel" text="" wrapText="true" styleClass="form-field-label" minHeight="0"/>
+
+                            <!-- Submit -->
+                            <Button fx:id="sendButton" text="Send Message →" onAction="#handleSend"
+                                    styleClass="btn-send" maxWidth="Infinity">
+                                <padding><Insets top="14" bottom="14" left="20" right="20"/></padding>
+                            </Button>
+
+                            <Label text="Your message will be sent directly to the development team's email." styleClass="contact-note"/>
+
+                        </VBox>
+                    </VBox>
+
+                </HBox>
+            </VBox>
+
+            <!-- Footer -->
+            <HBox alignment="CENTER" styleClass="footer-bar">
+                <padding><Insets top="20" bottom="20" left="60" right="60"/></padding>
+                <Label text="© 2026 ExamVerse — Department of CSE, BUET" styleClass="copyright"/>
+            </HBox>
+
+        </VBox>
+    </ScrollPane>
+
+</StackPane>

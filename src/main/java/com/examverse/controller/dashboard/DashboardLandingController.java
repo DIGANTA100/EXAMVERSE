@@ -194,43 +194,43 @@ public class DashboardLandingController implements Initializable {
     private void handleSignup() {
         System.out.println("Signup clicked - Navigate to signup screen");
         SceneManager.switchScene("/com/examverse/fxml/auth/signup.fxml");  // ← ADD THIS LINE
-       // SceneManager.switchScene("/com/examverse/fxml/auth/sliding-auth.fxml");
+        // SceneManager.switchScene("/com/examverse/fxml/auth/sliding-auth.fxml");
     }
 
     @FXML
     private void handleAbout() {
-        System.out.println("About clicked - Show about dialog/page");
-        // TODO: Show about dialog or navigate to about page
+        System.out.println("About clicked - Navigate to about page");
+        SceneManager.switchScene("/com/examverse/fxml/dashboard/about.fxml");
     }
 
     @FXML
     private void handleFeatures() {
-        System.out.println("Features clicked - Show features overview");
-        // TODO: Navigate to features page or show dialog
+        System.out.println("Features clicked - Navigate to features page");
+        SceneManager.switchScene("/com/examverse/fxml/dashboard/features.fxml");
     }
 
     @FXML
     private void handleDemo() {
-        System.out.println("Demo clicked - Show demo/tutorial");
-        // TODO: Start demo mode or show tutorial
+        System.out.println("Demo - not yet implemented");
+        // Will be implemented in a future update
     }
 
     @FXML
     private void handleDocs() {
-        System.out.println("Docs clicked - Open documentation");
-        // TODO: Navigate to documentation page or open external link
+        System.out.println("Docs clicked - Navigate to docs page");
+        SceneManager.switchScene("/com/examverse/fxml/dashboard/docs.fxml");
     }
 
     @FXML
     private void handleContact() {
-        System.out.println("Contact clicked - Show contact form");
-        // TODO: Show contact dialog or navigate to contact page
+        System.out.println("Contact clicked - Navigate to contact page");
+        SceneManager.switchScene("/com/examverse/fxml/dashboard/contact.fxml");
     }
 
     @FXML
     private void handleFAQ() {
-        System.out.println("FAQ clicked - Show FAQ page");
-        // TODO: Navigate to FAQ page
+        System.out.println("FAQ clicked - Navigate to FAQ page");
+        SceneManager.switchScene("/com/examverse/fxml/dashboard/faq.fxml");
     }
 
     /**

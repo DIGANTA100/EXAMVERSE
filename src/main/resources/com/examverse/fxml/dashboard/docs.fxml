@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane styleClass="page-root" stylesheets="@../../css/landing-pages.css"
+           xmlns="http://javafx.com/javafx/17.0.12"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.examverse.controller.dashboard.DocsController">
+
+    <VBox styleClass="page-background" StackPane.alignment="CENTER"/>
+
+    <ScrollPane fitToWidth="true" styleClass="page-scroll" StackPane.alignment="TOP_CENTER">
+        <VBox spacing="0">
+
+            <!-- NAV BAR -->
+            <HBox alignment="CENTER_LEFT" spacing="20" styleClass="nav-bar">
+                <padding><Insets top="22" bottom="22" left="60" right="60"/></padding>
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <VBox alignment="CENTER_LEFT" spacing="2">
+                        <HBox styleClass="logo-box"><padding><Insets top="8" bottom="8" left="12" right="12"/></padding></HBox>
+                    </VBox>
+                    <VBox alignment="CENTER_LEFT" spacing="-2">
+                        <Label text="EXAMVERSE" styleClass="brand-title"/>
+                        <Label text="Neural Core System" styleClass="brand-subtitle"/>
+                    </VBox>
+                </HBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="← Back to Home" onAction="#handleBack" styleClass="back-nav-button">
+                    <padding><Insets top="9" bottom="9" left="18" right="18"/></padding>
+                </Button>
+            </HBox>
+
+            <!-- CONTENT -->
+            <VBox fx:id="rootPane" alignment="TOP_CENTER" spacing="50">
+                <padding><Insets top="60" bottom="80" left="80" right="80"/></padding>
+
+                <!-- Header -->
+                <VBox alignment="CENTER" spacing="10" styleClass="page-header">
+                    <Label text="DOCUMENTATION" styleClass="page-eyebrow"/>
+                    <Label text="ExamVerse User Guide" styleClass="page-title"/>
+                    <Label text="Everything you need to get started, configure, and make the most of ExamVerse."
+                           styleClass="page-description" textAlignment="CENTER"/>
+                </VBox>
+
+                <!-- Docs Body: Sidebar + Content -->
+                <HBox spacing="30" alignment="TOP_LEFT">
+
+
+                    <VBox spacing="4" minWidth="200" maxWidth="200">
+                        <padding><Insets top="6"/></padding>
+
+                        <Label text="GETTING STARTED" styleClass="docs-sidebar-section"/>
+                        <padding><Insets bottom="4"/></padding>
+
+                        <Button text="  Overview" styleClass="docs-sidebar-item-active" maxWidth="Infinity">
+                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
+                        </Button>
+                        <Button text="  Installation" styleClass="docs-sidebar-item" maxWidth="Infinity">
+                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
+                        </Button>
+                        <Button text="  First Login" styleClass="docs-sidebar-item" maxWidth="Infinity">
+                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
+                        </Button>
+
+                        <Region prefHeight="12"/>
+                        <Label text="STUDENT GUIDE" styleClass="docs-sidebar-section"/>
+
+                        <Button text="  Taking an Exam" styleClass="docs-sidebar-item" maxWidth="Infinity">
+                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
+                        </Button>
+                        <Button text="  Practice Mode" styleClass="docs-sidebar-item" maxWidth="Infinity">
+                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
+                        </Button>
+                        <Button text="  Viewing Results" styleClass="docs-sidebar-item" maxWidth="Infinity">
+                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
+                        </Button>
+
+                        <Region prefHeight="12"/>
+                        <Label text="ADMIN GUIDE" styleClass="docs-sidebar-section"/>
+
+                        <Button text="  Managing Questions" styleClass="docs-sidebar-item" maxWidth="Infinity">
+                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
+                        </Button>
+                        <Button text="  Creating Exams" styleClass="docs-sidebar-item" maxWidth="Infinity">
+                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
+                        </Button>
+                        <Button text="  User Management" styleClass="docs-sidebar-item" maxWidth="Infinity">
+                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
+                        </Button>
+
+                        <Region prefHeight="12"/>
+                        <Label text="SYSTEM" styleClass="docs-sidebar-section"/>
+                        <Button text="  Configuration" styleClass="docs-sidebar-item" maxWidth="Infinity">
+                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
+                        </Button>
+                        <Button text="  Database Setup" styleClass="docs-sidebar-item" maxWidth="Infinity">
+                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
+                        </Button>
+                    </VBox>
+
+
+                    <VBox styleClass="docs-content-area" HBox.hgrow="ALWAYS">
+                        <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                        <VBox spacing="32">
+
+                            <!-- Section: Overview -->
+                            <VBox spacing="12">
+                                <Label text="Overview" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
+                                <Label text="ExamVerse is a desktop-based academic examination platform built with Java and JavaFX. It provides a complete end-to-end solution for conducting online examinations, managing question banks, and tracking student performance — all within a beautifully designed, offline-capable application."
+                                       styleClass="docs-body" wrapText="true"/>
+                            </VBox>
+
+                            <!-- Section: Getting Started -->
+                            <VBox spacing="14">
+                                <Label text="Getting Started" styleClass="docs-h2"/>
+
+                                <!-- Step 1 -->
+                                <HBox spacing="14" alignment="TOP_LEFT">
+                                    <Label text="1" styleClass="docs-step-number"/>
+                                    <VBox spacing="4" VBox.vgrow="ALWAYS">
+                                        <Label text="Build the project using Gradle" styleClass="docs-body" style="-fx-text-fill: #e2e8f0;"/>
+                                        <VBox styleClass="docs-code-block">
+                                            <padding><Insets top="10" bottom="10" left="14" right="14"/></padding>
+                                            <Label text="./gradlew run" styleClass="docs-code-block"/>
+                                        </VBox>
+                                    </VBox>
+                                </HBox>
+
+                                <!-- Step 2 -->
+                                <HBox spacing="14" alignment="TOP_LEFT">
+                                    <Label text="2" styleClass="docs-step-number"/>
+                                    <VBox spacing="4">
+                                        <Label text="The intro cinematic plays on first launch. Press any key or wait for it to complete." styleClass="docs-body" wrapText="true"/>
+                                    </VBox>
+                                </HBox>
+
+                                <!-- Step 3 -->
+                                <HBox spacing="14" alignment="TOP_LEFT">
+                                    <Label text="3" styleClass="docs-step-number"/>
+                                    <VBox spacing="4">
+                                        <Label text="Register a new account or log in. Choose your role — Student or Admin/Teacher — before submitting." styleClass="docs-body" wrapText="true"/>
+                                    </VBox>
+                                </HBox>
+
+                                <!-- Step 4 -->
+                                <HBox spacing="14" alignment="TOP_LEFT">
+                                    <Label text="4" styleClass="docs-step-number"/>
+                                    <VBox spacing="4">
+                                        <Label text="You will be redirected to your role-specific dashboard automatically after successful login." styleClass="docs-body" wrapText="true"/>
+                                    </VBox>
+                                </HBox>
+                            </VBox>
+
+                            <Region styleClass="section-divider"/>
+
+                            <!-- Section: Student Guide -->
+                            <VBox spacing="12">
+                                <Label text="Taking an Exam" styleClass="docs-h2"/>
+                                <Label text="From the Student Dashboard, select any available exam to begin. Exams are timed — a countdown timer is always visible in the top-right corner. Navigate between questions using the Previous / Next buttons, or jump directly using the question palette on the sidebar."
+                                       styleClass="docs-body" wrapText="true"/>
+                                <Label text="On submission (manual or automatic when time expires), your result is immediately calculated and displayed with a detailed breakdown of correct, incorrect, and skipped answers."
+                                       styleClass="docs-body" wrapText="true"/>
+                            </VBox>
+
+                            <Region styleClass="section-divider"/>
+
+                            <!-- Section: Admin Guide -->
+                            <VBox spacing="12">
+                                <Label text="Managing Questions (Admin)" styleClass="docs-h2"/>
+                                <Label text="Navigate to the Admin Dashboard and open the Question Manager. You can add new questions individually using the dialog form, specifying the question text, four options, the correct answer, subject, and difficulty level."
+                                       styleClass="docs-body" wrapText="true"/>
+                                <Label text="Questions are stored in the file-based data repository and are immediately available for exam assignment."
+                                       styleClass="docs-body" wrapText="true"/>
+                            </VBox>
+
+                            <Region styleClass="section-divider"/>
+
+                            <!-- Section: Configuration -->
+                            <VBox spacing="12">
+                                <Label text="Configuration" styleClass="docs-h2"/>
+                                <Label text="Application settings are defined in AppConfig.java and DatabaseConfig.java. Email settings (SMTP host, credentials) are configured in EmailConfig.java. Scene routing is managed centrally via SceneManager and SceneConfig."
+                                       styleClass="docs-body" wrapText="true"/>
+                                <VBox styleClass="docs-code-block">
+                                    <padding><Insets top="12" bottom="12" left="16" right="16"/></padding>
+                                    <Label text="src/main/java/com/examverse/config/" styleClass="docs-code-block"/>
+                                    <Label text="  ├── AppConfig.java" styleClass="docs-code-block"/>
+                                    <Label text="  ├── DatabaseConfig.java" styleClass="docs-code-block"/>
+                                    <Label text="  ├── EmailConfig.java" styleClass="docs-code-block"/>
+                                    <Label text="  └── SceneConfig.java" styleClass="docs-code-block"/>
+                                </VBox>
+                            </VBox>
+
+                        </VBox>
+                    </VBox>
+
+                </HBox>
+            </VBox>
+
+            <!-- Footer -->
+            <HBox alignment="CENTER" styleClass="footer-bar">
+                <padding><Insets top="20" bottom="20" left="60" right="60"/></padding>
+                <Label text="© 2026 ExamVerse — Department of CSE, BUET" styleClass="copyright"/>
+            </HBox>
+
+        </VBox>
+    </ScrollPane>
+
+</StackPane>

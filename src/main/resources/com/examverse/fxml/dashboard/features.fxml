@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane styleClass="page-root" stylesheets="@../../css/landing-pages.css"
+           xmlns="http://javafx.com/javafx/17.0.12"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.examverse.controller.dashboard.FeaturesController">
+
+    <VBox styleClass="page-background" StackPane.alignment="CENTER"/>
+
+    <ScrollPane fitToWidth="true" styleClass="page-scroll" StackPane.alignment="TOP_CENTER">
+        <VBox spacing="0">
+
+            <!-- NAV BAR -->
+            <HBox alignment="CENTER_LEFT" spacing="20" styleClass="nav-bar">
+                <padding><Insets top="22" bottom="22" left="60" right="60"/></padding>
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <VBox alignment="CENTER_LEFT" spacing="2">
+                        <HBox styleClass="logo-box"><padding><Insets top="8" bottom="8" left="12" right="12"/></padding></HBox>
+                    </VBox>
+                    <VBox alignment="CENTER_LEFT" spacing="-2">
+                        <Label text="EXAMVERSE" styleClass="brand-title"/>
+                        <Label text="Neural Core System" styleClass="brand-subtitle"/>
+                    </VBox>
+                </HBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="← Back to Home" onAction="#handleBack" styleClass="back-nav-button">
+                    <padding><Insets top="9" bottom="9" left="18" right="18"/></padding>
+                </Button>
+            </HBox>
+
+            <!-- CONTENT -->
+            <VBox fx:id="rootPane" alignment="TOP_CENTER" spacing="60">
+                <padding><Insets top="70" bottom="80" left="100" right="100"/></padding>
+
+                <!-- Header -->
+                <VBox alignment="CENTER" spacing="10" styleClass="page-header">
+                    <Label text="PLATFORM FEATURES" styleClass="page-eyebrow"/>
+                    <Label text="Built for Academic Excellence" styleClass="page-title"/>
+                    <Label text="Everything you need — from adaptive exams to AI-powered insights — in one unified system."
+                           styleClass="page-description" textAlignment="CENTER" wrapText="true" maxWidth="620"/>
+                </VBox>
+
+                <!-- ====== CORE FEATURES ====== -->
+                <VBox spacing="16">
+                    <Label text="CORE FEATURES" styleClass="section-label"/>
+                    <Region styleClass="section-divider-glow" minWidth="60" maxWidth="60"/>
+
+                    <HBox spacing="16" alignment="TOP_CENTER">
+
+                        <!-- Smart Exam Engine -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="🎯" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Smart Exam Engine" styleClass="feature-title"/>
+                                    <Label text="Timed, auto-evaluated MCQ exams with randomized question ordering and instant scoring on completion." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="LIVE" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="AUTO-GRADE" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Role-Based Access -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="🔐" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Role-Based Access" styleClass="feature-title"/>
+                                    <Label text="Separate Student and Admin/Teacher portals with distinct dashboards, permissions, and workflows for each role." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="STUDENT" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="ADMIN" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Practice Mode -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="📚" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Practice Mode" styleClass="feature-title"/>
+                                    <Label text="Ungraded practice sessions let students rehearse at their own pace with immediate per-question feedback." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="SELF-PACED" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                    </HBox>
+
+                    <HBox spacing="16" alignment="TOP_CENTER">
+
+                        <!-- AI Integration -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="🤖" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="AI-Powered Insights" styleClass="feature-title"/>
+                                    <Label text="Gemini AI integration provides intelligent question suggestions, performance analysis, and personalized study hints." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="GEMINI AI" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="ADAPTIVE" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Question Manager -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="🗂️" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Question Manager" styleClass="feature-title"/>
+                                    <Label text="Admins can create, edit, and categorize question banks with support for multiple subjects and difficulty levels." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="ADMIN ONLY" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Results & Analytics -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="📊" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Results &amp; Analytics" styleClass="feature-title"/>
+                                    <Label text="Detailed per-exam result breakdowns with score history, pass/fail tracking, and improvement trends over time." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="HISTORY" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="TRENDS" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                    </HBox>
+                </VBox>
+
+                <!-- ====== SYSTEM FEATURES ====== -->
+                <VBox spacing="16">
+                    <Label text="SYSTEM &amp; SECURITY" styleClass="section-label"/>
+                    <Region styleClass="section-divider-glow" minWidth="60" maxWidth="60"/>
+
+                    <HBox spacing="16" alignment="TOP_CENTER">
+
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="✉️" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Email Integration" styleClass="feature-title"/>
+                                    <Label text="Automated welcome emails on signup, password reset flows via secure email tokens, and notification support." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="SMTP" styleClass="feature-tag-text"/></HBox>
+                            </VBox>
+                        </VBox>
+
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="🎬" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Cinematic Intro" styleClass="feature-title"/>
+                                    <Label text="A custom video intro sequence plays on first launch, setting the stage for the ExamVerse experience with frame-perfect playback." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="MEDIAPLAYER" styleClass="feature-tag-text"/></HBox>
+                            </VBox>
+                        </VBox>
+
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="⚡" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Scene Caching &amp; Transitions" styleClass="feature-title"/>
+                                    <Label text="Intelligent scene caching for instant navigation and buttery-smooth fade transitions throughout the entire application." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="PERFORMANCE" styleClass="feature-tag-text"/></HBox>
+                            </VBox>
+                        </VBox>
+
+                    </HBox>
+                </VBox>
+
+            </VBox>
+
+            <!-- Footer -->
+            <HBox alignment="CENTER" styleClass="footer-bar">
+                <padding><Insets top="20" bottom="20" left="60" right="60"/></padding>
+                <Label text="© 2026 ExamVerse — Department of CSE, BUET" styleClass="copyright"/>
+            </HBox>
+
+        </VBox>
+    </ScrollPane>
+
+</StackPane>

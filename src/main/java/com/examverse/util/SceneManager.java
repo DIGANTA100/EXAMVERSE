@@ -39,7 +39,12 @@ public class SceneManager {
             "exam-result",          // ResultController must always show the latest result
             "login",                // LoginController must reset fields/button on every visit
             "signup",               // SignupController must reset fields/button on every visit
-            "terms-and-conditions"  // TermsController — always fade in fresh
+            "terms-and-conditions", // TermsController — always fade in fresh
+            "about",                // AboutController — always fade in fresh
+            "features",             // FeaturesController — always fade in fresh
+            "docs",                 // DocsController — always fade in fresh
+            "contact",              // ContactController — form must always reset
+            "faq"                   // FaqController — always fade in fresh
     };
 
     /** Returns true if this path should always bypass the cache. */
