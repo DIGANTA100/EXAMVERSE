@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane prefHeight="1080" prefWidth="1920" styleClass="auth-root" stylesheets="@../../css/auth.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.examverse.controller.auth.TermsController">
+
+    <!-- Background Gradient - Fills entire screen -->
+    <VBox alignment="CENTER" styleClass="background-gradient" StackPane.alignment="CENTER" />
+
+    <!-- ScrollPane for full page scroll -->
+    <ScrollPane fitToHeight="true" fitToWidth="true" styleClass="auth-scroll-pane" StackPane.alignment="CENTER">
+
+        <!-- Outer centering container -->
+        <VBox alignment="TOP_CENTER" minHeight="1080" spacing="0">
+
+            <padding>
+                <Insets bottom="60" left="0" right="0" top="60" />
+            </padding>
+
+            <!-- Terms Card -->
+            <VBox fx:id="rootPane" alignment="TOP_LEFT" maxWidth="720" minWidth="520" spacing="0" styleClass="login-card">
+
+                <padding>
+                    <Insets bottom="40" left="60" right="60" top="40" />
+                </padding>
+
+                <!-- Header -->
+                <VBox alignment="CENTER" spacing="6">
+                    <HBox alignment="CENTER" styleClass="logo-container">
+                        <VBox alignment="CENTER" styleClass="logo-circle">
+                            <padding>
+                                <Insets bottom="18" left="18" right="18" top="18" />
+                            </padding>
+                        </VBox>
+                    </HBox>
+                    <Label styleClass="auth-title" text="Terms &amp; Conditions" />
+                    <Label styleClass="auth-subtitle" text="Please read these terms carefully before using ExamVerse" />
+                </VBox>
+
+                <!-- Spacer -->
+                <Region prefHeight="24" />
+
+                <!-- Terms Content ScrollPane (inner scroll for text only) -->
+                <ScrollPane fitToWidth="true" maxHeight="560" minHeight="400" styleClass="auth-scroll-pane">
+
+                    <VBox spacing="22">
+
+                        <!-- Section 1 -->
+                        <VBox spacing="8">
+                            <Label styleClass="field-label" text="1. Acceptance of Terms" />
+                            <Label styleClass="terms-text" text="By accessing and using ExamVerse, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use the platform. Your continued use of ExamVerse following any changes to these terms constitutes your acceptance of the revised terms." wrapText="true" />
+                        </VBox>
+
+                        <!-- Section 2 -->
+                        <VBox spacing="8">
+                            <Label styleClass="field-label" text="2. User Accounts" />
+                            <Label styleClass="terms-text" text="You are responsible for maintaining the confidentiality of your account credentials. You agree to provide accurate, current, and complete information during registration and to keep your account information updated. You must immediately notify ExamVerse of any unauthorized use of your account. ExamVerse reserves the right to suspend or terminate accounts that violate these terms." wrapText="true" />
+                        </VBox>
+
+                        <!-- Section 3 -->
+                        <VBox spacing="8">
+                            <Label styleClass="field-label" text="3. Acceptable Use" />
+                            <Label styleClass="terms-text" text="You agree not to engage in any activity that disrupts or interferes with the platform. This includes, but is not limited to: cheating during exams, sharing exam questions or answers without authorization, attempting to gain unauthorized access to other accounts, uploading malicious content, or using the platform for any unlawful purpose. Violations may result in immediate account suspension." wrapText="true" />
+                        </VBox>
+
+                        <!-- Section 4 -->
+                        <VBox spacing="8">
+                            <Label styleClass="field-label" text="4. Exam Integrity" />
+                            <Label styleClass="terms-text" text="ExamVerse is committed to academic integrity. Students are expected to complete all assessments independently and honestly. Any form of academic dishonesty, including plagiarism, unauthorized collaboration, or use of unauthorized aids during exams, is strictly prohibited and may result in disqualification and permanent account termination." wrapText="true" />
+                        </VBox>
+
+                        <!-- Section 5 -->
+                        <VBox spacing="8">
+                            <Label styleClass="field-label" text="5. Privacy &amp; Data" />
+                            <Label styleClass="terms-text" text="ExamVerse collects and processes personal data in accordance with applicable privacy laws. We collect information such as your name, email address, and exam performance data to provide and improve our services. Your data will not be sold to third parties. For full details on how we handle your data, please refer to our Privacy Policy." wrapText="true" />
+                        </VBox>
+
+                        <!-- Section 6 -->
+                        <VBox spacing="8">
+                            <Label styleClass="field-label" text="6. Intellectual Property" />
+                            <Label styleClass="terms-text" text="All content on ExamVerse, including but not limited to exam questions, course materials, software, graphics, and text, is the intellectual property of ExamVerse or its content providers and is protected by applicable copyright and intellectual property laws. You may not reproduce, distribute, or create derivative works without explicit written permission." wrapText="true" />
+                        </VBox>
+
+                        <!-- Section 7 -->
+                        <VBox spacing="8">
+                            <Label styleClass="field-label" text="7. Limitation of Liability" />
+                            <Label styleClass="terms-text" text="ExamVerse is provided on an 'as is' basis. We make no warranties, expressed or implied, regarding the platform's availability, accuracy, or fitness for a particular purpose. ExamVerse shall not be liable for any indirect, incidental, or consequential damages arising from your use of the platform, including loss of data or interruption of service." wrapText="true" />
+                        </VBox>
+
+                        <!-- Section 8 -->
+                        <VBox spacing="8">
+                            <Label styleClass="field-label" text="8. Changes to Terms" />
+                            <Label styleClass="terms-text" text="ExamVerse reserves the right to modify these Terms and Conditions at any time. We will notify users of significant changes via email or a prominent notice on the platform. Your continued use of ExamVerse after such modifications constitutes your acceptance of the updated terms. We encourage you to review these terms periodically." wrapText="true" />
+                        </VBox>
+
+                        <!-- Section 9 -->
+                        <VBox spacing="8">
+                            <Label styleClass="field-label" text="9. Contact Us" />
+                            <Label styleClass="terms-text" text="If you have any questions about these Terms and Conditions, please contact us at support@examverse.com. We are committed to addressing your concerns promptly and will respond within 48 business hours." wrapText="true" />
+                        </VBox>
+
+                        <!-- Bottom padding inside scroll -->
+                        <Region prefHeight="10" />
+
+                    </VBox>
+
+                </ScrollPane>
+
+                <!-- Spacer -->
+                <Region prefHeight="28" />
+
+                <!-- Divider -->
+                <HBox alignment="CENTER" spacing="12" styleClass="divider-container">
+                    <Region styleClass="divider-line" HBox.hgrow="ALWAYS" />
+                    <Label styleClass="divider-text" text="EXAMVERSE" />
+                    <Region styleClass="divider-line" HBox.hgrow="ALWAYS" />
+                </HBox>
+
+                <!-- Spacer -->
+                <Region prefHeight="22" />
+
+                <!-- Community text -->
+                <Label alignment="CENTER" maxWidth="Infinity" styleClass="community-text" text="EXAMVERSE COMMUNITY" />
+
+                <!-- Spacer -->
+                <Region prefHeight="16" />
+
+                <!-- Back Button -->
+                <Button onAction="#handleBack" styleClass="back-button" text="← Back to Sign Up">
+                    <padding>
+                        <Insets bottom="10" left="20" right="20" top="10" />
+                    </padding>
+                </Button>
+
+            </VBox>
+
+        </VBox>
+
+    </ScrollPane>
+
+</StackPane>

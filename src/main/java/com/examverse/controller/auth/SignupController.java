@@ -305,6 +305,17 @@ public class SignupController implements Initializable {
     }
 
     /**
+     * Handle Terms & Conditions link click — opens the terms page
+     */
+    @FXML
+    private void handleTermsLink() {
+        System.out.println("Navigate to terms and conditions page");
+        applyFadeOutTransition(() -> {
+            SceneManager.switchScene("/com/examverse/fxml/auth/terms-and-conditions.fxml");
+        });
+    }
+
+    /**
      * Handle login link click
      */
     @FXML

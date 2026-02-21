@@ -106,7 +106,7 @@
                     <HBox alignment="CENTER_LEFT" spacing="8">
                         <CheckBox fx:id="termsCheckbox" styleClass="checkbox-custom" />
                         <Label styleClass="terms-text" text="I agree to the " />
-                        <Button styleClass="link-button-small" text="Terms &amp; Conditions" />
+                        <Button onAction="#handleTermsLink" styleClass="link-button-small" text="Terms &amp; Conditions" />
                     </HBox>
 
                 </VBox>

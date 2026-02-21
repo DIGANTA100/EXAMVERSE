@@ -35,10 +35,11 @@ public class SceneManager {
      * re-initialize on every visit (e.g. exam state must always be fresh).
      */
     private static final String[] NEVER_CACHE = {
-            "exam-taking",  // ExamController must re-initialize on every new/retake
-            "exam-result",  // ResultController must always show the latest result
-            "login",        // LoginController must reset fields/button on every visit
-            "signup"        // SignupController must reset fields/button on every visit
+            "exam-taking",          // ExamController must re-initialize on every new/retake
+            "exam-result",          // ResultController must always show the latest result
+            "login",                // LoginController must reset fields/button on every visit
+            "signup",               // SignupController must reset fields/button on every visit
+            "terms-and-conditions"  // TermsController — always fade in fresh
     };
 
     /** Returns true if this path should always bypass the cache. */
