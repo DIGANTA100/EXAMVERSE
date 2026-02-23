@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.examverse.controller.admin.QuestionManagerController"
+            stylesheets="@../../css/student-dashboard.css"
+            styleClass="root-pane">
+
+    <!-- ============================================================
+         TOP BAR
+         ============================================================ -->
+    <top>
+        <VBox styleClass="header-bar">
+            <padding>
+                <Insets top="20" right="30" bottom="20" left="30"/>
+            </padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <!-- Back button -->
+                <Button fx:id="backButton" text="&#8592; Back" styleClass="btn-secondary"
+                        onAction="#handleBack">
+                    <padding>
+                        <Insets top="10" right="20" bottom="10" left="20"/>
+                    </padding>
+                </Button>
+
+                <!-- Page title -->
+                <Label text="&#10067; Question Manager"
+                       styleClass="welcome-label" HBox.hgrow="ALWAYS"/>
+
+                <!-- Search bar -->
+                <TextField fx:id="searchField"
+                           promptText="&#128269; Search exams by title, subject or difficulty..."
+                           styleClass="search-field"
+                           prefWidth="320">
+                </TextField>
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- ============================================================
+         CENTER - Exam list
+         ============================================================ -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="content-scroll">
+            <VBox spacing="25">
+                <padding>
+                    <Insets top="30" right="30" bottom="30" left="30"/>
+                </padding>
+
+                <!-- Sub-header row -->
+                <HBox alignment="CENTER_LEFT" spacing="15">
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="All Exams" styleClass="label-subtitle"/>
+                        <Label fx:id="examCountLabel" text="Loading..." styleClass="label-body"/>
+                    </VBox>
+                </HBox>
+
+                <Separator styleClass="separator"/>
+
+                <!-- Dynamic exam cards -->
+                <VBox fx:id="examsContainer" spacing="20">
+                    <Label text="Loading exams..." styleClass="label-body"/>
+                </VBox>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

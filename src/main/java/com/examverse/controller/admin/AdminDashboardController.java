@@ -288,7 +288,7 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void handleQuestions() {
         setActiveButton(questionsBtn);
-        showAlert("Questions", "Questions management - Coming soon!");
+        SceneManager.switchScene("/com/examverse/fxml/dashboard/question-manager.fxml");
     }
 
     @FXML

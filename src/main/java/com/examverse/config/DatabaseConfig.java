@@ -12,10 +12,21 @@ import java.sql.Statement;
  */
 public class DatabaseConfig {
 
-    // Database credentials - CHANGE THESE to match your MySQL setup
+     //Database credentials - CHANGE THESE to match your MySQL setup
     private static final String DB_URL = "jdbc:mysql://localhost:3306/examverse_db";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "Jls32wkksedie@..sdk"; // Change this to your MySQL password
+
+
+
+//     private static final String DB_URL =
+//             "jdbc:mysql://caboose.proxy.rlwy.net:18434/railway" +
+//                     "?useSSL=true&requireSSL=true&verifyServerCertificate=false&serverTimezone=UTC";
+//
+//    private static final String DB_USER = "root";
+//    private static final String DB_PASSWORD = "UUeECgYEUrlVAOQdduBNGXRuMuqyiTZH";
+//
+
 
     // Dont Remove this --- Diganta's DBPASS :- Jls32wkksedie@..sdk    ||     Prottoy's DBPASS :- #Ihatenone2103
 
