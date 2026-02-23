@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.examverse.controller.admin.ExamReportsController"
+            stylesheets="@../../css/student-dashboard.css"
+            styleClass="root-pane">
+
+    <!-- ============================================
+         TOP BAR - Header with Title
+         ============================================ -->
+    <top>
+        <VBox styleClass="header-bar">
+            <padding>
+                <Insets top="20" right="30" bottom="20" left="30"/>
+            </padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Button fx:id="backButton" text="← Back" styleClass="btn-secondary"
+                        onAction="#handleBack">
+                    <padding>
+                        <Insets top="10" right="20" bottom="10" left="20"/>
+                    </padding>
+                </Button>
+
+                <Label text="📊 Exam Reports &amp; Statistics"
+                       styleClass="welcome-label" HBox.hgrow="ALWAYS"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- ============================================
+         CENTER - Reports Content
+         ============================================ -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="content-scroll">
+            <VBox spacing="30">
+                <padding>
+                    <Insets top="30" right="30" bottom="30" left="30"/>
+                </padding>
+
+                <!-- Overall Statistics Cards -->
+                <VBox spacing="15">
+                    <Label text="Overall Statistics" styleClass="label-subtitle"/>
+
+                    <HBox spacing="20" alignment="CENTER">
+                        <!-- Total Exams Card -->
+                        <VBox styleClass="stat-card" spacing="10" alignment="CENTER" HBox.hgrow="ALWAYS">
+                            <padding>
+                                <Insets top="20" right="20" bottom="20" left="20"/>
+                            </padding>
+                            <Label text="📚 Total Exams" styleClass="label-caption"/>
+                            <Label fx:id="totalExamsLabel" text="0" styleClass="label-title"/>
+                        </VBox>
+
+                        <!-- Total Students Card -->
+                        <VBox styleClass="stat-card" spacing="10" alignment="CENTER" HBox.hgrow="ALWAYS">
+                            <padding>
+                                <Insets top="20" right="20" bottom="20" left="20"/>
+                            </padding>
+                            <Label text="👥 Total Students" styleClass="label-caption"/>
+                            <Label fx:id="totalStudentsLabel" text="0" styleClass="label-title"/>
+                        </VBox>
+
+                        <!-- Total Attempts Card -->
+                        <VBox styleClass="stat-card" spacing="10" alignment="CENTER" HBox.hgrow="ALWAYS">
+                            <padding>
+                                <Insets top="20" right="20" bottom="20" left="20"/>
+                            </padding>
+                            <Label text="📊 Total Attempts" styleClass="label-caption"/>
+                            <Label fx:id="totalAttemptsLabel" text="0" styleClass="label-title"/>
+                        </VBox>
+
+                        <!-- Avg Score Card -->
+                        <VBox styleClass="stat-card" spacing="10" alignment="CENTER" HBox.hgrow="ALWAYS">
+                            <padding>
+                                <Insets top="20" right="20" bottom="20" left="20"/>
+                            </padding>
+                            <Label text="📈 Avg Score" styleClass="label-caption"/>
+                            <Label fx:id="avgScoreLabel" text="0%" styleClass="label-title"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Pass Rate Card (Full Width) -->
+                    <VBox styleClass="stat-card" spacing="15" alignment="CENTER_LEFT">
+                        <padding>
+                            <Insets top="20" right="30" bottom="20" left="30"/>
+                        </padding>
+
+                        <HBox spacing="20" alignment="CENTER_LEFT">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="✅ Overall Pass Rate" styleClass="label-subtitle"/>
+                                <Label fx:id="passRateLabel" text="0%"
+                                       style="-fx-text-fill: #22d3ee; -fx-font-size: 28px; -fx-font-weight: bold;"/>
+                            </VBox>
+
+                            <ProgressBar fx:id="passRateProgressBar" progress="0.0" prefWidth="400"
+                                         style="-fx-accent: #22d3ee;"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+
+                <Separator styleClass="separator"/>
+
+                <!-- Exam-wise Reports -->
+                <VBox spacing="15">
+                    <Label text="Exam-wise Statistics" styleClass="label-subtitle"/>
+
+                    <VBox fx:id="examsReportContainer" spacing="20">
+                        <!-- Exam report cards will be added dynamically -->
+                        <Label text="Loading exam reports..." styleClass="label-body"/>
+                    </VBox>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

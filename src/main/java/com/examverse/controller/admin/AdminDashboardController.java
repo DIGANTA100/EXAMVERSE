@@ -300,7 +300,8 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void handleResults() {
         setActiveButton(resultsBtn);
-        showAlert("Results", "Results and analytics - Coming soon!");
+        // Navigate to exam reports page
+        SceneManager.switchScene("/com/examverse/fxml/dashboard/exam-reports.fxml");
     }
 
     @FXML
