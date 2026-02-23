@@ -84,6 +84,17 @@ public class EmailConfig {
     public static final String RESET_PASSWORD_SUBJECT = "Reset Your ExamVerse Password 🔐";
 
     /**
+     * Admin inbox that receives all contact form submissions
+     */
+    public static final String CONTACT_RECIPIENT_EMAIL = "ajmainfayekdiganta@gmail.com";
+
+    /**
+     * Subject prefix prepended to every contact form email so it's easy
+     * to filter/label in Gmail: "[ExamVerse Contact] <user subject>"
+     */
+    public static final String CONTACT_SUBJECT_PREFIX = "[ExamVerse Contact] ";
+
+    /**
      * Get HTML template for welcome email
      */
     public static String getWelcomeEmailTemplate(String fullName, String username) {
@@ -423,5 +434,163 @@ public class EmailConfig {
                 "</div>" +
                 "</body>" +
                 "</html>";
+    }
+
+    /**
+     * Professional HTML template for contact form submissions.
+     * Delivered to the admin inbox — clean, scannable, colour-coded by category.
+     *
+     * @param senderName   User's name from the form
+     * @param senderEmail  User's email from the form
+     * @param subject      Subject entered by the user
+     * @param category     Category selected by the user
+     * @param messageBody  The full message text
+     */
+    public static String getContactMessageEmailTemplate(String senderName, String senderEmail,
+                                                        String subject, String category,
+                                                        String messageBody) {
+        // Escape HTML entities in user-supplied content to prevent injection
+        String safeName     = escapeHtml(senderName);
+        String safeEmail    = escapeHtml(senderEmail);
+        String safeSubject  = escapeHtml(subject);
+        String safeCategory = escapeHtml(category);
+        String safeMessage  = escapeHtml(messageBody).replace("\n", "<br>");
+
+        // Timestamp
+        String timestamp = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a"));
+
+        // Category badge colour
+        String categoryColor;
+        switch (category.toLowerCase()) {
+            case "bug report":      categoryColor = "#ef4444"; break;
+            case "feature request": categoryColor = "#8b5cf6"; break;
+            case "account issue":   categoryColor = "#f59e0b"; break;
+            case "exam issue":      categoryColor = "#f97316"; break;
+            default:                categoryColor = "#22d3ee"; break;
+        }
+
+        return "<!DOCTYPE html>" +
+                "<html lang=\"en\">" +
+                "<head>" +
+                "<meta charset=\"UTF-8\">" +
+                "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                "<title>ExamVerse Contact Message</title>" +
+                "<style>" +
+                "* { box-sizing: border-box; margin: 0; padding: 0; }" +
+                "body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; color: #0f172a; }" +
+                ".wrapper { padding: 40px 20px; }" +
+                ".container { max-width: 620px; margin: 0 auto; background: #ffffff; border-radius: 12px;" +
+                "             overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.12); }" +
+                ".header { background: linear-gradient(135deg, #020617 0%, #0f172a 60%, #1e293b 100%);" +
+                "          padding: 36px 40px; text-align: center; }" +
+                ".header-logo { font-size: 28px; font-weight: 300; color: #ffffff; letter-spacing: 3px; }" +
+                ".header-logo span { color: #22d3ee; font-weight: 700; }" +
+                ".header-tagline { color: rgba(148,163,184,0.8); font-size: 10px; letter-spacing: 4px;" +
+                "                  margin-top: 6px; text-transform: uppercase; }" +
+                ".header-badge { display: inline-block; margin-top: 18px;" +
+                "                background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3);" +
+                "                color: #22d3ee; font-size: 10px; font-weight: 600; letter-spacing: 2px;" +
+                "                padding: 5px 14px; border-radius: 20px; text-transform: uppercase; }" +
+                ".category-strip { background: " + categoryColor + "; padding: 10px 40px; }" +
+                ".category-strip span { color: #ffffff; font-size: 11px; font-weight: 700;" +
+                "                       letter-spacing: 2px; text-transform: uppercase; }" +
+                ".content { padding: 36px 40px; }" +
+                ".section-label { font-size: 10px; font-weight: 700; color: #94a3b8;" +
+                "                 letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }" +
+                ".sender-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;" +
+                "               padding: 20px 24px; margin-bottom: 28px; }" +
+                ".sender-name { font-size: 18px; font-weight: 600; color: #0f172a; }" +
+                ".sender-email { font-size: 13px; color: #22d3ee; margin-top: 4px; }" +
+                ".sender-meta { font-size: 11px; color: #94a3b8; margin-top: 8px; }" +
+                ".subject-row { border-left: 3px solid " + categoryColor + "; padding: 10px 16px;" +
+                "               background: #f8fafc; border-radius: 0 6px 6px 0; margin-bottom: 28px; }" +
+                ".subject-text { font-size: 15px; font-weight: 600; color: #0f172a; }" +
+                ".message-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;" +
+                "               padding: 24px; margin-bottom: 28px; }" +
+                ".message-text { font-size: 14px; color: #334155; line-height: 1.9; }" +
+                ".reply-box { background: linear-gradient(135deg, #ecfeff 0%, #f0f9ff 100%);" +
+                "             border: 1px solid #a5f3fc; border-radius: 8px; padding: 18px 24px; margin-bottom: 20px; }" +
+                ".reply-box p { font-size: 13px; color: #0e7490; line-height: 1.6; }" +
+                ".reply-box strong { color: #0f172a; }" +
+                ".reply-email { display: inline-block; margin-top: 8px; color: #22d3ee;" +
+                "               font-weight: 600; font-size: 13px; text-decoration: none; }" +
+                ".divider { border: none; border-top: 1px solid #e2e8f0; margin: 4px 0 24px 0; }" +
+                ".footer { background: #f8fafc; padding: 24px 40px; text-align: center;" +
+                "          border-top: 1px solid #e2e8f0; }" +
+                ".footer p { font-size: 11px; color: #94a3b8; line-height: 1.7; }" +
+                ".footer .brand { font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 6px; }" +
+                "</style>" +
+                "</head>" +
+                "<body>" +
+                "<div class=\"wrapper\">" +
+                "<div class=\"container\">" +
+
+                // Header
+                "<div class=\"header\">" +
+                "<div class=\"header-logo\">EXAM<span>VERSE</span></div>" +
+                "<div class=\"header-tagline\">Intelligent Assessment Platform</div>" +
+                "<div class=\"header-badge\">&#128236; New Contact Message</div>" +
+                "</div>" +
+
+                // Category strip
+                "<div class=\"category-strip\">" +
+                "<span>&#9679; &nbsp;" + safeCategory + "</span>" +
+                "</div>" +
+
+                // Body
+                "<div class=\"content\">" +
+
+                "<div class=\"section-label\">From</div>" +
+                "<div class=\"sender-card\">" +
+                "<div class=\"sender-name\">" + safeName + "</div>" +
+                "<div class=\"sender-email\">" + safeEmail + "</div>" +
+                "<div class=\"sender-meta\">Submitted via ExamVerse Contact Form &nbsp;&middot;&nbsp; " + timestamp + "</div>" +
+                "</div>" +
+
+                "<div class=\"section-label\">Subject</div>" +
+                "<div class=\"subject-row\">" +
+                "<div class=\"subject-text\">" + safeSubject + "</div>" +
+                "</div>" +
+
+                "<div class=\"section-label\">Message</div>" +
+                "<div class=\"message-box\">" +
+                "<div class=\"message-text\">" + safeMessage + "</div>" +
+                "</div>" +
+
+                "<div class=\"reply-box\">" +
+                "<p><strong>&#128161; How to reply:</strong> Simply hit <strong>Reply</strong> in Gmail &mdash; " +
+                "it goes directly to <strong>" + safeName + "</strong> at:</p>" +
+                "<a class=\"reply-email\" href=\"mailto:" + safeEmail + "\">" + safeEmail + "</a>" +
+                "</div>" +
+
+                "<hr class=\"divider\">" +
+                "</div>" +
+
+                // Footer
+                "<div class=\"footer\">" +
+                "<div class=\"brand\">EXAMVERSE</div>" +
+                "<p>This message was submitted through the ExamVerse contact form.<br>" +
+                "Department of CSE &nbsp;&middot;&nbsp; Bangladesh University of Engineering and Technology &nbsp;&middot;&nbsp; 2026</p>" +
+                "</div>" +
+
+                "</div>" +
+                "</div>" +
+                "</body>" +
+                "</html>";
+    }
+
+    /**
+     * Escape HTML special characters in user-supplied strings.
+     * Prevents HTML injection from contact form input.
+     */
+    private static String escapeHtml(String input) {
+        if (input == null) return "";
+        return input
+                .replace("&",  "&amp;")
+                .replace("<",  "&lt;")
+                .replace(">",  "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'",  "&#39;");
     }
 }

@@ -6,16 +6,19 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.animation.FadeTransition;
 import javafx.util.Duration;
+import com.examverse.service.auth.EmailService;
 import com.examverse.util.SceneManager;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
 /**
- * ContactController - Contact page with form validation
+ * ContactController - Contact page with real email delivery.
  *
- * The form validates all fields client-side.
- * To wire real email sending, inject EmailService and call it in handleSend().
+ * On submit, the message is sent via EmailService.sendContactMessageEmail()
+ * to ajmainfayekdiganta@gmail.com using the same SMTP session already
+ * configured in EmailConfig. The Reply-To header is set to the user's
+ * email so hitting "Reply" in Gmail goes straight back to them.
  */
 public class ContactController implements Initializable {
 
@@ -28,8 +31,12 @@ public class ContactController implements Initializable {
     @FXML private Label statusLabel;
     @FXML private Button sendButton;
 
+    private EmailService emailService;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        emailService = EmailService.getInstance();
+
         categoryCombo.getItems().addAll(
                 "General Inquiry",
                 "Bug Report",
@@ -38,23 +45,21 @@ public class ContactController implements Initializable {
                 "Exam Issue",
                 "Other"
         );
-        statusLabel.setVisible(false);
-        statusLabel.setManaged(false);
+
+        hideStatus();
         applyFadeInAnimation();
     }
 
     @FXML
     private void handleSend() {
-        // Clear previous status
         hideStatus();
 
-        String name    = nameField.getText().trim();
-        String email   = emailField.getText().trim();
-        String subject = subjectField.getText().trim();
+        String name     = nameField.getText().trim();
+        String email    = emailField.getText().trim();
+        String subject  = subjectField.getText().trim();
         String category = categoryCombo.getValue();
-        String message = messageArea.getText().trim();
+        String message  = messageArea.getText().trim();
 
-        // Validate
         if (name.isEmpty()) {
             showError("❌ Please enter your name.");
             nameField.requestFocus();
@@ -75,29 +80,36 @@ public class ContactController implements Initializable {
             categoryCombo.requestFocus();
             return;
         }
-        if (message.isEmpty() || message.length() < 10) {
+        if (message.length() < 10) {
             showError("❌ Please enter a message (at least 10 characters).");
             messageArea.requestFocus();
             return;
         }
 
-        // Simulate send (disable button during processing)
         sendButton.setDisable(true);
         sendButton.setText("Sending...");
+        showInfo("⏳ Sending your message, please wait...");
 
-        // In a real implementation, inject EmailService and call:
-        //   emailService.sendContactMessage(name, email, subject, category, message);
-        // For now we log and show a success message.
-        System.out.printf("📧 Contact form submitted:%n  From: %s <%s>%n  Subject: %s [%s]%n  Message: %s%n",
-                name, email, subject, category, message);
+        final String finalName     = name;
+        final String finalEmail    = email;
+        final String finalSubject  = subject;
+        final String finalCategory = category;
+        final String finalMessage  = message;
 
         new Thread(() -> {
-            try { Thread.sleep(900); } catch (InterruptedException ignored) {}
+            boolean success = emailService.sendContactMessageEmail(
+                    finalName, finalEmail, finalSubject, finalCategory, finalMessage);
+
             javafx.application.Platform.runLater(() -> {
-                showSuccess("✅ Message received! We'll get back to you within 24–48 hours.");
                 sendButton.setDisable(false);
                 sendButton.setText("Send Message →");
-                clearForm();
+
+                if (success) {
+                    showSuccess("✅ Message sent! We'll get back to you within 24–48 hours.");
+                    clearForm();
+                } else {
+                    showError("❌ Delivery failed. Email us directly: ajmainfayekdiganta@gmail.com");
+                }
             });
         }).start();
     }
@@ -120,6 +132,13 @@ public class ContactController implements Initializable {
     private void showSuccess(String msg) {
         statusLabel.setText(msg);
         statusLabel.setStyle("-fx-text-fill: #22d3ee;");
+        statusLabel.setVisible(true);
+        statusLabel.setManaged(true);
+    }
+
+    private void showInfo(String msg) {
+        statusLabel.setText(msg);
+        statusLabel.setStyle("-fx-text-fill: #94a3b8;");
         statusLabel.setVisible(true);
         statusLabel.setManaged(true);
     }

@@ -237,6 +237,62 @@ public class EmailService {
     }
 
     /**
+     * Send a contact form message to the ExamVerse support inbox.
+     *
+     * The email is sent FROM the configured sender account TO the admin inbox.
+     * The sender's name and email are embedded in the HTML body so the admin
+     * knows exactly who wrote in and can reply to them directly.
+     *
+     * @param senderName     Name the user entered in the contact form
+     * @param senderEmail    Email the user entered in the contact form
+     * @param subject        Subject line entered by the user
+     * @param category       Category selected from the dropdown
+     * @param messageBody    The message text entered by the user
+     * @return true if delivered successfully, false otherwise
+     */
+    public boolean sendContactMessageEmail(String senderName, String senderEmail,
+                                           String subject, String category,
+                                           String messageBody) {
+        try {
+            System.out.println("📬 Preparing contact form email from: " + senderEmail);
+
+            Message message = new MimeMessage(mailSession);
+
+            // Always sent from the configured ExamVerse account
+            message.setFrom(new InternetAddress(
+                    EmailConfig.SENDER_EMAIL,
+                    EmailConfig.SENDER_NAME
+            ));
+
+            // Always delivered to the admin inbox
+            message.setRecipients(
+                    Message.RecipientType.TO,
+                    InternetAddress.parse(EmailConfig.CONTACT_RECIPIENT_EMAIL)
+            );
+
+            // Set Reply-To so clicking "Reply" in Gmail goes straight to the user
+            message.setReplyTo(InternetAddress.parse(senderEmail));
+
+            message.setSubject(EmailConfig.CONTACT_SUBJECT_PREFIX + subject);
+
+            String htmlContent = EmailConfig.getContactMessageEmailTemplate(
+                    senderName, senderEmail, subject, category, messageBody);
+            message.setContent(htmlContent, "text/html; charset=utf-8");
+
+            Transport.send(message);
+
+            System.out.println("✅ Contact message delivered to admin inbox.");
+            return true;
+
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send contact message email.");
+            System.err.println("Error: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
      * Test email configuration
      * Sends a test email to verify settings
      */
