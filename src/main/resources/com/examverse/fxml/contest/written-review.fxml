@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.examverse.controller.contest.WrittenReviewController"
+            style="-fx-background-color:#050510;">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20"
+              style="-fx-background-color:#0a0a1e; -fx-border-color:#1e1e3f; -fx-border-width:0 0 1 0;">
+            <padding><Insets top="16" right="30" bottom="16" left="30"/></padding>
+
+            <Button fx:id="backBtn" text="← Contest Manager" onAction="#handleBack"
+                    style="-fx-background-color:#1e1e3f; -fx-text-fill:#94a3b8;
+                           -fx-background-radius:8; -fx-padding:8 16;"/>
+
+            <Label fx:id="contestTitleLabel" text="Written Review"
+                   style="-fx-text-fill:#ffffff; -fx-font-size:20px; -fx-font-weight:bold;"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Label fx:id="pendingCountLabel" text=""
+                   style="-fx-text-fill:#f59e0b; -fx-font-size:14px; -fx-font-weight:bold;"/>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fx:id="mainScroll" fitToWidth="true"
+                    style="-fx-background:#050510; -fx-background-color:#050510;">
+            <VBox fx:id="rootVBox" spacing="0">
+                <padding><Insets top="30" right="60" bottom="50" left="60"/></padding>
+                <VBox fx:id="answersContainer" spacing="20"/>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

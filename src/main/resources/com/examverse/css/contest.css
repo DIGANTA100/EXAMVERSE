@@ -1,0 +1,154 @@
+/* ═══════════════════════════════════════════════════════════════
+   ExamVerse — Contest CSS
+   Covers: lobby, room, result, leaderboard, review screens
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Root / Scroll ─────────────────────────────────────────────── */
+.root {
+    -fx-font-family: 'Segoe UI', 'Inter', 'Helvetica Neue', sans-serif;
+}
+
+.scroll-pane,
+.scroll-pane .viewport,
+.scroll-pane > .viewport > .vbox {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane .scroll-bar:vertical,
+.scroll-pane .scroll-bar:horizontal {
+    -fx-background-color: #0a0a1a;
+}
+.scroll-pane .scroll-bar:vertical .thumb,
+.scroll-pane .scroll-bar:horizontal .thumb {
+    -fx-background-color: #2d2d4e;
+    -fx-background-radius: 10;
+}
+
+/* ── Rank Title Labels ──────────────────────────────────────────── */
+.rank-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.rank-legend   { -fx-text-fill: #fbbf24; }
+.rank-champion { -fx-text-fill: #a78bfa; }
+.rank-expert   { -fx-text-fill: #60a5fa; }
+.rank-advanced { -fx-text-fill: #f97316; }
+.rank-skilled  { -fx-text-fill: #34d399; }
+.rank-learner  { -fx-text-fill: #94a3b8; }
+.rank-beginner { -fx-text-fill: #6b7280; }
+
+/* ── Common Buttons ─────────────────────────────────────────────── */
+.btn-contest-primary {
+    -fx-background-radius: 10;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-padding: 10 24 10 24;
+}
+
+.btn-contest-secondary {
+    -fx-background-color: #1e293b;
+    -fx-text-fill: #e2e8f0;
+    -fx-background-radius: 8;
+    -fx-padding: 9 20 9 20;
+    -fx-cursor: hand;
+}
+.btn-contest-secondary:hover {
+    -fx-background-color: #263548;
+}
+
+/* ── Theme-specific accent colors (set via inline style, mirrored here) ── */
+
+/* Cosmic Arena */
+.theme-cosmic_arena   { -fx-accent: #7c3aed; }
+/* Neon Circuit */
+.theme-neon_circuit   { -fx-accent: #00ff88; }
+/* Dragon Realm */
+.theme-dragon_realm   { -fx-accent: #ff6600; }
+/* Frozen Peaks */
+.theme-frozen_peaks   { -fx-accent: #00cfff; }
+/* Shadow Temple */
+.theme-shadow_temple  { -fx-accent: #9f1239; }
+/* Cyber Storm */
+.theme-cyber_storm    { -fx-accent: #38bdf8; }
+/* Volcanic Forge */
+.theme-volcanic_forge { -fx-accent: #ef4444; }
+/* Ocean Depths */
+.theme-ocean_depths   { -fx-accent: #0ea5e9; }
+
+/* ── Contest Cards ───────────────────────────────────────────────── */
+.contest-card {
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-border-width: 2;
+    -fx-cursor: hand;
+}
+
+/* ── Leaderboard rows ────────────────────────────────────────────── */
+.lb-row-me {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+/* ── Radio buttons inside contest room ──────────────────────────── */
+.radio-button {
+    -fx-text-fill: #e2e8f0;
+    -fx-font-size: 14px;
+}
+.radio-button:selected {
+    -fx-background-radius: 8;
+}
+.radio-button .radio {
+    -fx-border-color: #475569;
+    -fx-background-color: #0f172a;
+}
+.radio-button:selected .radio {
+    -fx-border-color: #7c3aed;
+    -fx-background-color: #7c3aed;
+}
+
+/* ── Slider (written review marks) ──────────────────────────────── */
+.slider .track {
+    -fx-background-color: #1e293b;
+    -fx-background-radius: 4;
+}
+.slider .thumb {
+    -fx-background-color: #7c3aed;
+    -fx-background-radius: 50;
+}
+
+/* ── Progress bar (intro loading) ───────────────────────────────── */
+.progress-bar .bar {
+    -fx-background-color: #7c3aed;
+    -fx-background-radius: 4;
+}
+.progress-bar .track {
+    -fx-background-color: #1e293b;
+    -fx-background-radius: 4;
+}
+
+/* ── Text fields ─────────────────────────────────────────────────── */
+.text-field, .text-area {
+    -fx-background-color: #0f172a;
+    -fx-text-fill: #e2e8f0;
+    -fx-prompt-text-fill: #475569;
+    -fx-background-radius: 8;
+    -fx-border-color: #1e293b;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 8 12 8 12;
+}
+.text-field:focused, .text-area:focused {
+    -fx-border-color: #7c3aed;
+    -fx-effect: dropshadow(gaussian, #7c3aed44, 8, 0, 0, 0);
+}
+
+/* ── Tooltip ─────────────────────────────────────────────────────── */
+.tooltip {
+    -fx-background-color: #1e293b;
+    -fx-text-fill: #e2e8f0;
+    -fx-background-radius: 6;
+    -fx-font-size: 12px;
+}

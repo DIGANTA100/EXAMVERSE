@@ -54,6 +54,9 @@
 
                 <Button fx:id="resultsBtn" text="📈  Results"
                         styleClass="sidebar-btn" onAction="#handleResults"/>
+
+                <Button fx:id="contestsBtn" text="🏆  Contests"
+                        styleClass="sidebar-btn" onAction="#handleContests"/>
             </VBox>
 
             <Region VBox.vgrow="ALWAYS"/>

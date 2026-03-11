@@ -55,6 +55,9 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private VBox contentPane, examsListContainer;
 
+    @FXML
+    private Button contestsBtn;
+
     // Services
     private ExamService examService;
     private QuestionService questionService;
@@ -303,6 +306,13 @@ public class AdminDashboardController implements Initializable {
         // Navigate to exam reports page
         SceneManager.switchScene("/com/examverse/fxml/dashboard/exam-reports.fxml");
     }
+
+    @FXML
+    private void handleContests() {
+        setActiveButton(contestsBtn);
+        SceneManager.switchScene("/com/examverse/fxml/contest/contest-manager.fxml");
+    }
+
 
     @FXML
     private void handleLogout() {

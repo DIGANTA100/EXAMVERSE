@@ -28,6 +28,7 @@ public class ExamVerseApp extends Application {
         try {
             System.out.println("📊 Initializing Database...");
             DatabaseConfig.initializeTables();
+            com.examverse.config.ContestDatabaseSetup.initializeContestTables();
 
             if (DatabaseConfig.testConnection()) {
                 System.out.println("✅ Database initialized successfully!");

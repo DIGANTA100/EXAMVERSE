@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane fx:id="rootPane"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.examverse.controller.contest.ContestRoomController"
+            style="-fx-background-color:#0a0a1a;">
+
+    <!-- ═══ TOP BAR ═══ -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20"
+              style="-fx-background-color:#0f0f23; -fx-border-color:#1e293b; -fx-border-width:0 0 1 0;">
+            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+
+            <Label fx:id="contestTitleLabel" text="Contest"
+                   style="-fx-text-fill:#ffffff; -fx-font-size:18px; -fx-font-weight:bold;"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Label fx:id="questionCounterLabel" text="Question 1 / 10"
+                   style="-fx-text-fill:#94a3b8; -fx-font-size:14px;"/>
+
+            <Label fx:id="liveScoreLabel" text="My Score: 0"
+                   style="-fx-text-fill:#22c55e; -fx-font-size:14px; -fx-font-weight:bold;"/>
+
+            <!-- Timer -->
+            <HBox alignment="CENTER" spacing="6"
+                  style="-fx-background-color:#1e293b; -fx-background-radius:10; -fx-padding:8 18;">
+                <Label text="⏱" style="-fx-font-size:16px;"/>
+                <Label fx:id="timerLabel" text="01:00:00"
+                       style="-fx-text-fill:#fbbf24; -fx-font-size:22px; -fx-font-weight:bold;"/>
+            </HBox>
+
+            <Button fx:id="submitAllBtn" text="✅  Submit Contest"
+                    onAction="#handleSubmitAll"
+                    style="-fx-background-color:#22c55e; -fx-text-fill:#000;
+                           -fx-font-weight:bold; -fx-background-radius:10;
+                           -fx-padding:10 22; -fx-font-size:14px;"/>
+        </HBox>
+    </top>
+
+    <!-- ═══ LEFT: Question Nav ═══ -->
+    <left>
+        <ScrollPane fitToWidth="true" style="-fx-background:#0f0f23; -fx-background-color:#0f0f23;"
+                    prefWidth="110">
+            <VBox fx:id="questionNavPanel" spacing="8">
+                <padding><Insets top="16" right="10" bottom="16" left="10"/></padding>
+            </VBox>
+        </ScrollPane>
+    </left>
+
+    <!-- ═══ CENTER: Question Content ═══ -->
+    <center>
+        <ScrollPane fx:id="questionScroll" fitToWidth="true"
+                    style="-fx-background:#0a0a1a; -fx-background-color:#0a0a1a;">
+            <VBox fx:id="questionContentArea" spacing="20">
+                <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+    <!-- ═══ RIGHT: Live Leaderboard ═══ -->
+    <right>
+        <ScrollPane fitToWidth="true" style="-fx-background:#0f0f23; -fx-background-color:#0f0f23;"
+                    prefWidth="220">
+            <VBox fx:id="leaderboardPanel" spacing="8">
+                <padding><Insets top="16" right="10" bottom="16" left="10"/></padding>
+            </VBox>
+        </ScrollPane>
+    </right>
+
+</BorderPane>

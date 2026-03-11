@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.examverse.controller.contest.ContestResultController"
+            style="-fx-background-color:#050510;">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20"
+              style="-fx-background-color:#0a0a1e; -fx-border-color:#1e1e3f; -fx-border-width:0 0 1 0;">
+            <padding><Insets top="16" right="30" bottom="16" left="30"/></padding>
+
+            <Button fx:id="backBtn" text="← Back to Lobby" onAction="#handleBack"
+                    style="-fx-background-color:#1e1e3f; -fx-text-fill:#94a3b8;
+                           -fx-background-radius:8; -fx-padding:8 16;"/>
+
+            <Label fx:id="contestTitleLabel" text="Results"
+                   style="-fx-text-fill:#ffffff; -fx-font-size:20px; -fx-font-weight:bold;"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Button fx:id="leaderboardBtn" text="🏆 Global Leaderboard"
+                    onAction="#handleLeaderboard"
+                    style="-fx-background-color:#1e293b; -fx-text-fill:#fbbf24;
+                           -fx-font-weight:bold; -fx-background-radius:8; -fx-padding:10 20;"/>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true"
+                    style="-fx-background:#050510; -fx-background-color:#050510;">
+            <VBox fx:id="rootVBox" spacing="0">
+                <padding><Insets top="30" right="50" bottom="50" left="50"/></padding>
+
+                <!-- Score summary row -->
+                <HBox spacing="20" alignment="CENTER">
+                    <VBox.margin><Insets bottom="30"/></VBox.margin>
+
+                    <!-- MCQ Score -->
+                    <VBox alignment="CENTER" spacing="6"
+                          style="-fx-background-color:#1e293b; -fx-background-radius:16;
+                                 -fx-padding:24 32; -fx-min-width:180;">
+                        <Label text="📝  MCQ Score"
+                               style="-fx-text-fill:#94a3b8; -fx-font-size:13px;"/>
+                        <Label fx:id="mcqScoreLabel" text="—"
+                               style="-fx-text-fill:#7c3aed; -fx-font-size:30px; -fx-font-weight:bold;"/>
+                    </VBox>
+
+                    <!-- Live Rank -->
+                    <VBox alignment="CENTER" spacing="6"
+                          style="-fx-background-color:#1e293b; -fx-background-radius:16;
+                                 -fx-padding:24 32; -fx-min-width:160;">
+                        <Label text="📊  Live Rank"
+                               style="-fx-text-fill:#94a3b8; -fx-font-size:13px;"/>
+                        <Label fx:id="liveRankLabel" text="—"
+                               style="-fx-text-fill:#fbbf24; -fx-font-size:30px; -fx-font-weight:bold;"/>
+                    </VBox>
+
+                    <!-- Rating change -->
+                    <VBox alignment="CENTER" spacing="6"
+                          style="-fx-background-color:#1e293b; -fx-background-radius:16;
+                                 -fx-padding:24 32; -fx-min-width:200;">
+                        <Label text="⚡  Rating"
+                               style="-fx-text-fill:#94a3b8; -fx-font-size:13px;"/>
+                        <Label fx:id="newRatingLabel" text="—"
+                               style="-fx-text-fill:#7c3aed; -fx-font-size:26px; -fx-font-weight:bold;"/>
+                        <Label fx:id="ratingChangeLabel" text="—"
+                               style="-fx-text-fill:#22c55e; -fx-font-size:16px; -fx-font-weight:bold;"/>
+                        <Label fx:id="rankTitleLabel" text=""
+                               style="-fx-font-size:14px;"/>
+                    </VBox>
+
+                    <!-- Final Rank -->
+                    <VBox alignment="CENTER" spacing="6"
+                          style="-fx-background-color:#1e293b; -fx-background-radius:16;
+                                 -fx-padding:24 32; -fx-min-width:180;">
+                        <Label text="🏆  Final Rank"
+                               style="-fx-text-fill:#94a3b8; -fx-font-size:13px;"/>
+                        <Label fx:id="finalRankLabel" text="Pending evaluation"
+                               style="-fx-text-fill:#e2e8f0; -fx-font-size:15px; -fx-font-weight:bold;"/>
+                    </VBox>
+                </HBox>
+
+                <!-- Written status -->
+                <Label fx:id="writtenStatusLabel" text=""
+                       style="-fx-text-fill:#f59e0b; -fx-font-size:14px;">
+                    <VBox.margin><Insets bottom="24"/></VBox.margin>
+                </Label>
+
+                <!-- Answers review -->
+                <VBox fx:id="answersReviewContainer" spacing="12">
+                    <VBox.margin><Insets bottom="30"/></VBox.margin>
+                </VBox>
+
+                <!-- Final Standings -->
+                <VBox fx:id="standingsContainer" spacing="8"/>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

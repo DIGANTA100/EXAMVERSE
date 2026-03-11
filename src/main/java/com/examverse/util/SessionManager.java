@@ -13,6 +13,8 @@ public class SessionManager {
 
     private static SessionManager instance;
     private User currentUser;
+    private com.examverse.model.exam.Contest currentContest;
+    private int currentParticipantId = -1;
     private Map<String, Object> attributes; // For storing temporary session data
 
     private SessionManager() {
@@ -68,6 +70,36 @@ public class SessionManager {
         return currentUser != null && currentUser.isStudent();
     }
 
+    // ==================== CONTEST SESSION METHODS ====================
+
+    /**
+     * Get current contest
+     */
+    public com.examverse.model.exam.Contest getCurrentContest() {
+        return currentContest;
+    }
+
+    /**
+     * Set current contest
+     */
+    public void setCurrentContest(com.examverse.model.exam.Contest contest) {
+        this.currentContest = contest;
+    }
+
+    /**
+     * Get participant ID for current contest
+     */
+    public int getCurrentParticipantId() {
+        return currentParticipantId;
+    }
+
+    /**
+     * Set participant ID for current contest
+     */
+    public void setCurrentParticipantId(int participantId) {
+        this.currentParticipantId = participantId;
+    }
+
     /**
      * Logout current user
      */
@@ -75,6 +107,8 @@ public class SessionManager {
         if (currentUser != null) {
             System.out.println("✅ User logged out: " + currentUser.getUsername());
             currentUser = null;
+            currentContest = null;
+            currentParticipantId = -1;
         }
         attributes.clear(); // Clear session attributes on logout
     }
@@ -86,7 +120,11 @@ public class SessionManager {
         if (currentUser != null) {
             System.out.println("🧹 Clearing session for: " + currentUser.getUsername());
         }
+
         currentUser = null;
+        currentContest = null;
+        currentParticipantId = -1;
+
         attributes.clear();
         instance = null;
     }

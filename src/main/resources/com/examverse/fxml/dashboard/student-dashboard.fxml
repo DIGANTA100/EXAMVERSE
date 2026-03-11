@@ -53,6 +53,8 @@
                         styleClass="sidebar-btn" onAction="#handleProfile"/>
                 <Button fx:id="aiAssistantBtn" text="🤖  AI Assistant"
                         styleClass="sidebar-btn" onAction="#handleAiAssistant"/>
+                <Button fx:id="contestsBtn" text="⚔️  Contests"
+                        styleClass="sidebar-btn" onAction="#handleContests"/>
             </VBox>
 
             <Region VBox.vgrow="ALWAYS"/>

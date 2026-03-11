@@ -33,6 +33,8 @@ import java.util.stream.Collectors;
 import javafx.geometry.HPos;
 import com.examverse.service.ai.GeminiService;
 import javafx.concurrent.Task;
+import javafx.scene.Parent;
+import javafx.scene.layout.Pane;
 
 /**
  * StudentDashboardController — Fixed & Fully Featured
@@ -69,6 +71,7 @@ public class StudentDashboardController implements Initializable {
     @FXML private Button profileBtn;
     @FXML private Button logoutBtn;
     @FXML private Button aiAssistantBtn;
+    @FXML private Button contestsBtn;
 
     // Header
     @FXML private Label  welcomeLabel;
@@ -229,7 +232,10 @@ public class StudentDashboardController implements Initializable {
     @FXML private void handleResults()    { setActiveButton(resultsBtn);   loadResultsAnalytics(); }
     @FXML private void handleProfile()    { setActiveButton(profileBtn);   loadProfile(); }
     @FXML private void handleAiAssistant() { setActiveButton(aiAssistantBtn); loadAiAssistant(); }
-
+    @FXML private void handleContests() {
+        setActiveButton(contestsBtn);
+        SceneManager.switchScene("/com/examverse/fxml/contest/contest-lobby.fxml");
+    }
     @FXML
     private void handleLogout() {
         if (clockTimeline != null) clockTimeline.stop();
@@ -397,7 +403,7 @@ public class StudentDashboardController implements Initializable {
     // ─────────────────────────────────────────────────────────────────────────
 
     private void setActiveButton(Button activeBtn) {
-        for (Button b : new Button[]{dashboardBtn, myExamsBtn, practiceBtn, resultsBtn, profileBtn, aiAssistantBtn}) {
+        for (Button b : new Button[]{dashboardBtn, myExamsBtn, practiceBtn, resultsBtn, profileBtn, aiAssistantBtn, contestsBtn}) {
 
             if (b == null) continue;
             b.getStyleClass().removeAll("sidebar-btn-active");
@@ -464,11 +470,15 @@ public class StudentDashboardController implements Initializable {
         Button a2 = quickActionBtn("▶️  Resume Exam",      "#f59e0b", "#b45309");
         Button a3 = quickActionBtn("💪  Practice Mode",    "#a78bfa", "#6d28d9");
         Button a4 = quickActionBtn("📊  My Results",       "#34d399", "#059669");
+        Button a5 = quickActionBtn("⚔️  Live Contests", "#7c3aed", "#5b21b6");
+
 
         a1.setOnAction(e -> { setActiveButton(myExamsBtn); loadMyExams(); });
         a2.setOnAction(e -> { setActiveButton(myExamsBtn); loadMyExamsTab("ongoing"); });
         a3.setOnAction(e -> { setActiveButton(practiceBtn); loadPracticeMode(); });
         a4.setOnAction(e -> { setActiveButton(resultsBtn); loadResultsAnalytics(); });
+        a5.setOnAction(e -> { setActiveButton(contestsBtn); handleContests(); });
+        actions.getChildren().add(a5);
 
         actions.getChildren().addAll(a1, a2, a3, a4);
 

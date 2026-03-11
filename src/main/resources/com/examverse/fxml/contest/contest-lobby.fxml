@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.examverse.controller.contest.ContestLobbyController"
+            style="-fx-background-color:#050510;">
+
+    <!-- ═══ TOP HEADER ═══ -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="16"
+              style="-fx-background-color:#0a0a1e; -fx-border-color:#1e1e3f; -fx-border-width:0 0 1 0;">
+            <padding><Insets top="16" right="30" bottom="16" left="30"/></padding>
+
+            <Button fx:id="backBtn" text="← Dashboard" onAction="#handleBack"
+                    style="-fx-background-color:#1e1e3f; -fx-text-fill:#94a3b8;
+                           -fx-background-radius:8; -fx-padding:8 16;"/>
+
+            <Label style="-fx-text-fill:#7c3aed; -fx-font-size:22px; -fx-font-weight:bold;">
+                ⚔️  Contest Arena
+            </Label>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- Student rating card -->
+            <VBox alignment="CENTER" spacing="2"
+                  style="-fx-background-color:#1e1e3f; -fx-background-radius:10; -fx-padding:8 20;">
+                <Label fx:id="usernameLabel" text="Player"
+                       style="-fx-text-fill:#94a3b8; -fx-font-size:12px;"/>
+                <HBox alignment="CENTER" spacing="8">
+                    <Label fx:id="ratingLabel" text="800"
+                           style="-fx-text-fill:#7c3aed; -fx-font-size:20px; -fx-font-weight:bold;"/>
+                    <Label fx:id="rankTitleLabel" text="🌱 Beginner"
+                           style="-fx-text-fill:#94a3b8; -fx-font-size:13px;"/>
+                </HBox>
+            </VBox>
+
+            <Button fx:id="leaderboardBtn" text="🏆 Leaderboard" onAction="#handleLeaderboard"
+                    style="-fx-background-color:#1e293b; -fx-text-fill:#fbbf24;
+                           -fx-font-weight:bold; -fx-background-radius:8; -fx-padding:10 20;"/>
+        </HBox>
+    </top>
+
+    <!-- ═══ CONTEST LIST ═══ -->
+    <center>
+        <ScrollPane fx:id="scrollPane" fitToWidth="true"
+                    style="-fx-background:#050510; -fx-background-color:#050510;">
+            <VBox spacing="0">
+                <padding><Insets top="30" right="60" bottom="40" left="60"/></padding>
+
+                <Label text="🎮  Live &amp; Upcoming Contests"
+                       style="-fx-text-fill:#e2e8f0; -fx-font-size:20px; -fx-font-weight:bold;">
+                    <VBox.margin><Insets bottom="24"/></VBox.margin>
+                </Label>
+
+                <VBox fx:id="contestCardsContainer" spacing="20" alignment="CENTER"/>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>
