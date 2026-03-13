@@ -26,60 +26,49 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * ContestManagerController — FIXED
+ * ContestManagerController — FIXED v2
  *
  * Bug fixes:
- *  1. Theme selection: ToggleButton mutual-exclusion now guaranteed.
- *     Previously, clicking a theme visually deselected others but
- *     getSelectedToggle() could return null when the user clicked the
- *     already-selected button (ToggleGroup allows deselection by default).
- *     Fixed by calling tb.setSelected(true) in the toggle handler AND by
- *     preventing deselection via a selection-guard listener.
+ *  1. "Add Questions" button is now hidden for EVALUATION, FINISHED, CANCELLED.
+ *     Admin can only add questions while the contest is UPCOMING (before launch).
  *
- *  2. Question count: after adding a question the card now shows a live
- *     "Questions added" counter fetched straight from the DB, so the admin
- *     always knows the current state without having to reload the page.
+ *  2. Question limits enforced: showAddQuestionDialog() now checks how many
+ *     MCQ/Written questions already exist and blocks adding more than the
+ *     contest's configured total_mcq / total_written limits.
  *
- *  3. Real-time visibility: the contest list auto-polls the DB every 10 s
- *     so status changes made in another window (e.g. a second admin session)
- *     are reflected without a manual reload.
+ *  3. "Review Written" button only shown for EVALUATION status.
+ *     It is hidden for FINISHED (i.e. after admin clicks "Mark Finished").
  *
- *  4. Review Written button: now visible for EVALUATION status AND for
- *     contests that are LIVE with written questions (so the teacher can
- *     start reviewing immediately after the contest ends).
+ *  4. Leaderboard button stores the contest in session so LeaderboardController
+ *     can load only that contest's participants.
+ *
+ *  5. Auto-refresh every 10s so status changes (including auto-launch) are
+ *     reflected without manual reload.
  */
 public class ContestManagerController implements Initializable {
 
     // ── FXML References ────────────────────────────────────────────────────────
-    @FXML private VBox    contestListContainer;
-    @FXML private Label   pageTitle;
-    @FXML private Button  backBtn, createContestBtn;
+    @FXML private VBox  contestListContainer;
+    @FXML private Label pageTitle;
+    @FXML private Button backBtn, createContestBtn;
     @FXML private ScrollPane mainScroll;
-    @FXML private VBox    mainContent;
+    @FXML private VBox mainContent;
 
     // ── Services / State ───────────────────────────────────────────────────────
     private final ContestService contestService = new ContestService();
-    private User   currentUser;
-    private Timer  refreshTimer;
+    private User currentUser;
+    private Timer refreshTimer;
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         currentUser = SessionManager.getInstance().getCurrentUser();
         loadContests();
-        startAutoRefresh();
-    }
 
-    // ── Auto-refresh (real-time networking fix) ───────────────────────────────
-    /**
-     * Polls DB every 10 seconds so contests created / status-changed by
-     * another session appear immediately without restarting the app.
-     */
-    private void startAutoRefresh() {
-        refreshTimer = new Timer(true);
+        // Auto-refresh every 10 s so auto-launched contests show their new status
+        refreshTimer = new Timer("admin-contest-refresh", true);
         refreshTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
+            @Override public void run() {
                 Platform.runLater(() -> loadContests());
             }
         }, 10_000, 10_000);
@@ -105,12 +94,6 @@ public class ContestManagerController implements Initializable {
     // ── Contest Card ──────────────────────────────────────────────────────────
     private VBox buildContestCard(Contest c) {
         Theme t = c.getTheme();
-
-        // ── Question count from DB ────────────────────────────────────────────
-        List<ContestQuestion> questions = contestService.getQuestionsForContest(c.getContestId());
-        long mcqAdded     = questions.stream().filter(ContestQuestion::isMcq).count();
-        long writtenAdded = questions.stream().filter(ContestQuestion::isWritten).count();
-
         VBox card = new VBox(12);
         card.setPadding(new Insets(20));
         card.setStyle("-fx-background-color:" + t.getBgColor() +
@@ -118,7 +101,7 @@ public class ContestManagerController implements Initializable {
                 "-fx-border-color:" + t.getAccentColor() + ";" +
                 "-fx-border-radius:12; -fx-border-width:1.5;");
 
-        // Title row
+        // ── Title row ──
         HBox titleRow = new HBox(12);
         titleRow.setAlignment(Pos.CENTER_LEFT);
         Label themeLabel = new Label(t.getDisplayName());
@@ -132,56 +115,44 @@ public class ContestManagerController implements Initializable {
         Label statusBadge = buildStatusBadge(c.getStatus());
         titleRow.getChildren().addAll(titleLabel, sp, themeLabel, statusBadge);
 
-        // Meta row
+        // ── Meta row ──
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm");
+
+        // Live question count display
+        int mcqAdded     = contestService.getQuestionCountByType(c.getContestId(), QuestionType.MCQ);
+        int writtenAdded = contestService.getQuestionCountByType(c.getContestId(), QuestionType.WRITTEN);
+        String qInfo = "📝 MCQ: " + mcqAdded + "/" + c.getTotalMcqQuestions() +
+                "  ✍️ Written: " + writtenAdded + "/" + c.getTotalWrittenQuestions();
+        String qInfoStyle = (mcqAdded < c.getTotalMcqQuestions() ||
+                writtenAdded < c.getTotalWrittenQuestions())
+                ? "-fx-text-fill:#f59e0b; -fx-font-size:12px;"
+                : "-fx-text-fill:#22c55e; -fx-font-size:12px;";
+
         Label metaLabel = new Label("⏰ " + (c.getStartTime() != null ? c.getStartTime().format(fmt) : "—") +
                 "  •  ⌛ " + c.getDurationMinutes() + " min" +
-                "  •  📝 " + c.getTotalMcqQuestions() + " MCQ + " +
-                c.getTotalWrittenQuestions() + " Written" +
                 "  •  🏆 " + c.getTotalMarks() + " marks");
         metaLabel.setStyle("-fx-text-fill:#94a3b8; -fx-font-size:13px;");
 
-        // ── FIX 2: Question progress bar showing how many have been added ─────
-        boolean allQuestionsAdded = (mcqAdded >= c.getTotalMcqQuestions())
-                && (writtenAdded >= c.getTotalWrittenQuestions());
-        int totalExpected = c.getTotalMcqQuestions() + c.getTotalWrittenQuestions();
-        int totalAdded    = (int)(mcqAdded + writtenAdded);
+        Label qCountLabel = new Label(qInfo);
+        qCountLabel.setStyle(qInfoStyle);
 
-        String questionProgressColor = allQuestionsAdded ? "#22c55e" : "#f59e0b";
-        Label questionProgress = new Label(
-                "Questions: " + totalAdded + " / " + totalExpected + " added" +
-                        " (" + mcqAdded + " MCQ, " + writtenAdded + " Written)" +
-                        (allQuestionsAdded ? "  ✅" : "  ⚠️ needs more questions"));
-        questionProgress.setStyle("-fx-text-fill:" + questionProgressColor +
-                "; -fx-font-size:13px; -fx-font-weight:bold;");
-
-        // Progress bar
-        ProgressBar qProgress = new ProgressBar(
-                totalExpected > 0 ? (double) totalAdded / totalExpected : 0);
-        qProgress.setPrefWidth(300);
-        qProgress.setPrefHeight(8);
-        qProgress.setStyle("-fx-accent:" + questionProgressColor + ";");
-
-        VBox progressBox = new VBox(4, questionProgress, qProgress);
-
-        // Action row
+        // ── Action row ──
         HBox actions = new HBox(10);
         actions.setAlignment(Pos.CENTER_LEFT);
 
-        Button addQBtn = new Button("➕ Add Questions");
-        addQBtn.setStyle("-fx-background-color:" + t.getAccentColor() +
-                "; -fx-text-fill:#000; -fx-font-weight:bold;" +
-                "-fx-background-radius:8; -fx-padding:8 16 8 16;");
-        addQBtn.setOnAction(e -> showAddQuestionDialog(c));
+        // ─ "Add Questions" button
+        // Only show for UPCOMING. Once launched (LIVE/EVALUATION/FINISHED), no more editing.
+        boolean canAddQuestions = c.getStatus() == Contest.Status.UPCOMING;
+        if (canAddQuestions) {
+            Button addQBtn = new Button("➕ Add Questions");
+            addQBtn.setStyle("-fx-background-color:" + t.getAccentColor() +
+                    "; -fx-text-fill:#000; -fx-font-weight:bold;" +
+                    "-fx-background-radius:8; -fx-padding:8 16 8 16;");
+            addQBtn.setOnAction(e -> showAddQuestionDialog(c));
+            actions.getChildren().add(addQBtn);
+        }
 
-        Button viewQBtn = new Button("👁 View Questions");
-        viewQBtn.setStyle("-fx-background-color:transparent;" +
-                "-fx-border-color:" + t.getAccentColor() + ";" +
-                "-fx-text-fill:" + t.getAccentColor() + ";" +
-                "-fx-background-radius:8; -fx-border-radius:8;" +
-                "-fx-padding:7 14 7 14;");
-        viewQBtn.setOnAction(e -> showViewQuestionsDialog(c));
-
+        // ─ Leaderboard button (always visible)
         Button viewLbBtn = new Button("🏆 Leaderboard");
         viewLbBtn.setStyle("-fx-background-color:transparent;" +
                 "-fx-border-color:" + t.getAccentColor() + ";" +
@@ -190,101 +161,25 @@ public class ContestManagerController implements Initializable {
                 "-fx-padding:7 14 7 14;");
         viewLbBtn.setOnAction(e -> openLeaderboard(c));
 
+        // ─ Status toggle button
         Button statusBtn = buildStatusToggleButton(c, t);
 
-        // ── FIX 4: Show Review Written for EVALUATION status ──────────────────
-        Button reviewBtn = new Button("✍️ Review Written");
-        reviewBtn.setStyle("-fx-background-color:transparent;" +
-                "-fx-border-color:#fbbf24; -fx-text-fill:#fbbf24;" +
-                "-fx-background-radius:8; -fx-border-radius:8;" +
-                "-fx-padding:7 14 7 14;");
-        reviewBtn.setOnAction(e -> openWrittenReview(c));
-        reviewBtn.setVisible(c.getStatus() == Contest.Status.EVALUATION ||
-                c.getStatus() == Contest.Status.FINISHED);
-        reviewBtn.setManaged(reviewBtn.isVisible());
-
-        actions.getChildren().addAll(addQBtn, viewQBtn, viewLbBtn, statusBtn, reviewBtn);
-
-        card.getChildren().addAll(titleRow, metaLabel, progressBox, actions);
-        return card;
-    }
-
-    // ── View Questions Dialog ─────────────────────────────────────────────────
-    private void showViewQuestionsDialog(Contest contest) {
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.setTitle("Questions — " + contest.getContestTitle());
-
-        ButtonType closeBtn = new ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE);
-        dialog.getDialogPane().getButtonTypes().add(closeBtn);
-
-        VBox content = new VBox(10);
-        content.setPadding(new Insets(20));
-        content.setPrefWidth(600);
-
-        List<ContestQuestion> questions = contestService.getQuestionsForContest(contest.getContestId());
-
-        if (questions.isEmpty()) {
-            Label none = new Label("No questions added yet.");
-            none.setStyle("-fx-font-size:14px;");
-            content.getChildren().add(none);
+        // ─ "Review Written" button — ONLY for EVALUATION phase
+        //   Hidden once admin clicks "Mark Finished" (status becomes FINISHED)
+        if (c.getStatus() == Contest.Status.EVALUATION) {
+            Button reviewBtn = new Button("✍️ Review Written");
+            reviewBtn.setStyle("-fx-background-color:transparent;" +
+                    "-fx-border-color:#fbbf24; -fx-text-fill:#fbbf24;" +
+                    "-fx-background-radius:8; -fx-border-radius:8;" +
+                    "-fx-padding:7 14 7 14;");
+            reviewBtn.setOnAction(e -> openWrittenReview(c));
+            actions.getChildren().addAll(viewLbBtn, statusBtn, reviewBtn);
         } else {
-            for (int i = 0; i < questions.size(); i++) {
-                ContestQuestion q = questions.get(i);
-                VBox qCard = new VBox(6);
-                qCard.setPadding(new Insets(12));
-                qCard.setStyle("-fx-background-color:#f8fafc; -fx-background-radius:8;" +
-                        "-fx-border-color:#e2e8f0; -fx-border-radius:8; -fx-border-width:1;");
-
-                Label qLabel = new Label((i + 1) + ". [" + q.getType().name() + " | " +
-                        q.getMarks() + " marks] " + q.getQuestionText());
-                qLabel.setWrapText(true);
-                qLabel.setStyle("-fx-font-weight:bold; -fx-font-size:13px;");
-                qCard.getChildren().add(qLabel);
-
-                if (q.isMcq()) {
-                    for (String opt : new String[]{
-                            "A: " + q.getOptionA(),
-                            "B: " + q.getOptionB(),
-                            "C: " + q.getOptionC(),
-                            "D: " + q.getOptionD()}) {
-                        if (opt.length() > 3) {
-                            Label ol = new Label("   " + opt);
-                            ol.setStyle("-fx-font-size:12px;");
-                            qCard.getChildren().add(ol);
-                        }
-                    }
-                    Label ans = new Label("   ✅ Correct: " + q.getCorrectAnswer());
-                    ans.setStyle("-fx-text-fill:#22c55e; -fx-font-size:12px; -fx-font-weight:bold;");
-                    qCard.getChildren().add(ans);
-                }
-
-                // Delete button
-                Button delBtn = new Button("🗑 Delete");
-                delBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:#ef4444;" +
-                        "-fx-border-color:#ef4444; -fx-border-radius:6; -fx-background-radius:6;" +
-                        "-fx-font-size:12px; -fx-padding:4 10;");
-                delBtn.setOnAction(e -> {
-                    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                            "Delete this question?", ButtonType.YES, ButtonType.NO);
-                    confirm.showAndWait().ifPresent(bt -> {
-                        if (bt == ButtonType.YES) {
-                            contestService.deleteQuestion(q.getQuestionId());
-                            content.getChildren().remove(qCard);
-                            loadContests(); // refresh card counts
-                        }
-                    });
-                });
-
-                qCard.getChildren().add(delBtn);
-                content.getChildren().add(qCard);
-            }
+            actions.getChildren().addAll(viewLbBtn, statusBtn);
         }
 
-        ScrollPane sp = new ScrollPane(content);
-        sp.setFitToWidth(true);
-        sp.setPrefViewportHeight(480);
-        dialog.getDialogPane().setContent(sp);
-        dialog.showAndWait();
+        card.getChildren().addAll(titleRow, metaLabel, qCountLabel, actions);
+        return card;
     }
 
     private Label buildStatusBadge(Contest.Status status) {
@@ -330,7 +225,7 @@ public class ContestManagerController implements Initializable {
         String msg = switch (next) {
             case LIVE       -> "Launch this contest? Students will be able to join immediately.";
             case EVALUATION -> "End the contest? No more answers will be accepted.";
-            case FINISHED   -> "Finalize contest? Ratings will be distributed.";
+            case FINISHED   -> "Finalize contest? Ratings will be distributed and the contest will be closed.";
             default         -> "";
         };
 
@@ -341,6 +236,7 @@ public class ContestManagerController implements Initializable {
                 boolean ok = contestService.updateContestStatus(c.getContestId(), next);
                 if (ok) {
                     if (next == Contest.Status.FINISHED) {
+                        // Trigger rating distribution (handles contests with no written questions)
                         contestService.distributeRatingChanges(c.getContestId());
                     }
                     Platform.runLater(this::loadContests);
@@ -351,8 +247,26 @@ public class ContestManagerController implements Initializable {
 
     // ── Add Question Dialog ───────────────────────────────────────────────────
     private void showAddQuestionDialog(Contest contest) {
+        // Fetch current counts before opening dialog
+        int mcqAdded     = contestService.getQuestionCountByType(contest.getContestId(), QuestionType.MCQ);
+        int writtenAdded = contestService.getQuestionCountByType(contest.getContestId(), QuestionType.WRITTEN);
+        int mcqLimit     = contest.getTotalMcqQuestions();
+        int writtenLimit = contest.getTotalWrittenQuestions();
+
+        boolean mcqFull     = mcqAdded >= mcqLimit;
+        boolean writtenFull = writtenAdded >= writtenLimit;
+
+        // If both are full, show message and return
+        if (mcqFull && writtenFull) {
+            showAlert("Questions Complete",
+                    "All questions have already been added for this contest.\n" +
+                            "MCQ: " + mcqAdded + "/" + mcqLimit +
+                            "   Written: " + writtenAdded + "/" + writtenLimit);
+            return;
+        }
+
         Dialog<ContestQuestion> dialog = new Dialog<>();
-        dialog.setTitle("Add Question to: " + contest.getContestTitle());
+        dialog.setTitle("Add Question — " + contest.getContestTitle());
 
         ButtonType addBtn = new ButtonType("Add Question", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(addBtn, ButtonType.CANCEL);
@@ -361,33 +275,55 @@ public class ContestManagerController implements Initializable {
         form.setPadding(new Insets(20));
         form.setPrefWidth(520);
 
-        // Question type
+        // ── Question type selection ──
         Label typeLabel = new Label("Question Type:");
         typeLabel.setStyle("-fx-font-weight:bold;");
         ToggleGroup typeGroup = new ToggleGroup();
-        RadioButton mcqRadio     = new RadioButton("MCQ (Auto-graded)");
-        RadioButton writtenRadio = new RadioButton("Written (Image Upload)");
+
+        // Show remaining slots so admin knows how many are left
+        String mcqText     = "MCQ (Auto-graded)  [" + mcqAdded + "/" + mcqLimit + " added]";
+        String writtenText = "Written (Image Upload)  [" + writtenAdded + "/" + writtenLimit + " added]";
+
+        RadioButton mcqRadio     = new RadioButton(mcqText);
+        RadioButton writtenRadio = new RadioButton(writtenText);
         mcqRadio.setToggleGroup(typeGroup);
         writtenRadio.setToggleGroup(typeGroup);
-        mcqRadio.setSelected(true);
+
+        // Disable the type that's already full
+        mcqRadio.setDisable(mcqFull);
+        writtenRadio.setDisable(writtenFull);
+
+        // Default-select the one that still has slots
+        if (!mcqFull) {
+            mcqRadio.setSelected(true);
+        } else {
+            writtenRadio.setSelected(true);
+        }
+
         HBox typeRow = new HBox(20, mcqRadio, writtenRadio);
 
-        // Question text
+        // ── Question text ──
         TextArea questionTA = new TextArea();
         questionTA.setPromptText("Question text...");
         questionTA.setPrefRowCount(3);
 
-        // Marks
-        TextField marksField = new TextField("5");
+        // ── Marks (pre-filled from contest config) ──
+        TextField marksField = new TextField();
         marksField.setPromptText("Marks");
 
-        // Order
-        // Auto-calculate next order index
-        int nextOrder = contestService.getQuestionsForContest(contest.getContestId()).size();
-        TextField orderField = new TextField(String.valueOf(nextOrder));
-        orderField.setPromptText("Order index");
+        // Auto-fill marks based on selected type
+        Runnable updateMarks = () -> {
+            if (mcqRadio.isSelected()) {
+                marksField.setText(String.valueOf(contest.getMcqMarksEach()));
+            } else {
+                marksField.setText(String.valueOf(contest.getWrittenMarksEach()));
+            }
+        };
+        mcqRadio.selectedProperty().addListener((obs, ov, nv) -> { if (nv) updateMarks.run(); });
+        writtenRadio.selectedProperty().addListener((obs, ov, nv) -> { if (nv) updateMarks.run(); });
+        updateMarks.run(); // set initial value
 
-        // MCQ options (hidden for written)
+        // ── MCQ options ──
         VBox mcqSection = new VBox(8);
         TextField optA = new TextField(); optA.setPromptText("Option A");
         TextField optB = new TextField(); optB.setPromptText("Option B");
@@ -396,6 +332,7 @@ public class ContestManagerController implements Initializable {
         ComboBox<String> correctAns = new ComboBox<>();
         correctAns.getItems().addAll("A", "B", "C", "D");
         correctAns.setValue("A");
+        correctAns.setPromptText("Correct Answer");
         TextArea explanationTA = new TextArea();
         explanationTA.setPromptText("Explanation (optional)");
         explanationTA.setPrefRowCount(2);
@@ -408,16 +345,14 @@ public class ContestManagerController implements Initializable {
                 new Label("Explanation (optional):"), explanationTA
         );
 
-        writtenRadio.selectedProperty().addListener((obs, ov, nv) -> {
-            mcqSection.setVisible(!nv);
-            mcqSection.setManaged(!nv);
-        });
+        // Toggle MCQ section visibility based on type
+        writtenRadio.selectedProperty().addListener((obs, ov, nv) -> mcqSection.setVisible(!nv));
+        mcqSection.setVisible(!writtenRadio.isSelected());
 
         form.getChildren().addAll(
                 typeLabel, typeRow,
                 new Label("Question:"), questionTA,
                 new Label("Marks:"), marksField,
-                new Label("Order:"), orderField,
                 mcqSection
         );
 
@@ -428,55 +363,79 @@ public class ContestManagerController implements Initializable {
 
         dialog.setResultConverter(bt -> {
             if (bt != addBtn) return null;
+
+            boolean isMcq = mcqRadio.isSelected();
+            QuestionType selectedType = isMcq ? QuestionType.MCQ : QuestionType.WRITTEN;
+
+            // Final guard: re-check limits at submit time (race condition safety)
+            int currentCount = contestService.getQuestionCountByType(
+                    contest.getContestId(), selectedType);
+            int limit = isMcq ? mcqLimit : writtenLimit;
+            if (currentCount >= limit) {
+                showAlert("Limit Reached",
+                        "Cannot add more " + selectedType.name() + " questions. " +
+                                "Limit is " + limit + " and " + currentCount + " already added.");
+                return null;
+            }
+
             ContestQuestion q = new ContestQuestion();
             q.setContestId(contest.getContestId());
             q.setQuestionText(questionTA.getText().trim());
-            q.setType(mcqRadio.isSelected() ? QuestionType.MCQ : QuestionType.WRITTEN);
+            q.setType(selectedType);
             try { q.setMarks(Integer.parseInt(marksField.getText())); }
-            catch (NumberFormatException e) { q.setMarks(5); }
-            try { q.setOrderIndex(Integer.parseInt(orderField.getText())); }
-            catch (NumberFormatException e) { q.setOrderIndex(0); }
-            if (mcqRadio.isSelected()) {
-                q.setOptionA(optA.getText());
-                q.setOptionB(optB.getText());
-                q.setOptionC(optC.getText());
-                q.setOptionD(optD.getText());
+            catch (NumberFormatException e) { q.setMarks(isMcq ? contest.getMcqMarksEach() : contest.getWrittenMarksEach()); }
+
+            // Auto-calculate order index
+            q.setOrderIndex(currentCount + 1);
+
+            if (isMcq) {
+                q.setOptionA(optA.getText().trim());
+                q.setOptionB(optB.getText().trim());
+                q.setOptionC(optC.getText().trim());
+                q.setOptionD(optD.getText().trim());
                 q.setCorrectAnswer(correctAns.getValue());
-                q.setExplanation(explanationTA.getText());
+                q.setExplanation(explanationTA.getText().trim());
             }
             return q;
         });
 
         dialog.showAndWait().ifPresent(q -> {
-            if (q == null || q.getQuestionText().isEmpty()) {
+            if (q == null) return;
+            if (q.getQuestionText().isEmpty()) {
                 showAlert("Error", "Question text cannot be empty.");
                 return;
             }
             int id = contestService.addQuestion(q);
             if (id > 0) {
-                // Count after addition
-                List<ContestQuestion> updated = contestService.getQuestionsForContest(contest.getContestId());
-                long mcq     = updated.stream().filter(ContestQuestion::isMcq).count();
-                long written = updated.stream().filter(ContestQuestion::isWritten).count();
-                showAlert("Success",
-                        "Question added! ✅\n\n" +
-                                "Total questions for this contest:\n" +
-                                "• MCQ: " + mcq + " / " + contest.getTotalMcqQuestions() + "\n" +
-                                "• Written: " + written + " / " + contest.getTotalWrittenQuestions());
-                loadContests(); // Refresh the card to update the progress bar
+                // Re-fetch counts for updated message
+                int newMcq     = contestService.getQuestionCountByType(contest.getContestId(), QuestionType.MCQ);
+                int newWritten = contestService.getQuestionCountByType(contest.getContestId(), QuestionType.WRITTEN);
+                showAlert("Question Added ✅",
+                        q.getType().name() + " question added successfully!\n\n" +
+                                "MCQ: " + newMcq + "/" + mcqLimit +
+                                "   Written: " + newWritten + "/" + writtenLimit);
+                loadContests(); // refresh card to show updated counts
             } else {
-                showAlert("Error", "Failed to add question.");
+                showAlert("Error", "Failed to add question. Check console.");
             }
         });
     }
 
+    private void stopTimer() {
+        if (refreshTimer != null) { refreshTimer.cancel(); refreshTimer = null; }
+    }
+
     // ── Navigation ────────────────────────────────────────────────────────────
     private void openLeaderboard(Contest c) {
+        stopTimer();
+        // Store contest in session so LeaderboardController loads contest-specific participants
         SessionManager.getInstance().setCurrentContest(c);
+        SessionManager.getInstance().setAttribute("leaderboard_mode", "contest");
         SceneManager.switchScene("/com/examverse/fxml/contest/contest-leaderboard.fxml");
     }
 
     private void openWrittenReview(Contest c) {
+        stopTimer();
         SessionManager.getInstance().setCurrentContest(c);
         SceneManager.switchScene("/com/examverse/fxml/contest/written-review.fxml");
     }
@@ -502,15 +461,15 @@ public class ContestManagerController implements Initializable {
         grid.setVgap(15);
         grid.setPadding(new Insets(20));
 
-        TextField titleField   = new TextField();  titleField.setPromptText("Contest Title");
-        TextArea  descTA       = new TextArea();   descTA.setPromptText("Description"); descTA.setPrefRowCount(2);
-        TextField durationFld  = new TextField("60");  durationFld.setPromptText("Duration (minutes)");
-        TextField mcqCountFld  = new TextField("10");  mcqCountFld.setPromptText("MCQ questions");
-        TextField wrCountFld   = new TextField("2");   wrCountFld.setPromptText("Written questions");
-        TextField mcqMarksFld  = new TextField("5");   mcqMarksFld.setPromptText("Marks per MCQ");
-        TextField wrMarksFld   = new TextField("10");  wrMarksFld.setPromptText("Marks per Written");
-        TextField maxGainFld   = new TextField("100"); maxGainFld.setPromptText("Max rating gain");
-        TextField maxLossFld   = new TextField("50");  maxLossFld.setPromptText("Max rating loss");
+        TextField titleField  = new TextField(); titleField.setPromptText("Contest Title");
+        TextArea  descTA      = new TextArea();  descTA.setPromptText("Description"); descTA.setPrefRowCount(2);
+        TextField durationFld = new TextField("60"); durationFld.setPromptText("Duration (minutes)");
+        TextField mcqCountFld = new TextField("10"); mcqCountFld.setPromptText("MCQ questions");
+        TextField wrCountFld  = new TextField("2");  wrCountFld.setPromptText("Written questions");
+        TextField mcqMarksFld = new TextField("5");  mcqMarksFld.setPromptText("Marks per MCQ");
+        TextField wrMarksFld  = new TextField("10"); wrMarksFld.setPromptText("Marks per Written");
+        TextField maxGainFld  = new TextField("100"); maxGainFld.setPromptText("Max rating gain");
+        TextField maxLossFld  = new TextField("50");  maxLossFld.setPromptText("Max rating loss");
 
         TextField startFld = new TextField(
                 LocalDateTime.now().plusHours(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
@@ -519,19 +478,14 @@ public class ContestManagerController implements Initializable {
                 LocalDateTime.now().plusHours(3).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
         evalFld.setPromptText("Eval deadline (yyyy-MM-dd HH:mm)");
 
-        // ── FIX 1: Theme picker — all themes selectable ───────────────────────
-        // We use a ToggleGroup but add a change-listener that prevents
-        // deselection (clicking the selected button again stays selected).
-        Label themeLabel = new Label("Theme:");
+        // ── Theme picker ──
+        Label themePickerLabel = new Label("Theme:");
         ToggleGroup themeGroup = new ToggleGroup();
-
-        // Track the last selected toggle so we can restore it on attempted deselect
-        final ToggleButton[] lastSelected = {null};
-
         HBox themeRow1 = new HBox(8);
         HBox themeRow2 = new HBox(8);
         Theme[] themes = Theme.values();
 
+        // Prevent deselection: clicking the already-selected theme does nothing
         for (int i = 0; i < themes.length; i++) {
             Theme th = themes[i];
             ToggleButton tb = new ToggleButton(th.getDisplayName());
@@ -541,29 +495,13 @@ public class ContestManagerController implements Initializable {
                     "; -fx-text-fill:" + th.getAccentColor() +
                     "; -fx-border-color:" + th.getAccentColor() +
                     "; -fx-border-radius:8; -fx-background-radius:8;" +
-                    "; -fx-padding:8 14 8 14; -fx-font-weight:bold;" +
-                    "; -fx-font-size:12px;");
+                    "; -fx-padding:6 12 6 12; -fx-font-weight:bold;");
+            if (i == 0) tb.setSelected(true);
 
-            if (i == 0) {
-                tb.setSelected(true);
-                lastSelected[0] = tb;
-                // Highlight first as selected
-                tb.setStyle(tb.getStyle() + "-fx-opacity:1.0;");
-            }
-
-            // Prevent deselection when user clicks the already-selected button
-            tb.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
-                if (isNowSelected) {
-                    lastSelected[0] = tb;
-                    // Highlight this button visually as active
-                    tb.setOpacity(1.0);
-                } else {
-                    // If nothing is selected (deselection), re-select this one
-                    if (themeGroup.getSelectedToggle() == null) {
-                        tb.setSelected(true);
-                    } else {
-                        tb.setOpacity(0.55);
-                    }
+            // Guard: never allow deselection
+            tb.selectedProperty().addListener((obs, wasSelected, isSelected) -> {
+                if (!isSelected && themeGroup.getSelectedToggle() == null) {
+                    tb.setSelected(true);
                 }
             });
 
@@ -572,24 +510,24 @@ public class ContestManagerController implements Initializable {
         }
 
         int row = 0;
-        grid.add(new Label("Title:"),         0, row);   grid.add(titleField, 1, row++);
-        grid.add(new Label("Description:"),   0, row);   grid.add(descTA, 1, row++);
-        grid.add(new Label("Start Time:"),    0, row);   grid.add(startFld, 1, row++);
-        grid.add(new Label("Duration (min):"),0, row);   grid.add(durationFld, 1, row++);
-        grid.add(new Label("Eval Deadline:"), 0, row);   grid.add(evalFld, 1, row++);
-        grid.add(new Label("MCQ Count:"),     0, row);   grid.add(mcqCountFld, 1, row++);
-        grid.add(new Label("Written Count:"), 0, row);   grid.add(wrCountFld, 1, row++);
-        grid.add(new Label("MCQ Marks each:"),0, row);   grid.add(mcqMarksFld, 1, row++);
-        grid.add(new Label("Written Marks each:"), 0, row); grid.add(wrMarksFld, 1, row++);
-        grid.add(new Label("Max Rating Gain:"),0, row);  grid.add(maxGainFld, 1, row++);
-        grid.add(new Label("Max Rating Loss:"),0, row);  grid.add(maxLossFld, 1, row++);
-        grid.add(themeLabel, 0, row);
-        VBox themeBox = new VBox(8, themeRow1, themeRow2);
+        grid.add(new Label("Title:"),        0, row); grid.add(titleField,  1, row++);
+        grid.add(new Label("Description:"),  0, row); grid.add(descTA,      1, row++);
+        grid.add(new Label("Start Time:"),   0, row); grid.add(startFld,    1, row++);
+        grid.add(new Label("Duration (min):"),0, row);grid.add(durationFld, 1, row++);
+        grid.add(new Label("Eval Deadline:"),0, row); grid.add(evalFld,     1, row++);
+        grid.add(new Label("MCQ Count:"),    0, row); grid.add(mcqCountFld, 1, row++);
+        grid.add(new Label("Written Count:"),0, row); grid.add(wrCountFld,  1, row++);
+        grid.add(new Label("MCQ Marks each:"),0,row); grid.add(mcqMarksFld, 1, row++);
+        grid.add(new Label("Written Marks each:"),0,row); grid.add(wrMarksFld,1,row++);
+        grid.add(new Label("Max Rating Gain:"),0,row);grid.add(maxGainFld,  1, row++);
+        grid.add(new Label("Max Rating Loss:"),0,row);grid.add(maxLossFld,  1, row++);
+        grid.add(themePickerLabel, 0, row);
+        VBox themeBox = new VBox(6, themeRow1, themeRow2);
         grid.add(themeBox, 1, row);
 
         ScrollPane sp = new ScrollPane(grid);
         sp.setFitToWidth(true);
-        sp.setPrefViewportHeight(500);
+        sp.setPrefViewportHeight(480);
         dialog.getDialogPane().setContent(sp);
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
@@ -614,18 +552,8 @@ public class ContestManagerController implements Initializable {
                 c.setEndTime(start.plusMinutes(c.getDurationMinutes()));
                 c.setEvalDeadline(LocalDateTime.parse(evalFld.getText().trim(), dtf));
 
-                // ── FIX 1: safe theme retrieval ────────────────────────────────
-                Toggle sel = themeGroup.getSelectedToggle();
-                if (sel != null && sel.getUserData() instanceof Theme selectedTheme) {
-                    c.setTheme(selectedTheme);
-                } else {
-                    // Fallback: use lastSelected guard
-                    if (lastSelected[0] != null && lastSelected[0].getUserData() instanceof Theme fallbackTheme) {
-                        c.setTheme(fallbackTheme);
-                    } else {
-                        c.setTheme(Theme.COSMIC_ARENA);
-                    }
-                }
+                ToggleButton selected = (ToggleButton) themeGroup.getSelectedToggle();
+                c.setTheme(selected != null ? (Theme) selected.getUserData() : Theme.COSMIC_ARENA);
                 return c;
             } catch (Exception ex) {
                 showAlert("Validation Error", "Please check all fields: " + ex.getMessage());
@@ -637,11 +565,11 @@ public class ContestManagerController implements Initializable {
             if (c == null) return;
             int id = contestService.createContest(c);
             if (id > 0) {
-                showAlert("Success", "Contest \"" + c.getContestTitle() + "\" created!\n" +
-                        "Theme: " + c.getTheme().getDisplayName() + "\n" +
-                        "ID: " + id + "\n\n" +
-                        "Now add " + c.getTotalMcqQuestions() + " MCQ and " +
-                        c.getTotalWrittenQuestions() + " Written questions using ➕ Add Questions.");
+                showAlert("Contest Created ✅",
+                        "\"" + c.getContestTitle() + "\" created successfully!\n" +
+                                "ID: " + id + "\n\n" +
+                                "Now add " + c.getTotalMcqQuestions() + " MCQ and " +
+                                c.getTotalWrittenQuestions() + " Written questions.");
                 loadContests();
             } else {
                 showAlert("Error", "Failed to create contest. Check console for details.");

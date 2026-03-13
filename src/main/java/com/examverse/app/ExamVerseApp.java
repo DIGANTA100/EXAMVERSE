@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import com.examverse.config.DatabaseConfig;
 import com.examverse.util.SceneManager;
+import com.examverse.service.exam.ContestService;
 
 import java.util.Objects;
 
@@ -29,6 +30,7 @@ public class ExamVerseApp extends Application {
             System.out.println("📊 Initializing Database...");
             DatabaseConfig.initializeTables();
             com.examverse.config.ContestDatabaseSetup.initializeContestTables();
+            ContestService.startContestAutoLauncher();
 
             if (DatabaseConfig.testConnection()) {
                 System.out.println("✅ Database initialized successfully!");

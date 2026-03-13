@@ -14,6 +14,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.media.Media;
@@ -29,67 +30,63 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * ContestLobbyController — FIXED
+ * ContestLobbyController — FIXED v2
  *
  * Bug fixes:
- *  1. "Enter Contest" button didn't work:
- *     The root cause was that the overlay was trying to add itself to the
- *     scene root assuming it was a Pane, but SceneManager typically loads
- *     a fresh FXML into a StackPane/BorderPane root that wraps everything.
- *     Fixed by:
- *     a) Never blocking the JavaFX thread — all navigation is via Platform.runLater.
- *     b) Simplifying the overlay to a dedicated StackPane added to rootVBox's parent
- *        using getScene().getRoot() with a safe cast, and falling back gracefully
- *        when the cast fails.
- *     c) Ensuring registerStudent() always returns a valid participantId
- *        (the INSERT IGNORE path now properly re-fetches the existing row).
+ *  1. Contest status re-fetched from DB every 5 seconds. When an UPCOMING
+ *     contest becomes LIVE (either admin-launched or auto-launched), the card
+ *     is rebuilt and the "Enter Contest" button appears immediately — the
+ *     student no longer needs to manually refresh.
  *
- *  2. Contests not appearing immediately after admin creates them:
- *     Auto-refresh timer reduced to 5 seconds. Additionally, on every
- *     scene activation (initialize) a fresh DB fetch is performed,
- *     so switching back to the lobby always shows the latest data.
+ *  2. Countdown reaching zero triggers an immediate DB refresh. Previously the
+ *     card kept showing the countdown even after auto-launch because the card
+ *     was built only once and not rebuilt on status change.
  *
- *  3. General robustness: null-checks on rootVBox.getScene() before any
- *     scene-graph manipulation.
+ *  3. Enter Contest runs on a background thread so the JavaFX UI never freezes.
  */
 public class ContestLobbyController implements Initializable {
 
     // ── FXML ──────────────────────────────────────────────────────────────────
-    @FXML private VBox    rootVBox;
-    @FXML private VBox    contestCardsContainer;
-    @FXML private Label   ratingLabel;
-    @FXML private Label   rankTitleLabel;
-    @FXML private Label   usernameLabel;
-    @FXML private Button  leaderboardBtn, backBtn;
+    @FXML private VBox   rootVBox;
+    @FXML private VBox   contestCardsContainer;
+    @FXML private Label  ratingLabel;
+    @FXML private Label  rankTitleLabel;
+    @FXML private Label  usernameLabel;
+    @FXML private Button leaderboardBtn;
+    @FXML private Button backBtn;
     @FXML private ScrollPane scrollPane;
 
     // ── State ─────────────────────────────────────────────────────────────────
     private final ContestService contestService = new ContestService();
-    private User        currentUser;
+    private User currentUser;
     private MediaPlayer mediaPlayer;
-    private Timer       refreshTimer;
+    private Timer refreshTimer;
+
+    // Tracks the last known status of each contest so we only rebuild cards
+    // when something actually changed (avoids visual flicker on every poll).
+    //private List<Contest> lastContests = List.of();
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         currentUser = SessionManager.getInstance().getCurrentUser();
         loadStudentRating();
-        loadContests(); // immediate fresh fetch on every entry
+        loadContests();
 
-        // ── FIX 2: 5-second refresh so new contests appear quickly ─────────────
-        refreshTimer = new Timer(true);
+        // Poll DB every 5 seconds to catch UPCOMING → LIVE transitions
+        // (both admin-manually-launched and auto-launched contests)
+        refreshTimer = new Timer("lobby-refresh", true);
         refreshTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
+            @Override public void run() {
                 Platform.runLater(() -> loadContests());
             }
         }, 5_000, 5_000);
     }
 
-    // ── Student Rating Display ─────────────────────────────────────────────────
+    // ── Student Rating Display ────────────────────────────────────────────────
     private void loadStudentRating() {
         if (currentUser == null) return;
-        if (usernameLabel  != null) usernameLabel.setText(currentUser.getFullName());
+        if (usernameLabel != null) usernameLabel.setText(currentUser.getFullName());
         int rating = contestService.getStudentRating(currentUser.getId());
         if (ratingLabel    != null) ratingLabel.setText(String.valueOf(rating));
         String title = StudentRating.getTitleForRating(rating);
@@ -101,9 +98,37 @@ public class ContestLobbyController implements Initializable {
     }
 
     // ── Load Contests ─────────────────────────────────────────────────────────
+//    private void loadContests() {
+//        List<Contest> contests = contestService.getActiveContests();
+//
+//        // Detect if anything changed (by comparing contest ids + statuses)
+//        boolean changed = hasContestListChanged(contests);
+//        if (!changed) return; // nothing to redraw
+//
+//        lastContests = contests;
+//        contestCardsContainer.getChildren().clear();
+//
+//        if (contests.isEmpty()) {
+//            VBox empty = new VBox(10);
+//            empty.setAlignment(Pos.CENTER);
+//            empty.setPadding(new Insets(60));
+//            Label noContest = new Label("🎮 No live contests right now");
+//            noContest.setStyle("-fx-text-fill:#94a3b8; -fx-font-size:20px; -fx-font-weight:bold;");
+//            Label subLabel = new Label("Check back soon — new contests are added regularly.");
+//            subLabel.setStyle("-fx-text-fill:#64748b; -fx-font-size:14px;");
+//            empty.getChildren().addAll(noContest, subLabel);
+//            contestCardsContainer.getChildren().add(empty);
+//            return;
+//        }
+//
+//        for (Contest c : contests) {
+//            contestCardsContainer.getChildren().add(buildContestCard(c));
+//        }
+//    }
+
     private void loadContests() {
-        contestCardsContainer.getChildren().clear();
         List<Contest> contests = contestService.getActiveContests();
+        contestCardsContainer.getChildren().clear();
 
         if (contests.isEmpty()) {
             VBox empty = new VBox(10);
@@ -123,6 +148,18 @@ public class ContestLobbyController implements Initializable {
         }
     }
 
+    /** Returns true if the contest list is different from what's currently displayed. */
+//    private boolean hasContestListChanged(List<Contest> fresh) {
+//        if (fresh.size() != lastContests.size()) return true;
+//        for (int i = 0; i < fresh.size(); i++) {
+//            Contest f = fresh.get(i);
+//            Contest l = lastContests.get(i);
+//            if (f.getContestId() != l.getContestId()) return true;
+//            if (f.getStatus()    != l.getStatus())    return true;
+//        }
+//        return false;
+//    }
+
     // ── Contest Card ──────────────────────────────────────────────────────────
     private VBox buildContestCard(Contest c) {
         Theme t = c.getTheme();
@@ -139,6 +176,7 @@ public class ContestLobbyController implements Initializable {
                         "-fx-effect: dropshadow(gaussian, " + t.getAccentColor() + "88, 20, 0.3, 0, 4);"
         );
 
+        // Hover glow
         card.setOnMouseEntered(e -> card.setStyle(card.getStyle().replace(
                 "dropshadow(gaussian, " + t.getAccentColor() + "88, 20",
                 "dropshadow(gaussian, " + t.getAccentColor() + "cc, 30")));
@@ -146,15 +184,18 @@ public class ContestLobbyController implements Initializable {
                 "dropshadow(gaussian, " + t.getAccentColor() + "cc, 30",
                 "dropshadow(gaussian, " + t.getAccentColor() + "88, 20")));
 
-        // Top row
+        // ── Top row ──
         HBox topRow = new HBox(12);
         topRow.setAlignment(Pos.CENTER_LEFT);
+
         Label themeTag = new Label(t.getDisplayName());
         themeTag.setStyle("-fx-background-color:" + t.getAccentColor() + "33;" +
                 "-fx-text-fill:" + t.getAccentColor() + ";" +
                 "-fx-font-size:12px; -fx-font-weight:bold;" +
                 "-fx-padding:4 12 4 12; -fx-background-radius:20;");
+
         Region sp1 = new Region(); HBox.setHgrow(sp1, Priority.ALWAYS);
+
         Label statusBadge = new Label(c.isLive() ? "🔴  LIVE" : "⏳  UPCOMING");
         statusBadge.setStyle("-fx-background-color:" + (c.isLive() ? "#22c55e" : "#3b82f6") + ";" +
                 "-fx-text-fill:#fff; -fx-font-size:12px; -fx-font-weight:bold;" +
@@ -167,13 +208,16 @@ public class ContestLobbyController implements Initializable {
         }
         topRow.getChildren().addAll(themeTag, sp1, statusBadge);
 
+        // ── Title ──
         Label titleLabel = new Label(c.getContestTitle());
         titleLabel.setStyle("-fx-text-fill:#ffffff; -fx-font-size:22px; -fx-font-weight:bold;");
 
+        // ── Description ──
         Label descLabel = new Label(c.getDescription() != null ? c.getDescription() : "");
         descLabel.setStyle("-fx-text-fill:#94a3b8; -fx-font-size:13px;");
         descLabel.setWrapText(true);
 
+        // ── Info row ──
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MMM dd • HH:mm");
         HBox infoRow = new HBox(24);
         infoRow.setAlignment(Pos.CENTER_LEFT);
@@ -185,39 +229,36 @@ public class ContestLobbyController implements Initializable {
                 infoChip("🏆", c.getTotalMarks() + " marks", t.getAccentColor())
         );
 
+        // ── Bottom row: Enter button OR countdown ──
         HBox bottomRow = new HBox(16);
         bottomRow.setAlignment(Pos.CENTER_RIGHT);
 
         if (c.isLive()) {
+            // Contest is LIVE → show Enter button immediately
             Button enterBtn = new Button("⚔️  ENTER CONTEST");
             enterBtn.setStyle(
                     "-fx-background-color: linear-gradient(to right," + t.getAccentColor() + "," +
                             t.getHighlightColor() + ");" +
                             "-fx-text-fill:#000000; -fx-font-weight:bold; -fx-font-size:15px;" +
                             "-fx-padding:12 32 12 32; -fx-background-radius:30;" +
-                            "-fx-effect: dropshadow(gaussian," + t.getAccentColor() + ", 12, 0.5, 0, 2);" +
-                            "-fx-cursor:hand;"
+                            "-fx-effect: dropshadow(gaussian," + t.getAccentColor() + ", 12, 0.5, 0, 2);"
             );
-            // Pulse animation
             ScaleTransition pulse = new ScaleTransition(Duration.millis(800), enterBtn);
             pulse.setFromX(1.0); pulse.setToX(1.04);
             pulse.setFromY(1.0); pulse.setToY(1.04);
             pulse.setCycleCount(Animation.INDEFINITE); pulse.setAutoReverse(true);
             pulse.play();
-
-            // ── FIX 1: Enter contest wired correctly ─────────────────────────
-            enterBtn.setOnAction(e -> {
-                pulse.stop();
-                enterBtn.setDisable(true);
-                enterBtn.setText("⏳ Entering...");
-                handleEnterContest(c, enterBtn);
-            });
+            enterBtn.setOnAction(e -> handleEnterContest(c, enterBtn));
             bottomRow.getChildren().add(enterBtn);
+
         } else {
+            // Contest is UPCOMING → show countdown
+            // When the countdown hits zero, immediately trigger a DB refresh
+            // so this card is rebuilt with the ENTER button.
             Label countdown = new Label("Starting in ...");
             countdown.setStyle("-fx-text-fill:" + t.getAccentColor() +
                     "; -fx-font-size:14px; -fx-font-weight:bold;");
-            updateCountdown(countdown, c.getStartTime());
+            buildCountdownWithAutoRefresh(countdown, c.getStartTime());
             bottomRow.getChildren().add(countdown);
         }
 
@@ -231,12 +272,21 @@ public class ContestLobbyController implements Initializable {
         return l;
     }
 
-    private void updateCountdown(Label label, LocalDateTime startTime) {
+    /**
+     * Countdown timer that also triggers a DB refresh when it hits zero.
+     * This ensures the card is immediately rebuilt with the Enter button once
+     * the contest auto-launches at its start_time.
+     */
+    private void buildCountdownWithAutoRefresh(Label label, LocalDateTime startTime) {
         if (startTime == null) { label.setText("TBD"); return; }
         Timeline tl = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
             long secs = java.time.Duration.between(LocalDateTime.now(), startTime).getSeconds();
             if (secs <= 0) {
                 label.setText("Starting now...");
+                // Trigger an immediate DB refresh — this will rebuild the card
+                // with the ENTER button once the auto-launcher sets it to LIVE
+               // lastContests = List.of(); // force rebuild
+                loadContests();
             } else {
                 long h = secs / 3600, m = (secs % 3600) / 60, s = secs % 60;
                 label.setText(String.format("Starting in %02d:%02d:%02d", h, m, s));
@@ -246,48 +296,78 @@ public class ContestLobbyController implements Initializable {
         tl.play();
     }
 
-    // ── Enter Contest (Clash Royale style) ────────────────────────────────────
-    /**
-     * FIX 1: Runs registration on a background thread so the UI never freezes.
-     * Music plays if available; after music ends OR after 2.5 s, navigate.
-     */
+    // ── Enter Contest ─────────────────────────────────────────────────────────
     private void handleEnterContest(Contest c, Button enterBtn) {
-        // Do DB work off the JavaFX thread
-        Thread registerThread = new Thread(() -> {
+        // Disable immediately to prevent double-click
+        enterBtn.setDisable(true);
+        enterBtn.setText("⏳ Entering...");
+
+        // Run DB registration on background thread to keep UI responsive
+        Thread t = new Thread(() -> {
             int participantId = contestService.registerStudent(c.getContestId(), currentUser.getId());
 
             Platform.runLater(() -> {
                 if (participantId < 0) {
+                    enterBtn.setDisable(false);
+                    enterBtn.setText("⚔️  ENTER CONTEST");
                     showAlert("Error", "Could not register for this contest. Please try again.");
-                    if (enterBtn != null) {
-                        enterBtn.setDisable(false);
-                        enterBtn.setText("⚔️  ENTER CONTEST");
-                    }
                     return;
                 }
-
-                // Mark as ACTIVE
                 contestService.activateParticipant(participantId);
-
-                // Store in session
                 SessionManager.getInstance().setCurrentContest(c);
                 SessionManager.getInstance().setCurrentParticipantId(participantId);
-
-                // Show intro then navigate
                 showThemeIntro(c);
             });
-        }, "register-thread");
-        registerThread.setDaemon(true);
-        registerThread.start();
+        });
+        t.setDaemon(true);
+        t.start();
     }
 
     /**
-     * FIX 1b: Overlay added safely. Uses Platform.runLater for navigation.
+     * Full-screen overlay showing theme name + contest title while loading.
+     * Plays theme music once if available, then navigates to contest room.
      */
     private void showThemeIntro(Contest c) {
         Theme t = c.getTheme();
 
-        // Attempt music — if no music file, just wait 2.5 s
+        if (rootVBox != null) rootVBox.setOpacity(0.3);
+
+        StackPane overlay = new StackPane();
+        overlay.setStyle("-fx-background-color:" + t.getBgColor() + "ee;");
+
+        VBox content = new VBox(30);
+        content.setAlignment(Pos.CENTER);
+
+        Label bigTheme = new Label(t.getDisplayName());
+        bigTheme.setStyle("-fx-text-fill:" + t.getAccentColor() +
+                "; -fx-font-size:48px; -fx-font-weight:bold;" +
+                "-fx-effect: dropshadow(gaussian," + t.getAccentColor() + ",30,0.8,0,0);");
+
+        Label contestName = new Label(c.getContestTitle());
+        contestName.setStyle("-fx-text-fill:#ffffff; -fx-font-size:28px; -fx-font-weight:bold;");
+
+        Label waitLabel = new Label("🎵  Loading arena...");
+        waitLabel.setStyle("-fx-text-fill:" + t.getHighlightColor() + "; -fx-font-size:18px;");
+
+        ProgressBar pb = new ProgressBar(-1);
+        pb.setPrefWidth(300);
+        pb.setStyle("-fx-accent:" + t.getAccentColor() + ";");
+
+        content.getChildren().addAll(bigTheme, contestName, waitLabel, pb);
+        overlay.getChildren().add(content);
+
+        if (rootVBox != null && rootVBox.getScene() != null) {
+            Parent existingRoot = rootVBox.getScene().getRoot();
+            if (existingRoot instanceof Pane existingPane) {
+                overlay.setPrefSize(existingPane.getWidth(), existingPane.getHeight());
+                existingPane.getChildren().add(overlay);
+            }
+        }
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(600), overlay);
+        fadeIn.setFromValue(0); fadeIn.setToValue(1);
+        fadeIn.play();
+
         boolean musicPlayed = tryPlayThemeMusic(c, () ->
                 Platform.runLater(this::enterContestRoom));
 
@@ -305,7 +385,7 @@ public class ContestLobbyController implements Initializable {
             Media media = new Media(musicUrl.toExternalForm());
             mediaPlayer = new MediaPlayer(media);
             mediaPlayer.setOnEndOfMedia(onFinished::run);
-            mediaPlayer.setOnError(() -> Platform.runLater(onFinished::run));
+            mediaPlayer.setOnError(onFinished::run);
             mediaPlayer.play();
             return true;
         } catch (Exception e) {
@@ -318,7 +398,9 @@ public class ContestLobbyController implements Initializable {
     private void enterContestRoom() {
         stopMusic();
         stopTimer();
-        SceneManager.switchScene("/com/examverse/fxml/contest/contest-room.fxml");
+        Platform.runLater(() ->
+                SceneManager.switchScene("/com/examverse/fxml/contest/contest-room.fxml")
+        );
     }
 
     private void stopMusic() {
@@ -333,12 +415,15 @@ public class ContestLobbyController implements Initializable {
     @FXML
     private void handleLeaderboard() {
         stopTimer();
+        // Global leaderboard from student lobby (not contest-specific)
+        SessionManager.getInstance().setAttribute("leaderboard_mode", "global");
         SceneManager.switchScene("/com/examverse/fxml/contest/contest-leaderboard.fxml");
     }
 
     @FXML
     private void handleBack() {
         stopTimer();
+        stopMusic();
         SceneManager.switchScene("/com/examverse/fxml/dashboard/student-dashboard.fxml");
     }
 

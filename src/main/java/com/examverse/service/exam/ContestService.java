@@ -12,34 +12,92 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
- * ContestService — FIXED
+ * ContestService - Full CRUD + business logic for the live contest system.
  *
- * Bug fixes:
- *  1. registerStudent(): MySQL INSERT IGNORE does NOT return generated keys when
- *     the row already exists (returns 0 rows affected). The original code fell
- *     through to getParticipantId() correctly but only if the generated-keys
- *     ResultSet was empty. However, the try-with-resources closed the connection
- *     before the fallback was reached in some JDBC drivers. Fixed by using a
- *     single connection for both the INSERT and the fallback SELECT.
+ * Fixes in this version:
+ *  1. startContestAutoLauncher(): background timer auto-sets UPCOMING → LIVE
+ *     when start_time passes, and auto-sets LIVE → EVALUATION when end_time passes.
+ *     Call once at app startup.
  *
- *  2. getPendingWrittenAnswers(): The original query returned PENDING answers
- *     even for contests that were only LIVE (before evaluation). The teacher
- *     review screen was therefore showing "all reviewed" because students hadn't
- *     submitted written answers yet — the admin was clicking review on a LIVE
- *     contest with no answers yet. Now the method also accepts a broader query
- *     that returns ALL written answers regardless of review_status for the
- *     teacher review screen, plus a separate method for truly-pending-only.
+ *  2. getContestLeaderboard(contestId): returns ONLY students who actually
+ *     participated in that specific contest. Never shows non-participants.
  *
- *  3. checkAndFinalizeContest(): only auto-finalises when contest is in
- *     EVALUATION status, not when it is LIVE or already FINISHED, preventing
- *     premature finalisation.
+ *  3. getGlobalLeaderboard(): now filters WHERE user_type = 'STUDENT' so
+ *     admins/teachers never appear on the leaderboard.
+ *
+ *  4. getQuestionCountByType(): used to enforce question limits when admin
+ *     adds questions.
+ *
+ *  5. checkAndFinalizeContest(): guard added — only runs when status = EVALUATION,
+ *     prevents premature finalization while contest is still LIVE.
+ *
+ *  6. registerStudent(): single-connection fix — INSERT IGNORE + fallback SELECT
+ *     on the same connection so participant_id is always returned correctly.
  */
 public class ContestService {
 
+    // ── Auto-Launcher (call once at app startup) ──────────────────────────────
+
+    private static Timer autoLaunchTimer;
+
+    /**
+     * Starts a background daemon timer that:
+     *  - Auto-launches UPCOMING contests whose start_time has passed → LIVE
+     *  - Auto-ends LIVE contests whose end_time has passed → EVALUATION
+     * Call this ONCE from your main Application class or DatabaseConfig init.
+     */
+    public static void startContestAutoLauncher() {
+        if (autoLaunchTimer != null) {
+            autoLaunchTimer.cancel();
+        }
+        autoLaunchTimer = new Timer("contest-auto-launcher", true); // daemon thread
+        autoLaunchTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                autoLaunchDueContests();
+                autoEndDueContests();
+            }
+        }, 0, 15_000); // check every 15 seconds
+        System.out.println("✅ Contest auto-launcher started (checks every 15s).");
+    }
+
+    /** UPCOMING → LIVE when start_time <= NOW */
+    private static void autoLaunchDueContests() {
+        String sql = "UPDATE contests SET status='LIVE' " +
+                "WHERE status='UPCOMING' AND start_time <= NOW()";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            int updated = ps.executeUpdate();
+            if (updated > 0) {
+                System.out.println("🚀 Auto-launched " + updated + " contest(s) to LIVE.");
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ autoLaunchDueContests: " + e.getMessage());
+        }
+    }
+
+    /** LIVE → EVALUATION when end_time <= NOW */
+    private static void autoEndDueContests() {
+        String sql = "UPDATE contests SET status='EVALUATION' " +
+                "WHERE status='LIVE' AND end_time <= NOW()";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            int updated = ps.executeUpdate();
+            if (updated > 0) {
+                System.out.println("⏹ Auto-ended " + updated + " contest(s) to EVALUATION.");
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ autoEndDueContests: " + e.getMessage());
+        }
+    }
+
     // ─── Contest CRUD ─────────────────────────────────────────────────────────
 
+    /** Create a new contest. Returns the generated contest_id or -1 on failure. */
     public int createContest(Contest c) {
         String sql = """
             INSERT INTO contests
@@ -82,6 +140,7 @@ public class ContestService {
         return -1;
     }
 
+    /** Update contest status. */
     public boolean updateContestStatus(int contestId, Status status) {
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(
@@ -95,6 +154,7 @@ public class ContestService {
         }
     }
 
+    /** Fetch all contests (admin view). */
     public List<Contest> getAllContests() {
         List<Contest> list = new ArrayList<>();
         String sql = "SELECT * FROM contests ORDER BY start_time DESC";
@@ -108,6 +168,7 @@ public class ContestService {
         return list;
     }
 
+    /** Fetch only UPCOMING and LIVE contests (student lobby). */
     public List<Contest> getActiveContests() {
         List<Contest> list = new ArrayList<>();
         String sql = "SELECT * FROM contests WHERE status IN ('UPCOMING','LIVE') ORDER BY start_time ASC";
@@ -121,6 +182,7 @@ public class ContestService {
         return list;
     }
 
+    /** Fetch a single contest by id. */
     public Contest getContestById(int contestId) {
         String sql = "SELECT * FROM contests WHERE contest_id=?";
         try (Connection conn = DatabaseConfig.getConnection();
@@ -136,6 +198,7 @@ public class ContestService {
 
     // ─── Contest Questions CRUD ───────────────────────────────────────────────
 
+    /** Add a question to a contest. Returns generated question_id or -1. */
     public int addQuestion(ContestQuestion q) {
         String sql = """
             INSERT INTO contest_questions
@@ -167,6 +230,7 @@ public class ContestService {
         return -1;
     }
 
+    /** Delete a question. */
     public boolean deleteQuestion(int questionId) {
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(
@@ -179,6 +243,7 @@ public class ContestService {
         }
     }
 
+    /** Get all questions for a contest, ordered. */
     public List<ContestQuestion> getQuestionsForContest(int contestId) {
         List<ContestQuestion> list = new ArrayList<>();
         String sql = "SELECT * FROM contest_questions WHERE contest_id=? ORDER BY order_index, question_id";
@@ -193,12 +258,31 @@ public class ContestService {
         return list;
     }
 
+    /**
+     * Returns how many questions of a specific type already exist for a contest.
+     * Used by ContestManagerController to enforce the MCQ/written limits set
+     * when the contest was created.
+     */
+    public int getQuestionCountByType(int contestId, QuestionType type) {
+        String sql = "SELECT COUNT(*) FROM contest_questions WHERE contest_id=? AND question_type=?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, contestId);
+            ps.setString(2, type.name());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            System.err.println("❌ getQuestionCountByType: " + e.getMessage());
+        }
+        return 0;
+    }
+
     // ─── Participation ────────────────────────────────────────────────────────
 
     /**
-     * FIX 1: registerStudent
-     * Uses a single connection for INSERT + fallback SELECT so the participant_id
-     * is always returned whether the student is new or already registered.
+     * FIX: single-connection INSERT + fallback SELECT.
+     * INSERT IGNORE returns 0 rows affected if row already exists.
+     * We use the same connection for the fallback SELECT so it always works.
      */
     public int registerStudent(int contestId, int studentId) {
         int currentRating = getStudentRating(studentId);
@@ -206,13 +290,13 @@ public class ContestService {
         String insertSql = """
             INSERT IGNORE INTO contest_participants
               (contest_id, student_id, status, rating_before, rating_after)
-            VALUES (?,?,'REGISTERED',?,?)
+            VALUES (?, ?, 'REGISTERED', ?, ?)
             """;
-        String selectSql = "SELECT participant_id FROM contest_participants WHERE contest_id=? AND student_id=?";
+        String selectSql =
+                "SELECT participant_id FROM contest_participants WHERE contest_id=? AND student_id=?";
 
         try (Connection conn = DatabaseConfig.getConnection()) {
-            // Step 1: attempt insert
-            int affected = 0;
+            // Try to insert
             int generatedId = -1;
             try (PreparedStatement ps = conn.prepareStatement(
                     insertSql, Statement.RETURN_GENERATED_KEYS)) {
@@ -220,16 +304,15 @@ public class ContestService {
                 ps.setInt(2, studentId);
                 ps.setInt(3, currentRating);
                 ps.setInt(4, currentRating);
-                affected = ps.executeUpdate();
+                int affected = ps.executeUpdate();
                 if (affected > 0) {
                     ResultSet keys = ps.getGeneratedKeys();
                     if (keys.next()) generatedId = keys.getInt(1);
                 }
             }
+            if (generatedId > 0) return generatedId;
 
-            if (generatedId > 0) return generatedId; // new registration
-
-            // Step 2: already registered — fetch existing participant_id
+            // Already registered — fetch existing id on same connection
             try (PreparedStatement ps2 = conn.prepareStatement(selectSql)) {
                 ps2.setInt(1, contestId);
                 ps2.setInt(2, studentId);
@@ -267,9 +350,9 @@ public class ContestService {
     }
 
     public int getParticipantId(int contestId, int studentId) {
-        String sql = "SELECT participant_id FROM contest_participants WHERE contest_id=? AND student_id=?";
         try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT participant_id FROM contest_participants WHERE contest_id=? AND student_id=?")) {
             ps.setInt(1, contestId);
             ps.setInt(2, studentId);
             ResultSet rs = ps.executeQuery();
@@ -313,11 +396,11 @@ public class ContestService {
             ps.setInt(8, marks);
             ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("❌ submitMcqAnswer insert: " + e.getMessage());
+            System.err.println("❌ submitMcqAnswer: " + e.getMessage());
             return null;
         }
 
-        recalculateMcqScore(participantId, contestId);
+        recalculateMcqScore(participantId);
         refreshLiveRanks(contestId);
 
         ContestAnswer answer = new ContestAnswer();
@@ -353,10 +436,11 @@ public class ContestService {
             System.err.println("❌ submitWrittenAnswer: " + e.getMessage());
             return false;
         }
-
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "UPDATE contest_participants SET pending_written_reviews = pending_written_reviews + 1 WHERE participant_id=?")) {
+                     "UPDATE contest_participants " +
+                             "SET pending_written_reviews = pending_written_reviews + 1 " +
+                             "WHERE participant_id=?")) {
             ps.setInt(1, participantId);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -368,13 +452,12 @@ public class ContestService {
     public boolean reviewWrittenAnswer(int answerId, int teacherId,
                                        int marksAwarded, String comment) {
         String fetchSql = """
-            SELECT ca.participant_id, ca.contest_id, ca.question_id, cq.marks
+            SELECT ca.participant_id, ca.contest_id, cq.marks
             FROM contest_answers ca
             JOIN contest_questions cq ON ca.question_id = cq.question_id
             WHERE ca.answer_id=?
             """;
-        int participantId = -1, contestId = -1;
-        int maxMarks = 0;
+        int participantId = -1, contestId = -1, maxMarks = 0;
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(fetchSql)) {
             ps.setInt(1, answerId);
@@ -388,17 +471,16 @@ public class ContestService {
             System.err.println("❌ reviewWrittenAnswer fetch: " + e.getMessage());
             return false;
         }
-        if (marksAwarded > maxMarks) marksAwarded = maxMarks;
-        if (marksAwarded < 0)        marksAwarded = 0;
 
-        String updateSql = """
-            UPDATE contest_answers
-            SET marks_awarded=?, teacher_comment=?, review_status='REVIEWED',
-                reviewed_by=?, reviewed_at=NOW()
-            WHERE answer_id=?
-            """;
+        marksAwarded = Math.max(0, Math.min(marksAwarded, maxMarks));
+
         try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(updateSql)) {
+             PreparedStatement ps = conn.prepareStatement("""
+                     UPDATE contest_answers
+                     SET marks_awarded=?, teacher_comment=?, review_status='REVIEWED',
+                         reviewed_by=?, reviewed_at=NOW()
+                     WHERE answer_id=?
+                     """)) {
             ps.setInt(1, marksAwarded);
             ps.setString(2, comment);
             ps.setInt(3, teacherId);
@@ -410,14 +492,11 @@ public class ContestService {
         }
 
         if (participantId != -1) {
-            recalculateWrittenScore(participantId, contestId);
+            recalculateWrittenScore(participantId);
             decrementPendingWritten(participantId);
             recalculateTotalScore(participantId);
         }
-
-        if (contestId != -1) {
-            checkAndFinalizeContest(contestId);
-        }
+        if (contestId != -1) checkAndFinalizeContest(contestId);
         return true;
     }
 
@@ -465,9 +544,9 @@ public class ContestService {
 
     public List<ContestAnswer> getStudentAnswers(int participantId) {
         List<ContestAnswer> list = new ArrayList<>();
-        String sql = "SELECT * FROM contest_answers WHERE participant_id=? ORDER BY question_id";
         try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM contest_answers WHERE participant_id=? ORDER BY question_id")) {
             ps.setInt(1, participantId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(mapAnswer(rs));
@@ -477,26 +556,13 @@ public class ContestService {
         return list;
     }
 
-    /**
-     * FIX 2: getPendingWrittenAnswers
-     * Returns ALL written answers that are still PENDING review.
-     * Previously this returned nothing for LIVE contests because students
-     * hadn't submitted yet. Now it correctly queries for any PENDING written
-     * answer regardless of contest status.
-     *
-     * If the admin opens the review screen on a LIVE or EVALUATION contest
-     * and no students have uploaded images yet, the screen now correctly
-     * says "0 answers pending" rather than showing a misleading message.
-     */
     public List<ContestAnswer> getPendingWrittenAnswers(int contestId) {
         List<ContestAnswer> list = new ArrayList<>();
         String sql = """
             SELECT ca.*
             FROM contest_answers ca
             JOIN contest_questions cq ON ca.question_id = cq.question_id
-            WHERE ca.contest_id=?
-              AND cq.question_type='WRITTEN'
-              AND ca.review_status='PENDING'
+            WHERE ca.contest_id=? AND cq.question_type='WRITTEN' AND ca.review_status='PENDING'
             ORDER BY ca.answered_at ASC
             """;
         try (Connection conn = DatabaseConfig.getConnection();
@@ -510,10 +576,6 @@ public class ContestService {
         return list;
     }
 
-    /**
-     * Returns total count of written answers submitted (pending + reviewed)
-     * so the teacher can see overall progress.
-     */
     public int getTotalWrittenAnswerCount(int contestId) {
         String sql = """
             SELECT COUNT(*) FROM contest_answers ca
@@ -531,18 +593,105 @@ public class ContestService {
         return 0;
     }
 
+    // ─── Global Leaderboard (rating page) ────────────────────────────────────
+
+    /**
+     * FIX: now filters WHERE u.user_type = 'STUDENT' — admins and teachers
+     * never appear in the global rating leaderboard.
+     */
+    public List<com.examverse.model.user.StudentRating> getGlobalLeaderboard(int limit) {
+        List<com.examverse.model.user.StudentRating> list = new ArrayList<>();
+        String sql = """
+            SELECT sr.*, u.full_name, u.username
+            FROM student_ratings sr
+            JOIN users u ON sr.student_id = u.id
+            WHERE u.user_type = 'STUDENT'
+            ORDER BY sr.current_rating DESC
+            LIMIT ?
+            """;
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                com.examverse.model.user.StudentRating r = new com.examverse.model.user.StudentRating();
+                r.setRatingId(rs.getInt("rating_id"));
+                r.setStudentId(rs.getInt("student_id"));
+                r.setStudentName(rs.getString("full_name"));
+                r.setUsername(rs.getString("username"));
+                r.setCurrentRating(rs.getInt("current_rating"));
+                r.setPeakRating(rs.getInt("peak_rating"));
+                r.setContestsParticipated(rs.getInt("contests_participated"));
+                r.setContestsWon(rs.getInt("contests_won"));
+                r.setTotalScore(rs.getInt("total_score"));
+                list.add(r);
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ getGlobalLeaderboard: " + e.getMessage());
+        }
+        return list;
+    }
+
+    /**
+     * NEW — Contest-specific leaderboard.
+     * Returns ONLY students who have a row in contest_participants for this
+     * contestId, joined with their global rating data.
+     * Used by LeaderboardController when navigated from admin contest manager.
+     */
+    public List<com.examverse.model.user.StudentRating> getContestLeaderboard(int contestId) {
+        List<com.examverse.model.user.StudentRating> list = new ArrayList<>();
+        String sql = """
+            SELECT
+                COALESCE(sr.rating_id, 0)              AS rating_id,
+                cp.student_id,
+                u.full_name,
+                u.username,
+                COALESCE(sr.current_rating, 800)        AS current_rating,
+                COALESCE(sr.peak_rating, 800)           AS peak_rating,
+                COALESCE(sr.contests_participated, 0)   AS contests_participated,
+                COALESCE(sr.contests_won, 0)            AS contests_won,
+                COALESCE(sr.total_score, 0)             AS total_score
+            FROM contest_participants cp
+            JOIN users u ON cp.student_id = u.id
+            LEFT JOIN student_ratings sr ON sr.student_id = cp.student_id
+            WHERE cp.contest_id = ?
+            ORDER BY COALESCE(sr.current_rating, 800) DESC
+            """;
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, contestId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                com.examverse.model.user.StudentRating r = new com.examverse.model.user.StudentRating();
+                r.setRatingId(rs.getInt("rating_id"));
+                r.setStudentId(rs.getInt("student_id"));
+                r.setStudentName(rs.getString("full_name"));
+                r.setUsername(rs.getString("username"));
+                r.setCurrentRating(rs.getInt("current_rating"));
+                r.setPeakRating(rs.getInt("peak_rating"));
+                r.setContestsParticipated(rs.getInt("contests_participated"));
+                r.setContestsWon(rs.getInt("contests_won"));
+                r.setTotalScore(rs.getInt("total_score"));
+                list.add(r);
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ getContestLeaderboard: " + e.getMessage());
+        }
+        return list;
+    }
+
     // ─── Private helpers ──────────────────────────────────────────────────────
 
-    private void recalculateMcqScore(int participantId, int contestId) {
+    private void recalculateMcqScore(int participantId) {
         String sql = """
             UPDATE contest_participants cp
             SET mcq_marks_obtained = (
                 SELECT COALESCE(SUM(ca.marks_awarded), 0)
                 FROM contest_answers ca
                 JOIN contest_questions cq ON ca.question_id = cq.question_id
-                WHERE ca.participant_id=? AND cq.question_type='MCQ'
+                WHERE ca.participant_id = ? AND cq.question_type = 'MCQ'
             )
-            WHERE cp.participant_id=?
+            WHERE cp.participant_id = ?
             """;
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -554,16 +703,16 @@ public class ContestService {
         }
     }
 
-    private void recalculateWrittenScore(int participantId, int contestId) {
+    private void recalculateWrittenScore(int participantId) {
         String sql = """
             UPDATE contest_participants cp
             SET written_marks_obtained = (
                 SELECT COALESCE(SUM(ca.marks_awarded), 0)
                 FROM contest_answers ca
                 JOIN contest_questions cq ON ca.question_id = cq.question_id
-                WHERE ca.participant_id=? AND cq.question_type='WRITTEN'
+                WHERE ca.participant_id = ? AND cq.question_type = 'WRITTEN'
             )
-            WHERE cp.participant_id=?
+            WHERE cp.participant_id = ?
             """;
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -579,7 +728,7 @@ public class ContestService {
         String sql = """
             UPDATE contest_participants
             SET total_marks_obtained = mcq_marks_obtained + written_marks_obtained
-            WHERE participant_id=?
+            WHERE participant_id = ?
             """;
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -594,7 +743,7 @@ public class ContestService {
         String sql = """
             UPDATE contest_participants
             SET pending_written_reviews = GREATEST(0, pending_written_reviews - 1)
-            WHERE participant_id=?
+            WHERE participant_id = ?
             """;
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -606,28 +755,27 @@ public class ContestService {
     }
 
     private void refreshLiveRanks(int contestId) {
-        try (Connection conn = DatabaseConfig.getConnection()) {
-            try (PreparedStatement ps1 = conn.prepareStatement("SET @r=0");
-                 PreparedStatement ps2 = conn.prepareStatement(
-                         "UPDATE contest_participants SET live_rank=(@r:=@r+1) " +
-                                 "WHERE contest_id=? ORDER BY mcq_marks_obtained DESC, submitted_at ASC")) {
-                ps1.execute();
-                ps2.setInt(1, contestId);
-                ps2.executeUpdate();
-            }
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps1 = conn.prepareStatement("SET @r=0");
+             PreparedStatement ps2 = conn.prepareStatement(
+                     "UPDATE contest_participants SET live_rank=(@r:=@r+1) " +
+                             "WHERE contest_id=? ORDER BY mcq_marks_obtained DESC, submitted_at ASC")) {
+            ps1.execute();
+            ps2.setInt(1, contestId);
+            ps2.executeUpdate();
         } catch (SQLException e) {
             System.err.println("❌ refreshLiveRanks: " + e.getMessage());
         }
     }
 
     /**
-     * FIX 3: Only finalize when contest is in EVALUATION status.
-     * Previously this could trigger during LIVE status if a student happened
-     * to have no written questions, causing premature finalisation.
+     * FIX: guard added — only finalizes when status = EVALUATION.
+     * Previously this could fire while contest was still LIVE if a student
+     * happened to have no written answers, causing premature finalization.
      */
     private void checkAndFinalizeContest(int contestId) {
-        // First, ensure the contest is in EVALUATION status
         Contest contest = getContestById(contestId);
+        // Only finalize if we are actually in evaluation phase
         if (contest == null || contest.getStatus() != Status.EVALUATION) return;
 
         String checkSql = """
@@ -640,8 +788,9 @@ public class ContestService {
             ps.setInt(1, contestId);
             ResultSet rs = ps.executeQuery();
             if (rs.next() && rs.getInt(1) == 0) {
-                // All pending written answers reviewed — check if any written answers exist at all
                 int totalWritten = getTotalWrittenAnswerCount(contestId);
+                // Only auto-finalize if there ARE written answers reviewed,
+                // or if there were no written questions at all
                 if (totalWritten > 0 || contest.getTotalWrittenQuestions() == 0) {
                     assignFinalRanks(contestId);
                     distributeRatingChanges(contestId);
@@ -655,16 +804,15 @@ public class ContestService {
     }
 
     private void assignFinalRanks(int contestId) {
-        try (Connection conn = DatabaseConfig.getConnection()) {
-            try (PreparedStatement ps1 = conn.prepareStatement("SET @fr=0");
-                 PreparedStatement ps2 = conn.prepareStatement(
-                         "UPDATE contest_participants SET final_rank=(@fr:=@fr+1) " +
-                                 "WHERE contest_id=? AND status IN ('SUBMITTED','EVALUATED','ACTIVE') " +
-                                 "ORDER BY total_marks_obtained DESC, submitted_at ASC")) {
-                ps1.execute();
-                ps2.setInt(1, contestId);
-                ps2.executeUpdate();
-            }
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps1 = conn.prepareStatement("SET @fr=0");
+             PreparedStatement ps2 = conn.prepareStatement(
+                     "UPDATE contest_participants SET final_rank=(@fr:=@fr+1) " +
+                             "WHERE contest_id=? AND status IN ('SUBMITTED','EVALUATED','ACTIVE') " +
+                             "ORDER BY total_marks_obtained DESC, submitted_at ASC")) {
+            ps1.execute();
+            ps2.setInt(1, contestId);
+            ps2.executeUpdate();
         } catch (SQLException e) {
             System.err.println("❌ assignFinalRanks: " + e.getMessage());
         }
@@ -687,15 +835,12 @@ public class ContestService {
                 for (int i = 0; i < n; i++) {
                     ContestParticipant p = standings.get(i);
                     int rank = i + 1;
-
                     double percentile = (n == 1) ? 1.0 : (double)(n - rank) / (n - 1);
                     int change = (int) Math.round(maxGain * percentile - maxLoss * (1 - percentile));
-
-                    if (rank == 1 && change < 1)  change = 1;
-                    if (rank == n && change > -1)  change = -1;
+                    if (rank == 1 && change < 1) change = 1;
+                    if (rank == n && change > -1) change = -1;
                     change = Math.max(change, -maxLoss);
                     change = Math.min(change, maxGain);
-
                     int ratingAfter = Math.max(0, p.getRatingBefore() + change);
 
                     try (PreparedStatement ps = conn.prepareStatement(
@@ -711,15 +856,15 @@ public class ContestService {
 
                     try (PreparedStatement ps = conn.prepareStatement("""
                             INSERT INTO student_ratings
-                              (student_id, current_rating, peak_rating, contests_participated,
-                               contests_won, total_score)
+                              (student_id, current_rating, peak_rating,
+                               contests_participated, contests_won, total_score)
                             VALUES (?,?,?,1,?,?)
                             ON DUPLICATE KEY UPDATE
-                              current_rating   = VALUES(current_rating),
-                              peak_rating      = GREATEST(peak_rating, VALUES(current_rating)),
+                              current_rating        = VALUES(current_rating),
+                              peak_rating           = GREATEST(peak_rating, VALUES(current_rating)),
                               contests_participated = contests_participated + 1,
-                              contests_won     = contests_won + VALUES(contests_won),
-                              total_score      = total_score + VALUES(total_score)
+                              contests_won          = contests_won + VALUES(contests_won),
+                              total_score           = total_score + VALUES(total_score)
                             """)) {
                         ps.setInt(1, p.getStudentId());
                         ps.setInt(2, ratingAfter);
@@ -731,7 +876,7 @@ public class ContestService {
 
                     try (PreparedStatement ps = conn.prepareStatement(
                             "INSERT INTO contest_rating_history " +
-                                    "(student_id, contest_id, rating_before, rating_after, rating_change, final_rank, total_score) " +
+                                    "(student_id,contest_id,rating_before,rating_after,rating_change,final_rank,total_score) " +
                                     "VALUES (?,?,?,?,?,?,?)")) {
                         ps.setInt(1, p.getStudentId());
                         ps.setInt(2, contestId);
@@ -759,48 +904,16 @@ public class ContestService {
     // ─── Rating helpers ───────────────────────────────────────────────────────
 
     public int getStudentRating(int studentId) {
-        String sql = "SELECT current_rating FROM student_ratings WHERE student_id=?";
         try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT current_rating FROM student_ratings WHERE student_id=?")) {
             ps.setInt(1, studentId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getInt(1);
         } catch (SQLException e) {
             System.err.println("❌ getStudentRating: " + e.getMessage());
         }
-        return 800;
-    }
-
-    public List<com.examverse.model.user.StudentRating> getGlobalLeaderboard(int limit) {
-        List<com.examverse.model.user.StudentRating> list = new ArrayList<>();
-        String sql = """
-            SELECT sr.*, u.full_name, u.username
-            FROM student_ratings sr
-            JOIN users u ON sr.student_id = u.id
-            ORDER BY sr.current_rating DESC
-            LIMIT ?
-            """;
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, limit);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                com.examverse.model.user.StudentRating r = new com.examverse.model.user.StudentRating();
-                r.setRatingId(rs.getInt("rating_id"));
-                r.setStudentId(rs.getInt("student_id"));
-                r.setStudentName(rs.getString("full_name"));
-                r.setUsername(rs.getString("username"));
-                r.setCurrentRating(rs.getInt("current_rating"));
-                r.setPeakRating(rs.getInt("peak_rating"));
-                r.setContestsParticipated(rs.getInt("contests_participated"));
-                r.setContestsWon(rs.getInt("contests_won"));
-                r.setTotalScore(rs.getInt("total_score"));
-                list.add(r);
-            }
-        } catch (SQLException e) {
-            System.err.println("❌ getGlobalLeaderboard: " + e.getMessage());
-        }
-        return list;
+        return 800; // default starting rating
     }
 
     // ─── RS Mappers ───────────────────────────────────────────────────────────
@@ -853,7 +966,7 @@ public class ContestService {
         p.setContestId(rs.getInt("contest_id"));
         p.setStudentId(rs.getInt("student_id"));
         try { p.setStudentName(rs.getString("full_name")); } catch (SQLException ignored) {}
-        try { p.setUsername(rs.getString("username")); } catch (SQLException ignored) {}
+        try { p.setUsername(rs.getString("username")); }    catch (SQLException ignored) {}
         p.setStatus(ParticipantStatus.valueOf(rs.getString("status")));
         Timestamp jt = rs.getTimestamp("joined_at");
         if (jt != null) p.setJoinedAt(jt.toLocalDateTime());
@@ -894,9 +1007,9 @@ public class ContestService {
     }
 
     private ContestQuestion getQuestionById(int questionId) {
-        String sql = "SELECT * FROM contest_questions WHERE question_id=?";
         try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM contest_questions WHERE question_id=?")) {
             ps.setInt(1, questionId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return mapQuestion(rs);

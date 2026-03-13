@@ -126,7 +126,7 @@ public class SessionManager {
         currentParticipantId = -1;
 
         attributes.clear();
-        instance = null;
+       // instance = null;
     }
 
     // ==================== SESSION ATTRIBUTES METHODS ====================
