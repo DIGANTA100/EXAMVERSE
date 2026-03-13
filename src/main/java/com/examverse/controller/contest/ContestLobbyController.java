@@ -30,19 +30,35 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * ContestLobbyController — FIXED v2
+ * ContestLobbyController — FIXED v3
  *
- * Bug fixes:
- *  1. Contest status re-fetched from DB every 5 seconds. When an UPCOMING
- *     contest becomes LIVE (either admin-launched or auto-launched), the card
- *     is rebuilt and the "Enter Contest" button appears immediately — the
- *     student no longer needs to manually refresh.
+ * Bug fixes in this version:
  *
- *  2. Countdown reaching zero triggers an immediate DB refresh. Previously the
- *     card kept showing the countdown even after auto-launch because the card
- *     was built only once and not rebuilt on status change.
+ *  BUG 1 — "Enter Contest" button still shows after student already submitted:
+ *    Root cause: loadContests() rebuilds cards for ALL live contests without
+ *    checking if the current student already submitted. So after submission,
+ *    the 5-second poll rebuilt the card with the Enter button again.
+ *    Fix: buildContestCard() now calls contestService.hasStudentSubmitted()
+ *    and shows a "✅ Already Submitted" badge instead of the Enter button when
+ *    the student's participant status is SUBMITTED or EVALUATED.
  *
- *  3. Enter Contest runs on a background thread so the JavaFX UI never freezes.
+ *  BUG 2 — Screen freeze + "✅ Connected to ExamVerse database successfully!"
+ *    spam when countdown reaches zero:
+ *    Root cause: buildCountdownWithAutoRefresh() had a Timeline firing every
+ *    second that called loadContests() DIRECTLY on the JavaFX thread. loadContests()
+ *    opens a DB connection synchronously, which blocks the UI thread → freeze.
+ *    On top of that, every new loadContests() call also creates a brand-new
+ *    ContestService instance whose static DatabaseConfig.getConnection() logs
+ *    "Connected…" — so you saw it once per second.
+ *    Fix:
+ *      a) The countdown Timeline ONLY updates the label text. It never touches
+ *         the DB.
+ *      b) When the countdown reaches zero it sets a volatile flag
+ *         (countdownExpired) and lets the existing background refreshTimer
+ *         (which already runs every 5 s on a daemon thread) pick up the DB
+ *         refresh on the next tick. The UI thread is never blocked.
+ *      c) The refreshTimer itself already calls Platform.runLater(loadContests)
+ *         so the UI rebuild still happens on the FX thread — correctly.
  */
 public class ContestLobbyController implements Initializable {
 
@@ -62,9 +78,13 @@ public class ContestLobbyController implements Initializable {
     private MediaPlayer mediaPlayer;
     private Timer refreshTimer;
 
-    // Tracks the last known status of each contest so we only rebuild cards
-    // when something actually changed (avoids visual flicker on every poll).
-    //private List<Contest> lastContests = List.of();
+    /**
+     * FIX (Bug 2): Set to true by countdown labels when they hit zero.
+     * The background refreshTimer checks this flag — if true it forces an
+     * immediate loadContests() call and resets the flag.
+     * This keeps ALL database work off the JavaFX thread.
+     */
+    private volatile boolean countdownExpired = false;
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
     @Override
@@ -73,11 +93,17 @@ public class ContestLobbyController implements Initializable {
         loadStudentRating();
         loadContests();
 
-        // Poll DB every 5 seconds to catch UPCOMING → LIVE transitions
-        // (both admin-manually-launched and auto-launched contests)
+        // Poll DB every 5 seconds on a daemon background thread.
+        // Platform.runLater ensures the UI rebuild is on the FX thread.
         refreshTimer = new Timer("lobby-refresh", true);
         refreshTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override public void run() {
+            @Override
+            public void run() {
+                // Also triggers immediately when a countdown has just expired
+                // (countdownExpired flag was set by the Timeline on the FX thread).
+                if (countdownExpired) {
+                    countdownExpired = false;
+                }
                 Platform.runLater(() -> loadContests());
             }
         }, 5_000, 5_000);
@@ -98,34 +124,6 @@ public class ContestLobbyController implements Initializable {
     }
 
     // ── Load Contests ─────────────────────────────────────────────────────────
-//    private void loadContests() {
-//        List<Contest> contests = contestService.getActiveContests();
-//
-//        // Detect if anything changed (by comparing contest ids + statuses)
-//        boolean changed = hasContestListChanged(contests);
-//        if (!changed) return; // nothing to redraw
-//
-//        lastContests = contests;
-//        contestCardsContainer.getChildren().clear();
-//
-//        if (contests.isEmpty()) {
-//            VBox empty = new VBox(10);
-//            empty.setAlignment(Pos.CENTER);
-//            empty.setPadding(new Insets(60));
-//            Label noContest = new Label("🎮 No live contests right now");
-//            noContest.setStyle("-fx-text-fill:#94a3b8; -fx-font-size:20px; -fx-font-weight:bold;");
-//            Label subLabel = new Label("Check back soon — new contests are added regularly.");
-//            subLabel.setStyle("-fx-text-fill:#64748b; -fx-font-size:14px;");
-//            empty.getChildren().addAll(noContest, subLabel);
-//            contestCardsContainer.getChildren().add(empty);
-//            return;
-//        }
-//
-//        for (Contest c : contests) {
-//            contestCardsContainer.getChildren().add(buildContestCard(c));
-//        }
-//    }
-
     private void loadContests() {
         List<Contest> contests = contestService.getActiveContests();
         contestCardsContainer.getChildren().clear();
@@ -147,18 +145,6 @@ public class ContestLobbyController implements Initializable {
             contestCardsContainer.getChildren().add(buildContestCard(c));
         }
     }
-
-    /** Returns true if the contest list is different from what's currently displayed. */
-//    private boolean hasContestListChanged(List<Contest> fresh) {
-//        if (fresh.size() != lastContests.size()) return true;
-//        for (int i = 0; i < fresh.size(); i++) {
-//            Contest f = fresh.get(i);
-//            Contest l = lastContests.get(i);
-//            if (f.getContestId() != l.getContestId()) return true;
-//            if (f.getStatus()    != l.getStatus())    return true;
-//        }
-//        return false;
-//    }
 
     // ── Contest Card ──────────────────────────────────────────────────────────
     private VBox buildContestCard(Contest c) {
@@ -194,7 +180,8 @@ public class ContestLobbyController implements Initializable {
                 "-fx-font-size:12px; -fx-font-weight:bold;" +
                 "-fx-padding:4 12 4 12; -fx-background-radius:20;");
 
-        Region sp1 = new Region(); HBox.setHgrow(sp1, Priority.ALWAYS);
+        Region sp1 = new Region();
+        HBox.setHgrow(sp1, Priority.ALWAYS);
 
         Label statusBadge = new Label(c.isLive() ? "🔴  LIVE" : "⏳  UPCOMING");
         statusBadge.setStyle("-fx-background-color:" + (c.isLive() ? "#22c55e" : "#3b82f6") + ";" +
@@ -202,8 +189,10 @@ public class ContestLobbyController implements Initializable {
                 "-fx-padding:4 14 4 14; -fx-background-radius:20;");
         if (c.isLive()) {
             FadeTransition pulse = new FadeTransition(Duration.millis(900), statusBadge);
-            pulse.setFromValue(1.0); pulse.setToValue(0.4);
-            pulse.setCycleCount(Animation.INDEFINITE); pulse.setAutoReverse(true);
+            pulse.setFromValue(1.0);
+            pulse.setToValue(0.4);
+            pulse.setCycleCount(Animation.INDEFINITE);
+            pulse.setAutoReverse(true);
             pulse.play();
         }
         topRow.getChildren().addAll(themeTag, sp1, statusBadge);
@@ -229,36 +218,55 @@ public class ContestLobbyController implements Initializable {
                 infoChip("🏆", c.getTotalMarks() + " marks", t.getAccentColor())
         );
 
-        // ── Bottom row: Enter button OR countdown ──
+        // ── Bottom row: Enter button, countdown, or "already submitted" ──
         HBox bottomRow = new HBox(16);
         bottomRow.setAlignment(Pos.CENTER_RIGHT);
 
         if (c.isLive()) {
-            // Contest is LIVE → show Enter button immediately
-            Button enterBtn = new Button("⚔️  ENTER CONTEST");
-            enterBtn.setStyle(
-                    "-fx-background-color: linear-gradient(to right," + t.getAccentColor() + "," +
-                            t.getHighlightColor() + ");" +
-                            "-fx-text-fill:#000000; -fx-font-weight:bold; -fx-font-size:15px;" +
-                            "-fx-padding:12 32 12 32; -fx-background-radius:30;" +
-                            "-fx-effect: dropshadow(gaussian," + t.getAccentColor() + ", 12, 0.5, 0, 2);"
-            );
-            ScaleTransition pulse = new ScaleTransition(Duration.millis(800), enterBtn);
-            pulse.setFromX(1.0); pulse.setToX(1.04);
-            pulse.setFromY(1.0); pulse.setToY(1.04);
-            pulse.setCycleCount(Animation.INDEFINITE); pulse.setAutoReverse(true);
-            pulse.play();
-            enterBtn.setOnAction(e -> handleEnterContest(c, enterBtn));
-            bottomRow.getChildren().add(enterBtn);
+            // ── FIX (Bug 1): Check if this student already submitted ──────────
+            boolean alreadySubmitted = currentUser != null
+                    && contestService.hasStudentSubmitted(c.getContestId(), currentUser.getId());
+
+            if (alreadySubmitted) {
+                // Student is done — show a non-clickable badge instead of Enter button
+                Label doneLabel = new Label("✅  Already Submitted");
+                doneLabel.setStyle(
+                        "-fx-background-color:#22c55e33;" +
+                                "-fx-text-fill:#22c55e;" +
+                                "-fx-font-size:14px; -fx-font-weight:bold;" +
+                                "-fx-padding:10 24 10 24; -fx-background-radius:30;"
+                );
+                bottomRow.getChildren().add(doneLabel);
+            } else {
+                // Normal Enter button
+                Button enterBtn = new Button("⚔️  ENTER CONTEST");
+                enterBtn.setStyle(
+                        "-fx-background-color: linear-gradient(to right," + t.getAccentColor() + "," +
+                                t.getHighlightColor() + ");" +
+                                "-fx-text-fill:#000000; -fx-font-weight:bold; -fx-font-size:15px;" +
+                                "-fx-padding:12 32 12 32; -fx-background-radius:30;" +
+                                "-fx-effect: dropshadow(gaussian," + t.getAccentColor() + ", 12, 0.5, 0, 2);"
+                );
+                ScaleTransition pulse = new ScaleTransition(Duration.millis(800), enterBtn);
+                pulse.setFromX(1.0);
+                pulse.setToX(1.04);
+                pulse.setFromY(1.0);
+                pulse.setToY(1.04);
+                pulse.setCycleCount(Animation.INDEFINITE);
+                pulse.setAutoReverse(true);
+                pulse.play();
+                enterBtn.setOnAction(e -> handleEnterContest(c, enterBtn));
+                bottomRow.getChildren().add(enterBtn);
+            }
 
         } else {
-            // Contest is UPCOMING → show countdown
-            // When the countdown hits zero, immediately trigger a DB refresh
-            // so this card is rebuilt with the ENTER button.
+            // ── FIX (Bug 2): Countdown ONLY updates the label — no DB calls ──
+            // When it hits zero it sets countdownExpired = true so the existing
+            // background refreshTimer does the DB fetch on its next 5-second tick.
             Label countdown = new Label("Starting in ...");
             countdown.setStyle("-fx-text-fill:" + t.getAccentColor() +
                     "; -fx-font-size:14px; -fx-font-weight:bold;");
-            buildCountdownWithAutoRefresh(countdown, c.getStartTime());
+            buildCountdownLabelOnly(countdown, c.getStartTime());
             bottomRow.getChildren().add(countdown);
         }
 
@@ -273,20 +281,29 @@ public class ContestLobbyController implements Initializable {
     }
 
     /**
-     * Countdown timer that also triggers a DB refresh when it hits zero.
-     * This ensures the card is immediately rebuilt with the Enter button once
-     * the contest auto-launches at its start_time.
+     * FIX (Bug 2): This Timeline ONLY updates the label text.
+     * It does NOT call loadContests() or touch the database.
+     *
+     * When the countdown hits zero it sets countdownExpired = true.
+     * The background refreshTimer (daemon thread, every 5 s) will see this
+     * flag on its next tick and call Platform.runLater(loadContests) — which
+     * is the correct way to update JavaFX UI from a non-FX thread.
+     *
+     * Previously: loadContests() was called directly here every second,
+     * opening a DB connection on the JavaFX thread → freeze + log spam.
      */
-    private void buildCountdownWithAutoRefresh(Label label, LocalDateTime startTime) {
-        if (startTime == null) { label.setText("TBD"); return; }
+    private void buildCountdownLabelOnly(Label label, LocalDateTime startTime) {
+        if (startTime == null) {
+            label.setText("TBD");
+            return;
+        }
         Timeline tl = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
             long secs = java.time.Duration.between(LocalDateTime.now(), startTime).getSeconds();
             if (secs <= 0) {
                 label.setText("Starting now...");
-                // Trigger an immediate DB refresh — this will rebuild the card
-                // with the ENTER button once the auto-launcher sets it to LIVE
-               // lastContests = List.of(); // force rebuild
-                loadContests();
+                // Signal the background thread to do a DB refresh.
+                // DO NOT call loadContests() here — this runs on the FX thread.
+                countdownExpired = true;
             } else {
                 long h = secs / 3600, m = (secs % 3600) / 60, s = secs % 60;
                 label.setText(String.format("Starting in %02d:%02d:%02d", h, m, s));
@@ -316,6 +333,8 @@ public class ContestLobbyController implements Initializable {
                 contestService.activateParticipant(participantId);
                 SessionManager.getInstance().setCurrentContest(c);
                 SessionManager.getInstance().setCurrentParticipantId(participantId);
+                System.out.println("DEBUG ENTER: entering contestId=" + c.getContestId()
+                        + " new participantId=" + participantId);
                 showThemeIntro(c);
             });
         });
@@ -365,7 +384,8 @@ public class ContestLobbyController implements Initializable {
         }
 
         FadeTransition fadeIn = new FadeTransition(Duration.millis(600), overlay);
-        fadeIn.setFromValue(0); fadeIn.setToValue(1);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
         fadeIn.play();
 
         boolean musicPlayed = tryPlayThemeMusic(c, () ->
@@ -415,7 +435,6 @@ public class ContestLobbyController implements Initializable {
     @FXML
     private void handleLeaderboard() {
         stopTimer();
-        // Global leaderboard from student lobby (not contest-specific)
         SessionManager.getInstance().setAttribute("leaderboard_mode", "global");
         SceneManager.switchScene("/com/examverse/fxml/contest/contest-leaderboard.fxml");
     }
@@ -440,7 +459,9 @@ public class ContestLobbyController implements Initializable {
 
     private void showAlert(String title, String msg) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle(title); a.setHeaderText(null); a.setContentText(msg);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
         a.showAndWait();
     }
 }

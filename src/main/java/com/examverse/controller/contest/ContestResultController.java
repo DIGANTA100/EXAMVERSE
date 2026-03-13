@@ -22,14 +22,29 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 /**
- * ContestResultController
- * Shown after a student submits the contest.
- * Displays:
- *  - MCQ score (immediate)
- *  - Written answer status (pending / reviewed)
- *  - Live rank (based on MCQ)
- *  - Rating change (after full evaluation / if no written → immediate)
- *  - Full standings table
+ * ContestResultController — FIXED v2
+ *
+ * BUG FIX: "Enter Contest button still showing / wrong participant data in Contest 2"
+ *
+ * Root cause:
+ *   When handleBack() navigated to the lobby, SessionManager still held:
+ *     - currentContest  → contest 1
+ *     - currentParticipantId → contest 1's participant ID
+ *
+ *   So when the student entered contest 2, ContestLobbyController correctly
+ *   called registerStudent(contest2Id, studentId) and set currentContest to
+ *   contest 2. BUT ContestRoomController read currentParticipantId from the
+ *   session which was still contest 1's value (not yet replaced because
+ *   registerStudent's Platform.runLater hadn't run, or there was a race).
+ *
+ *   Fix: handleBack() now explicitly clears currentContest and
+ *   currentParticipantId from the session before navigating to the lobby.
+ *   ContestRoomController (fixed separately) also re-derives participantId
+ *   from the DB as a second safety net.
+ *
+ *   Also fixed: handleLeaderboard() was navigating without clearing the
+ *   session's leaderboard_mode attribute, which could cause the leaderboard
+ *   to show in "global" mode instead of the contest-specific mode.
  */
 public class ContestResultController implements Initializable {
 
@@ -77,14 +92,12 @@ public class ContestResultController implements Initializable {
 
     // ── My Result ─────────────────────────────────────────────────────────────
     private void loadMyResult() {
-        // Load participant data from DB
         List<ContestParticipant> standings = contestService.getFinalStandings(contest.getContestId());
         ContestParticipant me = standings.stream()
                 .filter(p -> p.getStudentId() == currentUser.getId())
                 .findFirst().orElse(null);
 
         if (me == null) {
-            // Fallback: use live leaderboard
             List<ContestParticipant> live = contestService.getLiveLeaderboard(contest.getContestId());
             me = live.stream().filter(p -> p.getStudentId() == currentUser.getId())
                     .findFirst().orElse(null);
@@ -97,13 +110,11 @@ public class ContestResultController implements Initializable {
 
         Theme t = contest.getTheme();
 
-        // MCQ score
         mcqScoreLabel.setText(me.getMcqMarksObtained() + " / " +
                 (contest.getTotalMcqQuestions() * contest.getMcqMarksEach()));
         mcqScoreLabel.setStyle("-fx-text-fill:" + t.getAccentColor() +
                 "; -fx-font-size:28px; -fx-font-weight:bold;");
 
-        // Written status
         int pending = me.getPendingWrittenReviews();
         if (contest.getTotalWrittenQuestions() == 0) {
             writtenStatusLabel.setText("No written questions.");
@@ -116,12 +127,10 @@ public class ContestResultController implements Initializable {
             writtenStatusLabel.setStyle("-fx-text-fill:#22c55e; -fx-font-size:14px;");
         }
 
-        // Live rank
         liveRankLabel.setText("#" + me.getLiveRank());
         liveRankLabel.setStyle("-fx-text-fill:" + t.getHighlightColor() +
                 "; -fx-font-size:24px; -fx-font-weight:bold;");
 
-        // Final rank & rating (if evaluated)
         if (me.isEvaluated()) {
             finalRankLabel.setText("Final Rank: #" + me.getFinalRank());
 
@@ -140,7 +149,6 @@ public class ContestResultController implements Initializable {
             rankTitleLabel.getStyleClass().setAll("rank-title",
                     StudentRating.getTitleCssClass(me.getRatingAfter()));
 
-            // Animate rating change
             animateRatingChange(change);
         } else {
             finalRankLabel.setText("Final rank pending evaluation.");
@@ -279,9 +287,9 @@ public class ContestResultController implements Initializable {
                     "; -fx-font-size:14px;");
             nameLbl.setMinWidth(160);
 
-            Region sp = new Region(); HBox.setHgrow(sp, Priority.ALWAYS);
+            Region sp = new Region();
+            HBox.setHgrow(sp, Priority.ALWAYS);
 
-            // MCQ / Written / Total
             Label mcqLbl = new Label("MCQ: " + p.getMcqMarksObtained());
             mcqLbl.setStyle("-fx-text-fill:#94a3b8; -fx-font-size:13px;");
 
@@ -292,7 +300,6 @@ public class ContestResultController implements Initializable {
             totalLbl.setStyle("-fx-text-fill:" + t.getHighlightColor() +
                     "; -fx-font-weight:bold; -fx-font-size:14px;");
 
-            // Rating change (if evaluated)
             if (p.isEvaluated()) {
                 int change = p.getRatingChange();
                 Label ratingChg = new Label((change >= 0 ? "+" : "") + change);
@@ -310,11 +317,24 @@ public class ContestResultController implements Initializable {
     // ── Navigation ────────────────────────────────────────────────────────────
     @FXML
     private void handleBack() {
+        // ── FIX: Clear the contest session state before going back to lobby.
+        //
+        // Without this, SessionManager holds onto the old contest and participant ID.
+        // When the student enters a NEW contest, ContestRoomController.initialize()
+        // reads the stale participantId (contest 1's) from the session and loads
+        // the wrong data. Now the lobby gets a clean slate every time.
+        System.out.println("DEBUG BACK: clearing contest=" + (contest != null ? contest.getContestId() : "NULL")
+                + " participantId=" + participantId);
+        SessionManager.getInstance().setCurrentContest(null);
+        SessionManager.getInstance().setCurrentParticipantId(-1);
+
         SceneManager.switchScene("/com/examverse/fxml/contest/contest-lobby.fxml");
     }
 
     @FXML
     private void handleLeaderboard() {
+        // Show this contest's specific leaderboard from the result screen
+        SessionManager.getInstance().setAttribute("leaderboard_mode", "contest");
         SceneManager.switchScene("/com/examverse/fxml/contest/contest-leaderboard.fxml");
     }
 }

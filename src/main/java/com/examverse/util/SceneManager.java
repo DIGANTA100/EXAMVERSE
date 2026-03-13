@@ -45,6 +45,7 @@ public class SceneManager {
             "docs",
             "contact",
             "faq",
+            "contest-room",
             "contest-lobby",       // ← ADD THIS
             "contest-manager",     // ← ADD THIS
             "contest-leaderboard", // ← ADD THIS

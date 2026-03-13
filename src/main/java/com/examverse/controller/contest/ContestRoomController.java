@@ -27,20 +27,38 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 /**
- * ContestRoomController
- * The live contest screen. Shows all questions (MCQ + Written) in a sidebar.
- * MCQ → radio buttons, auto-grade on submit.
- * Written → "Upload Image" button, stores file path in DB.
- * Timer counts down; auto-submits on expiry.
- * Live leaderboard panel updates every 15 seconds.
+ * ContestRoomController — FIXED v2
+ *
+ * BUG FIX: "Seeing previous contest's answers in new contest"
+ *
+ * Root cause:
+ *   The submitted / mcqAnswers / writtenPaths maps were NEVER seeded from the
+ *   database on initialize(). They started empty every time. This meant:
+ *
+ *   1. On re-entry to the SAME contest (back nav, app restart), all previously
+ *      answered questions appeared unanswered — student could re-answer them.
+ *
+ *   2. More critically: if SessionManager.currentParticipantId was stale (still
+ *      holding contest-1's participant ID when entering contest-2), the contest
+ *      room silently loaded under the wrong participant. The fix in
+ *      ContestResultController.handleBack() now clears participantId from
+ *      session on exit, and ContestRoomController.initialize() re-derives
+ *      participantId from the DB using (contestId + studentId) as the canonical
+ *      source of truth — never trusting a potentially stale session value.
+ *
+ * Additional fix:
+ *   initialize() now calls seedAnswerStateFromDb() which loads all existing
+ *   contest_answers rows for this participant and pre-populates the three maps.
+ *   This makes previously submitted MCQ answers show as "already submitted"
+ *   with their chosen option highlighted, and written uploads show their image.
  */
 public class ContestRoomController implements Initializable {
 
     // ── FXML ──────────────────────────────────────────────────────────────────
     @FXML private BorderPane rootPane;
-    @FXML private VBox questionNavPanel;        // sidebar: question number buttons
-    @FXML private VBox questionContentArea;     // center: current question
-    @FXML private VBox leaderboardPanel;        // right: live ranks
+    @FXML private VBox questionNavPanel;
+    @FXML private VBox questionContentArea;
+    @FXML private VBox leaderboardPanel;
     @FXML private Label timerLabel;
     @FXML private Label contestTitleLabel;
     @FXML private Label liveScoreLabel;
@@ -55,9 +73,12 @@ public class ContestRoomController implements Initializable {
     private int participantId;
     private List<ContestQuestion> questions;
     private int currentQuestionIndex = 0;
-    private final Map<Integer, String> mcqAnswers  = new HashMap<>(); // questionId → "A/B/C/D"
-    private final Map<Integer, String> writtenPaths = new HashMap<>(); // questionId → local file path
-    private final Map<Integer, Boolean> submitted   = new HashMap<>(); // questionId → answered?
+
+    // These three maps are now ALWAYS seeded from DB in initialize() so they
+    // are never stale or polluted by a previous contest session.
+    private final Map<Integer, String>  mcqAnswers   = new HashMap<>(); // questionId → "A/B/C/D"
+    private final Map<Integer, String>  writtenPaths = new HashMap<>(); // questionId → local file path
+    private final Map<Integer, Boolean> submitted    = new HashMap<>(); // questionId → answered?
 
     private Timeline countdownTimer;
     private Timeline leaderboardRefresh;
@@ -66,12 +87,39 @@ public class ContestRoomController implements Initializable {
     // ── Lifecycle ─────────────────────────────────────────────────────────────
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        currentUser   = SessionManager.getInstance().getCurrentUser();
-        contest       = SessionManager.getInstance().getCurrentContest();
-        participantId = SessionManager.getInstance().getCurrentParticipantId();
+        currentUser = SessionManager.getInstance().getCurrentUser();
+        contest     = SessionManager.getInstance().getCurrentContest();
+
+        System.out.println("DEBUG ROOM: contestId=" + (contest != null ? contest.getContestId() : "NULL")
+                + " participantId=" + SessionManager.getInstance().getCurrentParticipantId());
 
         if (contest == null || currentUser == null) {
             showAlert("Error", "Session expired. Please re-enter the contest.");
+            return;
+        }
+
+        // ── FIX: Always derive participantId from DB using (contestId, studentId).
+        // Never rely solely on SessionManager.currentParticipantId which can be
+        // stale if the student came back from a previous contest result screen
+        // without the session being cleared properly.
+        int sessionParticipantId = SessionManager.getInstance().getCurrentParticipantId();
+        int dbParticipantId      = contestService.getParticipantId(
+                contest.getContestId(), currentUser.getId());
+
+        if (dbParticipantId > 0) {
+            // DB is the canonical source of truth
+            participantId = dbParticipantId;
+            // Correct the session if it was stale
+            if (sessionParticipantId != dbParticipantId) {
+                System.out.println("⚠️ Stale participantId in session (" + sessionParticipantId
+                        + ") corrected to DB value (" + dbParticipantId + ")");
+                SessionManager.getInstance().setCurrentParticipantId(dbParticipantId);
+            }
+        } else if (sessionParticipantId > 0) {
+            // Fallback to session (should rarely happen)
+            participantId = sessionParticipantId;
+        } else {
+            showAlert("Error", "Could not find your registration for this contest.");
             return;
         }
 
@@ -79,16 +127,64 @@ public class ContestRoomController implements Initializable {
         contestTitleLabel.setText(contest.getContestTitle());
 
         questions = contestService.getQuestionsForContest(contest.getContestId());
+        System.out.println("DEBUG QUESTIONS: contest=" + contest.getContestId()
+                + " question count=" + questions.size()
+                + " first questionId=" + (questions.isEmpty() ? "none" : questions.get(0).getQuestionId()));
         if (questions.isEmpty()) {
             showAlert("Notice", "This contest has no questions yet.");
             return;
         }
+
+        // ── FIX: Seed answer maps from DB before building the UI.
+        // This ensures previously answered questions show their saved state
+        // and cannot be re-answered, regardless of how the room was entered.
+        seedAnswerStateFromDb();
 
         buildQuestionNav();
         showQuestion(0);
         startCountdown();
         startLeaderboardRefresh();
         refreshLiveLeaderboard();
+    }
+
+    /**
+     * Loads all existing answers for this participant from contest_answers
+     * and populates mcqAnswers, writtenPaths, and submitted maps.
+     *
+     * This is critical for two scenarios:
+     *  1. Student re-enters a contest room mid-contest (e.g. navigated away).
+     *  2. Prevents stale data from a previous session polluting a new contest.
+     *
+     * Called ONCE during initialize(), before buildQuestionNav() / showQuestion().
+     */
+    private void seedAnswerStateFromDb() {
+        mcqAnswers.clear();
+        writtenPaths.clear();
+        submitted.clear();
+
+
+        List<ContestAnswer> existingAnswers = contestService.getStudentAnswers(participantId);
+        System.out.println("DEBUG SEED: loading answers for participantId=" + participantId);
+        for (ContestAnswer a : existingAnswers) {
+            System.out.println("  → questionId=" + a.getQuestionId() + " contestId=" + a.getContestId());
+        }
+        for (ContestAnswer a : existingAnswers) {
+            int qid = a.getQuestionId();
+            submitted.put(qid, true);
+
+            if (a.getSelectedOption() != null && !a.getSelectedOption().isEmpty()) {
+                // MCQ answer
+                mcqAnswers.put(qid, a.getSelectedOption());
+            }
+            if (a.getImagePath() != null && !a.getImagePath().isEmpty()) {
+                // Written upload path
+                writtenPaths.put(qid, a.getImagePath());
+            }
+        }
+
+        System.out.println("✅ Seeded " + existingAnswers.size()
+                + " existing answers for participant " + participantId
+                + " in contest " + contest.getContestId());
     }
 
     // ── Theme ─────────────────────────────────────────────────────────────────
@@ -163,7 +259,6 @@ public class ContestRoomController implements Initializable {
 
         questionCounterLabel.setText("Question " + (index + 1) + " / " + questions.size());
 
-        // Question type badge
         Label typeBadge = new Label(q.isMcq() ? "📝  MCQ" : "✍️  WRITTEN");
         typeBadge.setStyle("-fx-background-color:" + (q.isMcq() ? t.getAccentColor() : "#f59e0b") + ";" +
                 "-fx-text-fill:#000; -fx-font-weight:bold; -fx-font-size:12px;" +
@@ -175,7 +270,6 @@ public class ContestRoomController implements Initializable {
         HBox typeRow = new HBox(10, typeBadge, marksLabel);
         typeRow.setAlignment(Pos.CENTER_LEFT);
 
-        // Question text
         Label qText = new Label(q.getQuestionText());
         qText.setStyle("-fx-text-fill:#f1f5f9; -fx-font-size:17px; -fx-font-weight:bold;");
         qText.setWrapText(true);
@@ -190,7 +284,6 @@ public class ContestRoomController implements Initializable {
             buildWrittenSection(q, questionBox, t);
         }
 
-        // Navigation buttons
         HBox navBtns = new HBox(12);
         navBtns.setAlignment(Pos.CENTER);
         if (index > 0) {
@@ -217,6 +310,7 @@ public class ContestRoomController implements Initializable {
 
         ToggleGroup group = new ToggleGroup();
         String preSelected = mcqAnswers.get(q.getQuestionId());
+        boolean alreadySubmitted = submitted.getOrDefault(q.getQuestionId(), false);
 
         for (int i = 0; i < 4; i++) {
             if (optTexts[i] == null || optTexts[i].isEmpty()) continue;
@@ -225,56 +319,64 @@ public class ContestRoomController implements Initializable {
             RadioButton rb = new RadioButton(key + ".  " + optTexts[i]);
             rb.setToggleGroup(group);
             rb.setUserData(key);
+            rb.setDisable(alreadySubmitted); // Lock options if already answered
             rb.setStyle("-fx-text-fill:#e2e8f0; -fx-font-size:14px;");
             rb.setPadding(new Insets(10, 14, 10, 14));
 
-            // Restore previous selection
-            if (key.equals(preSelected)) rb.setSelected(true);
-
-            // Style selected state
-            rb.selectedProperty().addListener((obs, ov, nv) -> {
+            if (key.equals(preSelected)) {
+                rb.setSelected(true);
+                // Highlight the pre-selected option
                 rb.setStyle("-fx-text-fill:#e2e8f0; -fx-font-size:14px;" +
-                        (nv ? "-fx-background-color:" + t.getAccentColor() + "22;" +
-                                "-fx-background-radius:8;" : ""));
+                        "-fx-background-color:" + t.getAccentColor() + "22;" +
+                        "-fx-background-radius:8;");
+            }
+
+            rb.selectedProperty().addListener((obs, ov, nv) -> {
+                if (!alreadySubmitted) {
+                    rb.setStyle("-fx-text-fill:#e2e8f0; -fx-font-size:14px;" +
+                            (nv ? "-fx-background-color:" + t.getAccentColor() + "22;" +
+                                    "-fx-background-radius:8;" : ""));
+                }
             });
 
             questionBox.getChildren().add(rb);
         }
 
-        // Submit MCQ button
-        Button submitMcq = new Button("✓  Submit Answer");
+        Button submitMcq = new Button(alreadySubmitted ? "✓  Submitted" : "✓  Submit Answer");
         submitMcq.setStyle(primaryBtnStyle(t) + "-fx-padding:10 24;");
-        submitMcq.setOnAction(e -> {
-            if (group.getSelectedToggle() == null) {
-                showAlert("Notice", "Please select an option first.");
-                return;
-            }
-            String chosen = (String) group.getSelectedToggle().getUserData();
-            mcqAnswers.put(q.getQuestionId(), chosen);
+        submitMcq.setDisable(alreadySubmitted);
 
-            ContestAnswer answer = contestService.submitMcqAnswer(
-                    participantId, contest.getContestId(),
-                    q.getQuestionId(), currentUser.getId(), chosen);
+        if (!alreadySubmitted) {
+            submitMcq.setOnAction(e -> {
+                if (group.getSelectedToggle() == null) {
+                    showAlert("Notice", "Please select an option first.");
+                    return;
+                }
+                String chosen = (String) group.getSelectedToggle().getUserData();
+                mcqAnswers.put(q.getQuestionId(), chosen);
 
-            if (answer != null) {
-                submitted.put(q.getQuestionId(), true);
-                refreshNavButtonStyles();
-                updateLiveScore();
-                String feedback = answer.isCorrect()
-                        ? "✅ Correct! +" + answer.getMarksAwarded() + " marks"
-                        : "❌ Incorrect. The correct answer was " + q.getCorrectAnswer();
-                Label fb = new Label(feedback);
-                fb.setStyle("-fx-text-fill:" + (answer.isCorrect() ? "#22c55e" : "#ef4444") +
-                        "; -fx-font-weight:bold; -fx-font-size:14px;");
-                questionBox.getChildren().add(fb);
-                submitMcq.setDisable(true);
-            }
-        });
+                ContestAnswer answer = contestService.submitMcqAnswer(
+                        participantId, contest.getContestId(),
+                        q.getQuestionId(), currentUser.getId(), chosen);
 
-        // If already submitted, show disabled
-        if (submitted.getOrDefault(q.getQuestionId(), false)) {
-            submitMcq.setDisable(true);
-            submitMcq.setText("✓  Submitted");
+                if (answer != null) {
+                    submitted.put(q.getQuestionId(), true);
+                    refreshNavButtonStyles();
+                    updateLiveScore();
+                    String feedback = answer.isCorrect()
+                            ? "✅ Correct! +" + answer.getMarksAwarded() + " marks"
+                            : "❌ Incorrect. The correct answer was " + q.getCorrectAnswer();
+                    Label fb = new Label(feedback);
+                    fb.setStyle("-fx-text-fill:" + (answer.isCorrect() ? "#22c55e" : "#ef4444") +
+                            "; -fx-font-weight:bold; -fx-font-size:14px;");
+                    questionBox.getChildren().add(fb);
+                    submitMcq.setDisable(true);
+                    submitMcq.setText("✓  Submitted");
+                    // Lock all radio buttons after submission
+                    group.getToggles().forEach(toggle ->
+                            ((RadioButton) toggle).setDisable(true));
+                }
+            });
         }
 
         questionBox.getChildren().add(submitMcq);
@@ -287,7 +389,6 @@ public class ContestRoomController implements Initializable {
         instruction.setStyle("-fx-text-fill:#94a3b8; -fx-font-size:13px;");
         instruction.setWrapText(true);
 
-        // Preview pane
         VBox previewBox = new VBox(8);
         previewBox.setStyle("-fx-background-color:#0f172a; -fx-background-radius:8;" +
                 "-fx-min-height:180; -fx-alignment:center;");
@@ -296,17 +397,20 @@ public class ContestRoomController implements Initializable {
         previewPlaceholder.setStyle("-fx-text-fill:#475569; -fx-font-size:14px;");
         previewBox.getChildren().add(previewPlaceholder);
 
-        // Check if already uploaded
+        // Show existing upload if any (seeded from DB)
         String existingPath = writtenPaths.get(q.getQuestionId());
         if (existingPath != null) {
             try {
                 ImageView iv = new ImageView(new Image("file:" + existingPath));
-                iv.setFitWidth(340); iv.setPreserveRatio(true);
+                iv.setFitWidth(340);
+                iv.setPreserveRatio(true);
                 previewBox.getChildren().setAll(iv);
             } catch (Exception ignored) {}
         }
 
-        Button uploadBtn = new Button("📤  Upload Answer Image");
+        Button uploadBtn = new Button(
+                submitted.getOrDefault(q.getQuestionId(), false)
+                        ? "🔄  Replace Image" : "📤  Upload Answer Image");
         uploadBtn.setStyle("-fx-background-color:#f59e0b; -fx-text-fill:#000;" +
                 "-fx-font-weight:bold; -fx-background-radius:8; -fx-padding:10 24;");
 
@@ -325,7 +429,6 @@ public class ContestRoomController implements Initializable {
             if (chosen == null) return;
 
             try {
-                // Copy image to uploads directory
                 Path uploadDir = Paths.get(System.getProperty("user.home"),
                         "examverse_uploads", "contest_" + contest.getContestId());
                 Files.createDirectories(uploadDir);
@@ -336,12 +439,11 @@ public class ContestRoomController implements Initializable {
                 Files.copy(chosen.toPath(), dest, StandardCopyOption.REPLACE_EXISTING);
                 String savedPath = dest.toString();
 
-                // Show preview
                 ImageView iv = new ImageView(new Image("file:" + savedPath));
-                iv.setFitWidth(340); iv.setPreserveRatio(true);
+                iv.setFitWidth(340);
+                iv.setPreserveRatio(true);
                 previewBox.getChildren().setAll(iv);
 
-                // Save to DB
                 boolean ok = contestService.submitWrittenAnswer(
                         participantId, contest.getContestId(),
                         q.getQuestionId(), currentUser.getId(), savedPath);
@@ -389,7 +491,6 @@ public class ContestRoomController implements Initializable {
             long s = remainingSeconds % 60;
             timerLabel.setText(String.format("%02d:%02d:%02d", h, m, s));
 
-            // Color change when < 5 minutes
             if (remainingSeconds < 300) {
                 timerLabel.setStyle(timerLabel.getStyle().replace(
                         contest.getTheme().getHighlightColor(), "#ef4444"));
@@ -448,7 +549,8 @@ public class ContestRoomController implements Initializable {
             nameLbl.setStyle("-fx-text-fill:" + (isMe ? t.getAccentColor() : "#e2e8f0") +
                     "; -fx-font-weight:" + (isMe ? "bold" : "normal") + ";");
             nameLbl.setMaxWidth(120);
-            Region sp = new Region(); HBox.setHgrow(sp, Priority.ALWAYS);
+            Region sp = new Region();
+            HBox.setHgrow(sp, Priority.ALWAYS);
             Label scoreLbl = new Label(p.getMcqMarksObtained() + " pts");
             scoreLbl.setStyle("-fx-text-fill:" + t.getHighlightColor() + "; -fx-font-weight:bold;");
 
@@ -508,7 +610,9 @@ public class ContestRoomController implements Initializable {
 
     private void showAlert(String title, String msg) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle(title); a.setHeaderText(null); a.setContentText(msg);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
         a.showAndWait();
     }
 }

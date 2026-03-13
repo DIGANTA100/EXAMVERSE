@@ -363,6 +363,27 @@ public class ContestService {
         return -1;
     }
 
+    public boolean hasStudentSubmitted(int contestId, int studentId) {
+        String sql = """
+            SELECT status FROM contest_participants
+            WHERE contest_id = ? AND student_id = ?
+            """;
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, contestId);
+            ps.setInt(2, studentId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String status = rs.getString("status");
+                // SUBMITTED or EVALUATED both mean the student is done
+                return "SUBMITTED".equals(status) || "EVALUATED".equals(status);
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ hasStudentSubmitted: " + e.getMessage());
+        }
+        return false; // not registered = not submitted
+    }
+
     // ─── Answer Submission ────────────────────────────────────────────────────
 
     public ContestAnswer submitMcqAnswer(int participantId, int contestId,
