@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.image.ImageView?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:id="rootPane"
+           fx:controller="com.examverse.controller.contest.ContestIntroController"
+           prefWidth="1280" prefHeight="800"
+           style="-fx-background-color: #050810;">
+
+    <!-- ① Deep dark background — controller sets gradient per theme -->
+    <VBox fx:id="backgroundPane"
+          prefWidth="1280" prefHeight="800"
+          style="-fx-background-color: #050810;"/>
+
+    <!-- ② Particle/glow layer — controller injects animated circles here -->
+    <Pane fx:id="particlePane"
+          prefWidth="1280" prefHeight="800"
+          mouseTransparent="true"/>
+
+    <!-- ③ Main centred content -->
+    <VBox fx:id="cardContainer"
+          alignment="CENTER"
+          spacing="0"
+          prefWidth="1280" prefHeight="800">
+
+        <!-- Arena card wrapper -->
+        <StackPane fx:id="cardWrapper"
+                   prefWidth="680" prefHeight="450"
+                   maxWidth="680" maxHeight="450"
+                   style="-fx-background-color:transparent;">
+
+            <!-- The card itself -->
+            <VBox fx:id="arenaCard"
+                  prefWidth="680" prefHeight="450"
+                  maxWidth="680" maxHeight="450"
+                  alignment="BOTTOM_CENTER"
+                  style="-fx-background-color:#0f1523;
+                         -fx-background-radius:24;
+                         -fx-border-radius:24;
+                         -fx-border-width:2;
+                         -fx-border-color:#334155;">
+
+                <!-- Arena image — fills top 65% of card -->
+                <ImageView fx:id="arenaImage"
+                           fitWidth="680" fitHeight="294"
+                           preserveRatio="false"
+                           smooth="true"/>
+
+                <!-- Bottom info strip -->
+                <VBox fx:id="cardInfoStrip"
+                      alignment="CENTER"
+                      spacing="4"
+                      prefHeight="126"
+                      style="-fx-padding: 14 24 18 24;
+                             -fx-background-color:#0a0e1a;
+                             -fx-background-radius:0 0 24 24;">
+
+                    <!-- Theme name — big, coloured, glowing -->
+                    <Label fx:id="themeNameLabel"
+                           text="COSMIC ARENA"
+                           style="-fx-font-size:30px;
+                                  -fx-font-weight:bold;
+                                  -fx-text-fill:#7c3aed;"/>
+
+                    <!-- Contest title -->
+                    <Label fx:id="contestTitleLabel"
+                           text="Contest Title"
+                           style="-fx-font-size:15px;
+                                  -fx-text-fill:#94a3b8;
+                                  -fx-font-weight:normal;"/>
+
+                    <!-- Music status row -->
+                    <HBox fx:id="musicRow"
+                          alignment="CENTER"
+                          spacing="8"
+                          style="-fx-padding:6 0 0 0;">
+                        <Label fx:id="musicIcon"
+                               text="♪"
+                               style="-fx-text-fill:#7c3aed; -fx-font-size:15px;"/>
+                        <Label fx:id="musicLabel"
+                               text="Playing theme song..."
+                               style="-fx-text-fill:#64748b; -fx-font-size:12px;"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </StackPane>
+
+        <!-- Spacer below card -->
+        <Region prefHeight="28"/>
+
+        <!-- Entering label beneath card -->
+        <Label fx:id="enteringLabel"
+               text="PREPARING ARENA"
+               style="-fx-text-fill:#334155;
+                      -fx-font-size:11px;
+                      -fx-font-weight:bold;"/>
+    </VBox>
+
+    <!-- ④ Bottom bar: thin progress bar + skip hint -->
+    <VBox fx:id="bottomBar"
+          alignment="BOTTOM_CENTER"
+          prefWidth="1280" prefHeight="800"
+          mouseTransparent="true">
+
+        <HBox alignment="CENTER_RIGHT"
+              style="-fx-padding: 0 32 8 0;">
+            <Label fx:id="skipLabel"
+                   text=""
+                   style="-fx-text-fill:#1e293b; -fx-font-size:12px;"/>
+        </HBox>
+
+        <ProgressBar fx:id="musicProgressBar"
+                     prefWidth="1280"
+                     prefHeight="3"
+                     progress="0"
+                     style="-fx-background-color:transparent; -fx-accent:#7c3aed;"/>
+    </VBox>
+
+</StackPane>

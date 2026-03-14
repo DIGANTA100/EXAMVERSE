@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   ExamVerse — Contest CSS
+   ExamVerse — Contest CSS  (v2)
    Covers: lobby, room, result, leaderboard, review screens
    ═══════════════════════════════════════════════════════════════ */
 
@@ -25,10 +25,7 @@
 }
 
 /* ── Rank Title Labels ──────────────────────────────────────────── */
-.rank-title {
-    -fx-font-size: 13px;
-    -fx-font-weight: bold;
-}
+.rank-title   { -fx-font-size: 13px; -fx-font-weight: bold; }
 
 .rank-legend   { -fx-text-fill: #fbbf24; }
 .rank-champion { -fx-text-fill: #a78bfa; }
@@ -58,23 +55,14 @@
     -fx-background-color: #263548;
 }
 
-/* ── Theme-specific accent colors (set via inline style, mirrored here) ── */
-
-/* Cosmic Arena */
+/* ── Theme accents ───────────────────────────────────────────────── */
 .theme-cosmic_arena   { -fx-accent: #7c3aed; }
-/* Neon Circuit */
 .theme-neon_circuit   { -fx-accent: #00ff88; }
-/* Dragon Realm */
 .theme-dragon_realm   { -fx-accent: #ff6600; }
-/* Frozen Peaks */
 .theme-frozen_peaks   { -fx-accent: #00cfff; }
-/* Shadow Temple */
 .theme-shadow_temple  { -fx-accent: #9f1239; }
-/* Cyber Storm */
 .theme-cyber_storm    { -fx-accent: #38bdf8; }
-/* Volcanic Forge */
 .theme-volcanic_forge { -fx-accent: #ef4444; }
-/* Ocean Depths */
 .theme-ocean_depths   { -fx-accent: #0ea5e9; }
 
 /* ── Contest Cards ───────────────────────────────────────────────── */
@@ -92,14 +80,9 @@
     -fx-border-width: 1;
 }
 
-/* ── Radio buttons inside contest room ──────────────────────────── */
-.radio-button {
-    -fx-text-fill: #e2e8f0;
-    -fx-font-size: 14px;
-}
-.radio-button:selected {
-    -fx-background-radius: 8;
-}
+/* ── Radio buttons ───────────────────────────────────────────────── */
+.radio-button { -fx-text-fill: #e2e8f0; -fx-font-size: 14px; }
+.radio-button:selected { -fx-background-radius: 8; }
 .radio-button .radio {
     -fx-border-color: #475569;
     -fx-background-color: #0f172a;
@@ -109,7 +92,7 @@
     -fx-background-color: #7c3aed;
 }
 
-/* ── Slider (written review marks) ──────────────────────────────── */
+/* ── Slider ──────────────────────────────────────────────────────── */
 .slider .track {
     -fx-background-color: #1e293b;
     -fx-background-radius: 4;
@@ -119,15 +102,9 @@
     -fx-background-radius: 50;
 }
 
-/* ── Progress bar (intro loading) ───────────────────────────────── */
-.progress-bar .bar {
-    -fx-background-color: #7c3aed;
-    -fx-background-radius: 4;
-}
-.progress-bar .track {
-    -fx-background-color: #1e293b;
-    -fx-background-radius: 4;
-}
+/* ── Progress bar ────────────────────────────────────────────────── */
+.progress-bar .bar  { -fx-background-color: #7c3aed; -fx-background-radius: 4; }
+.progress-bar .track{ -fx-background-color: #1e293b; -fx-background-radius: 4; }
 
 /* ── Text fields ─────────────────────────────────────────────────── */
 .text-field, .text-area {
@@ -151,4 +128,172 @@
     -fx-text-fill: #e2e8f0;
     -fx-background-radius: 6;
     -fx-font-size: 12px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   STUDENT LOBBY — Tab Bar
+   A pill-shaped capsule with two toggle tabs. The active tab gets
+   an indigo fill + glow. The inactive tab is ghosted. The whole
+   capsule sits inside a dark gradient header band.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* The outer pill-capsule HBox */
+.lobby-tab-bar {
+    -fx-background-color: #161b27;
+    -fx-background-radius: 50;
+    -fx-border-color: #2a3347;
+    -fx-border-radius: 50;
+    -fx-border-width: 1.5;
+    -fx-padding: 5 5 5 5;
+    -fx-spacing: 2;
+    -fx-alignment: CENTER_LEFT;
+    -fx-effect: dropshadow(gaussian, #00000066, 10, 0.2, 0, 2);
+}
+
+/* Inactive tab pill */
+.lobby-tab {
+    -fx-background-color: transparent;
+    -fx-text-fill: #64748b;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 50;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 10 30 10 30;
+    -fx-cursor: hand;
+}
+.lobby-tab:hover {
+    -fx-background-color: #1e293b;
+    -fx-text-fill: #94a3b8;
+}
+
+/* Active tab pill */
+.lobby-tab-active {
+    -fx-background-color: linear-gradient(to right, #6366f1, #4f46e5);
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 50;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 10 30 10 30;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, #6366f1aa, 14, 0.5, 0, 3);
+}
+.lobby-tab-active:hover {
+    -fx-background-color: linear-gradient(to right, #4f46e5, #4338ca);
+}
+
+/* Header band that wraps the tab-bar + subtitle */
+.lobby-header-band {
+    -fx-background-color: linear-gradient(to bottom, #0d1117, #090e19);
+    -fx-border-color: transparent transparent #1e2d40 transparent;
+    -fx-border-width: 0 0 1.5 0;
+    -fx-padding: 22 26 20 26;
+    -fx-spacing: 10;
+}
+
+/* Subtitle line under the tab bar */
+.lobby-header-sub {
+    -fx-text-fill: #344155;
+    -fx-font-size: 12px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   ADMIN MANAGER — Section Headers
+   Each section is: [accent bar] [icon + title] [count badge] [spacer] [chevron]
+   The header has a subtle directional gradient tinted by its status color.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Outer wrapper card for a section */
+.section-wrapper {
+    -fx-background-color: #0b1018;
+    -fx-background-radius: 16;
+    -fx-border-color: #1a2336;
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, #00000055, 10, 0.15, 0, 2);
+}
+
+/* ── Header strip ── */
+.section-header {
+    -fx-background-radius: 16 16 0 0;
+    -fx-padding: 0 22 0 0;   /* left side has no padding — accent bar fills it */
+    -fx-min-height: 62;
+    -fx-pref-height: 62;
+    -fx-cursor: hand;
+    -fx-alignment: CENTER_LEFT;
+    -fx-spacing: 14;
+}
+
+/* Left accent bar (narrow colored rectangle) */
+.section-accent-bar {
+    -fx-min-width: 6;
+    -fx-pref-width: 6;
+    -fx-min-height: 62;
+    -fx-pref-height: 62;
+    -fx-background-radius: 16 0 0 0;  /* only top-left rounded to match wrapper */
+}
+
+/* Section icon (large emoji/symbol) */
+.section-icon {
+    -fx-font-size: 22px;
+}
+
+/* Section title */
+.section-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #f1f5f9;
+}
+
+/* Count badge */
+.section-count-badge {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 13 3 13;
+    -fx-background-radius: 50;
+}
+
+/* Collapse/expand chevron */
+.section-chevron {
+    -fx-font-size: 16px;
+    -fx-text-fill: #334155;
+    -fx-cursor: hand;
+}
+
+/* Section body — the list of contest cards */
+.section-body {
+    -fx-padding: 4 16 18 16;
+    -fx-spacing: 12;
+    -fx-background-color: transparent;
+}
+
+/* Empty placeholder text */
+.section-empty {
+    -fx-text-fill: #263347;
+    -fx-font-size: 13px;
+    -fx-font-style: italic;
+    -fx-padding: 8 0 4 0;
+}
+
+/* Per-status tinted gradient backgrounds on the header strip */
+.section-header-live {
+    -fx-background-color: linear-gradient(to right, #1f0a0a 0%, #0f172a 55%);
+}
+.section-header-upcoming {
+    -fx-background-color: linear-gradient(to right, #050d1f 0%, #0f172a 55%);
+}
+.section-header-evaluation {
+    -fx-background-color: linear-gradient(to right, #1a1000 0%, #0f172a 55%);
+}
+.section-header-finished {
+    -fx-background-color: linear-gradient(to right, #0c0c0c 0%, #0f172a 55%);
+}
+
+/* Hover state: lighten the header band slightly */
+.section-header:hover {
+    -fx-opacity: 0.92;
 }

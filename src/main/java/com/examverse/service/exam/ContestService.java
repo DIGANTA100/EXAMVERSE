@@ -182,6 +182,79 @@ public class ContestService {
         return list;
     }
 
+    public List<Contest> getPendingEvaluationContests() {
+        List<Contest> list = new ArrayList<>();
+        String sql = "SELECT * FROM contests WHERE status = 'EVALUATION' ORDER BY end_time DESC";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) list.add(mapContest(rs));
+        } catch (SQLException e) {
+            System.err.println("❌ getPendingEvaluationContests: " + e.getMessage());
+        }
+        return list;
+    }
+
+    /**
+     * Fetch only FINISHED and CANCELLED contests.
+     * Used by: student "Past Contests" tab, admin "Finished" section.
+     */
+    public List<Contest> getFinishedContests() {
+        List<Contest> list = new ArrayList<>();
+        String sql = "SELECT * FROM contests WHERE status IN ('FINISHED','CANCELLED') " +
+                "ORDER BY end_time DESC";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) list.add(mapContest(rs));
+        } catch (SQLException e) {
+            System.err.println("❌ getFinishedContests: " + e.getMessage());
+        }
+        return list;
+    }
+
+    /**
+     * Generic: fetch contests filtered by a single status.
+     * Used by: admin sectioned view (LIVE, UPCOMING sections).
+     */
+    public List<Contest> getContestsByStatus(Status status) {
+        List<Contest> list = new ArrayList<>();
+        String sql = "SELECT * FROM contests WHERE status=? ORDER BY start_time DESC";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status.name());
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapContest(rs));
+        } catch (SQLException e) {
+            System.err.println("❌ getContestsByStatus(" + status + "): " + e.getMessage());
+        }
+        return list;
+    }
+
+    /**
+     * Returns the participant row for a student in a given finished contest,
+     * or null if they never participated.
+     * Used by: student "Past Contests" card — shows their rank, score and
+     * rating change as a participation badge.
+     */
+    public ContestParticipant getParticipantForStudent(int contestId, int studentId) {
+        String sql = "SELECT cp.*, u.full_name, u.username " +
+                "FROM contest_participants cp " +
+                "JOIN users u ON cp.student_id = u.id " +
+                "WHERE cp.contest_id=? AND cp.student_id=?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, contestId);
+            ps.setInt(2, studentId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return mapParticipant(rs);
+        } catch (SQLException e) {
+            System.err.println("❌ getParticipantForStudent: " + e.getMessage());
+        }
+        return null;
+    }
+
+
     /** Fetch a single contest by id. */
     public Contest getContestById(int contestId) {
         String sql = "SELECT * FROM contests WHERE contest_id=?";
