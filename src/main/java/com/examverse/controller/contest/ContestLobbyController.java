@@ -82,21 +82,92 @@ public class ContestLobbyController implements Initializable {
     }
 
     // ── Tab bar ───────────────────────────────────────────────────────────────
+    //
+    // FIX — two bugs removed:
+    //
+    //  ① White buttons:
+    //     The old code used getStyleClass().add("lobby-tab-active") /
+    //     getStyleClass().add("lobby-tab").  Those classes live in contest.css
+    //     but that stylesheet is never loaded for this scene, so both buttons
+    //     fell back to JavaFX's default white button skin.
+    //     Fix: all tab styling is now done with inline -fx- properties, exactly
+    //     like every other styled node in this controller.
+    //
+    //  ② Buttons vanish after clicking "Past Contests":
+    //     selectTab() called getStyleClass().setAll(...) which REPLACES the
+    //     entire style-class list.  This wipes the "button" base class that
+    //     JavaFX needs to render the node — the button becomes a blank
+    //     transparent rectangle.
+    //     Fix: use setStyle() for visual updates — never touch getStyleClass().
+
+    /** Inline style for the ACTIVE (selected) tab pill. */
+    private static final String STYLE_TAB_ACTIVE =
+            "-fx-background-color: linear-gradient(to right, #6366f1, #4f46e5);" +
+                    "-fx-text-fill: #ffffff;" +
+                    "-fx-font-size: 13px;" +
+                    "-fx-font-weight: bold;" +
+                    "-fx-background-radius: 50;" +
+                    "-fx-border-color: transparent;" +
+                    "-fx-border-width: 0;" +
+                    "-fx-padding: 10 30 10 30;" +
+                    "-fx-cursor: hand;" +
+                    "-fx-effect: dropshadow(gaussian, #6366f1aa, 14, 0.5, 0, 3);";
+
+    /** Inline style for the INACTIVE (unselected) tab pill. */
+    private static final String STYLE_TAB_INACTIVE =
+            "-fx-background-color: transparent;" +
+                    "-fx-text-fill: #64748b;" +
+                    "-fx-font-size: 13px;" +
+                    "-fx-font-weight: bold;" +
+                    "-fx-background-radius: 50;" +
+                    "-fx-border-color: transparent;" +
+                    "-fx-border-width: 0;" +
+                    "-fx-padding: 10 30 10 30;" +
+                    "-fx-cursor: hand;";
+
     private void buildTabBar() {
         activeTabBtn = new Button("⚔️   Live & Upcoming");
         pastTabBtn   = new Button("📜   Past Contests");
-        activeTabBtn.getStyleClass().add("lobby-tab-active");
-        pastTabBtn.getStyleClass().add("lobby-tab");
+
+        // Apply inline styles — no external CSS class dependency
+        activeTabBtn.setStyle(STYLE_TAB_ACTIVE);
+        pastTabBtn.setStyle(STYLE_TAB_INACTIVE);
+
+        // Hover effects for the inactive tab (the active one already has a glow)
+        pastTabBtn.setOnMouseEntered(e -> {
+            if (currentTab != Tab.PAST)
+                pastTabBtn.setStyle(STYLE_TAB_INACTIVE +
+                        "-fx-background-color:#1e293b; -fx-text-fill:#94a3b8;");
+        });
+        pastTabBtn.setOnMouseExited(e -> {
+            if (currentTab != Tab.PAST) pastTabBtn.setStyle(STYLE_TAB_INACTIVE);
+        });
+        activeTabBtn.setOnMouseEntered(e -> {
+            if (currentTab != Tab.ACTIVE)
+                activeTabBtn.setStyle(STYLE_TAB_INACTIVE +
+                        "-fx-background-color:#1e293b; -fx-text-fill:#94a3b8;");
+        });
+        activeTabBtn.setOnMouseExited(e -> {
+            if (currentTab != Tab.ACTIVE) activeTabBtn.setStyle(STYLE_TAB_INACTIVE);
+        });
 
         activeTabBtn.setOnAction(e -> selectTab(Tab.ACTIVE));
         pastTabBtn.setOnAction(e -> selectTab(Tab.PAST));
 
+        // Capsule container — styled inline, no CSS class
         HBox capsule = new HBox(2, activeTabBtn, pastTabBtn);
-        capsule.getStyleClass().add("lobby-tab-bar");
         capsule.setAlignment(Pos.CENTER_LEFT);
+        capsule.setStyle(
+                "-fx-background-color: #161b27;" +
+                        "-fx-background-radius: 50;" +
+                        "-fx-border-color: #2a3347;" +
+                        "-fx-border-radius: 50;" +
+                        "-fx-border-width: 1.5;" +
+                        "-fx-padding: 5 5 5 5;" +
+                        "-fx-effect: dropshadow(gaussian, #00000066, 10, 0.2, 0, 2);"
+        );
 
-        Label sub = new Label("Browse and join contests · Past contests include full question review");
-        sub.getStyleClass().add("lobby-header-sub");
+        Label sub = new Label("Browse and join contests  ·  Past contests include full question review");
         sub.setStyle("-fx-text-fill:#344155; -fx-font-size:12px;");
 
         VBox headerBand = new VBox(10, capsule, sub);
@@ -116,12 +187,14 @@ public class ContestLobbyController implements Initializable {
     private void selectTab(Tab tab) {
         if (currentTab == tab) return;
         currentTab = tab;
+        // FIX: use setStyle() — never call getStyleClass().setAll() on buttons
+        // because that wipes the "button" base class and makes them invisible.
         if (tab == Tab.ACTIVE) {
-            activeTabBtn.getStyleClass().setAll("lobby-tab-active");
-            pastTabBtn.getStyleClass().setAll("lobby-tab");
+            activeTabBtn.setStyle(STYLE_TAB_ACTIVE);
+            pastTabBtn.setStyle(STYLE_TAB_INACTIVE);
         } else {
-            pastTabBtn.getStyleClass().setAll("lobby-tab-active");
-            activeTabBtn.getStyleClass().setAll("lobby-tab");
+            pastTabBtn.setStyle(STYLE_TAB_ACTIVE);
+            activeTabBtn.setStyle(STYLE_TAB_INACTIVE);
         }
         loadContests();
     }
