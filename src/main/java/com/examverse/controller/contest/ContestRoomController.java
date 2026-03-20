@@ -94,7 +94,9 @@ public class ContestRoomController implements Initializable {
                 + " participantId=" + SessionManager.getInstance().getCurrentParticipantId());
 
         if (contest == null || currentUser == null) {
-            showAlert("Error", "Session expired. Please re-enter the contest.");
+            showStyledAlert("⚠️  Session Expired",
+                    "Your session has expired. Please re-enter the contest.",
+                    null);
             return;
         }
 
@@ -119,7 +121,9 @@ public class ContestRoomController implements Initializable {
             // Fallback to session (should rarely happen)
             participantId = sessionParticipantId;
         } else {
-            showAlert("Error", "Could not find your registration for this contest.");
+            showStyledAlert("⚠️  Registration Not Found",
+                    "Could not find your registration for this contest.\nPlease return to the lobby and try again.",
+                    null);
             return;
         }
 
@@ -131,7 +135,9 @@ public class ContestRoomController implements Initializable {
                 + " question count=" + questions.size()
                 + " first questionId=" + (questions.isEmpty() ? "none" : questions.get(0).getQuestionId()));
         if (questions.isEmpty()) {
-            showAlert("Notice", "This contest has no questions yet.");
+            showStyledAlert("📭  No Questions",
+                    "This contest has no questions yet.\nPlease check back later.",
+                    contest.getTheme());
             return;
         }
 
@@ -349,7 +355,9 @@ public class ContestRoomController implements Initializable {
         if (!alreadySubmitted) {
             submitMcq.setOnAction(e -> {
                 if (group.getSelectedToggle() == null) {
-                    showAlert("Notice", "Please select an option first.");
+                    showStyledAlert("📝  No Option Selected",
+                            "Please select an answer option before submitting.",
+                            contest.getTheme());
                     return;
                 }
                 String chosen = (String) group.getSelectedToggle().getUserData();
@@ -503,7 +511,9 @@ public class ContestRoomController implements Initializable {
     private void handleAutoSubmit() {
         boolean ok = contestService.submitContest(participantId);
         Platform.runLater(() -> {
-            showAlert("Contest Over", "Time is up! Your answers have been submitted automatically.");
+            showStyledAlert("⏰  Time's Up!",
+                    "Your time has expired. All answers have been\nsubmitted automatically.",
+                    contest.getTheme());
             navigateToResult();
         });
     }
@@ -573,22 +583,30 @@ public class ContestRoomController implements Initializable {
     // ── Submit All ────────────────────────────────────────────────────────────
     @FXML
     private void handleSubmitAll() {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                "Submit the contest? You won't be able to change your answers.",
-                ButtonType.YES, ButtonType.NO);
-        confirm.setTitle("Submit Contest");
-        confirm.showAndWait().ifPresent(bt -> {
-            if (bt == ButtonType.YES) {
-                stopTimers();
-                boolean ok = contestService.submitContest(participantId);
-                if (ok) navigateToResult();
-                else showAlert("Error", "Failed to submit. Please try again.");
-            }
-        });
+        // Use styled dark dialog instead of the plain white JavaFX Alert
+        ContestSubmitDialog.show(
+                contest.getTheme(),
+                contest.getContestTitle(),
+                () -> {
+                    stopTimers();
+                    boolean ok = contestService.submitContest(participantId);
+                    if (ok) {
+                        navigateToResult();
+                    } else {
+                        showStyledAlert("⚠️  Submission Failed",
+                                "Could not submit your contest. Please try again.",
+                                contest.getTheme());
+                    }
+                }
+        );
     }
 
     private void navigateToResult() {
         stopTimers();
+        // Ensure session carries the correct contest + participantId so
+        // ContestResultController always loads data for THIS student in THIS contest.
+        SessionManager.getInstance().setCurrentContest(contest);
+        SessionManager.getInstance().setCurrentParticipantId(participantId);
         SceneManager.switchScene("/com/examverse/fxml/contest/contest-result.fxml");
     }
 
@@ -608,11 +626,94 @@ public class ContestRoomController implements Initializable {
                 "-fx-background-radius:8; -fx-padding:9 20;";
     }
 
-    private void showAlert(String title, String msg) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle(title);
-        a.setHeaderText(null);
-        a.setContentText(msg);
-        a.showAndWait();
+    // ── Styled Alert (replaces all plain white JavaFX Alert calls) ────────────
+    /**
+     * Shows a small styled dark modal alert.
+     * @param title   Bold heading text
+     * @param message Body text (supports \n for line breaks)
+     * @param theme   Contest theme for accent color. Pass null to use a default purple.
+     */
+    private void showStyledAlert(String title, String message, Theme theme) {
+        String accent = (theme != null) ? theme.getAccentColor() : "#7c3aed";
+
+        javafx.stage.Stage dialog = new javafx.stage.Stage();
+        dialog.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+        dialog.initStyle(javafx.stage.StageStyle.UNDECORATED);
+        dialog.setResizable(false);
+
+        // ── Card ──────────────────────────────────────────────────────────────
+        VBox root = new VBox(0);
+        root.setAlignment(Pos.CENTER);
+        root.setStyle(
+                "-fx-background-color:#0f172a;" +
+                        "-fx-background-radius:14;" +
+                        "-fx-border-color:" + accent + ";" +
+                        "-fx-border-radius:14;" +
+                        "-fx-border-width:1.5;" +
+                        "-fx-effect: dropshadow(gaussian," + accent + "55,20,0.3,0,0);"
+        );
+        root.setMinWidth(360);
+        root.setMaxWidth(360);
+
+        // Accent top bar
+        Region topBar = new Region();
+        topBar.setPrefHeight(3);
+        topBar.setStyle("-fx-background-color:" + accent + "; -fx-background-radius:12 12 0 0;");
+
+        // Body
+        VBox body = new VBox(14);
+        body.setAlignment(Pos.CENTER);
+        body.setPadding(new Insets(26, 30, 24, 30));
+
+        Label titleLbl = new Label(title);
+        titleLbl.setStyle(
+                "-fx-text-fill:#f1f5f9;" +
+                        "-fx-font-size:17px;" +
+                        "-fx-font-weight:bold;" +
+                        "-fx-text-alignment:center;"
+        );
+        titleLbl.setWrapText(true);
+        titleLbl.setMaxWidth(300);
+        titleLbl.setAlignment(Pos.CENTER);
+
+        Label msgLbl = new Label(message);
+        msgLbl.setStyle(
+                "-fx-text-fill:#94a3b8;" +
+                        "-fx-font-size:13px;" +
+                        "-fx-text-alignment:center;"
+        );
+        msgLbl.setWrapText(true);
+        msgLbl.setMaxWidth(300);
+        msgLbl.setAlignment(Pos.CENTER);
+
+        Button okBtn = new Button("OK");
+        String okBase =
+                "-fx-background-color: linear-gradient(to right," + accent + "," + accent + "cc);" +
+                        "-fx-text-fill:#000000;" +
+                        "-fx-font-size:14px;" +
+                        "-fx-font-weight:bold;" +
+                        "-fx-background-radius:8;" +
+                        "-fx-padding:9 36 9 36;" +
+                        "-fx-cursor:hand;";
+        okBtn.setStyle(okBase);
+        okBtn.setOnMouseEntered(e -> okBtn.setStyle(
+                "-fx-background-color:" + accent + "dd;" +
+                        "-fx-text-fill:#000000;" +
+                        "-fx-font-size:14px; -fx-font-weight:bold;" +
+                        "-fx-background-radius:8; -fx-padding:9 36 9 36; -fx-cursor:hand;"));
+        okBtn.setOnMouseExited(e -> okBtn.setStyle(okBase));
+        okBtn.setOnAction(e -> dialog.close());
+
+        body.getChildren().addAll(titleLbl, msgLbl, okBtn);
+        root.getChildren().addAll(topBar, body);
+
+        javafx.scene.Scene scene = new javafx.scene.Scene(root);
+        scene.setFill(null);
+        scene.setOnKeyPressed(e -> {
+            if (e.getCode() == javafx.scene.input.KeyCode.ENTER ||
+                    e.getCode() == javafx.scene.input.KeyCode.ESCAPE) dialog.close();
+        });
+        dialog.setScene(scene);
+        dialog.showAndWait();
     }
 }

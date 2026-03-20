@@ -294,19 +294,87 @@ public class ContestLobbyController implements Initializable {
                 infoChip("🏆", c.getTotalMarks() + " marks", t.getAccentColor())
         );
 
+        // ── Bottom row: LEFT side (standings/countdown) + RIGHT side (enter/submitted) ──
         HBox bottomRow = new HBox(16);
-        bottomRow.setAlignment(Pos.CENTER_RIGHT);
+        bottomRow.setAlignment(Pos.CENTER_LEFT);
 
         if (c.isLive()) {
             boolean submitted = currentUser != null
                     && contestService.hasStudentSubmitted(c.getContestId(), currentUser.getId());
             if (submitted) {
+                // ── LEFT: "Current Standings" button ──────────────────────────
+                Button standingsBtn = new Button("📊  Current Standings");
+                String sbBase = "-fx-background-color:" + t.getAccentColor() + "22;" +
+                        "-fx-border-color:" + t.getAccentColor() + ";" +
+                        "-fx-text-fill:" + t.getAccentColor() + ";" +
+                        "-fx-font-weight:bold; -fx-font-size:13px;" +
+                        "-fx-padding:10 22 10 22; -fx-background-radius:30; -fx-border-radius:30;" +
+                        "-fx-cursor:hand;";
+                String sbHover = "-fx-background-color:" + t.getAccentColor() + "44;" +
+                        "-fx-border-color:" + t.getAccentColor() + ";" +
+                        "-fx-text-fill:" + t.getAccentColor() + ";" +
+                        "-fx-font-weight:bold; -fx-font-size:13px;" +
+                        "-fx-padding:10 22 10 22; -fx-background-radius:30; -fx-border-radius:30;" +
+                        "-fx-cursor:hand;";
+                standingsBtn.setStyle(sbBase);
+                standingsBtn.setOnMouseEntered(e -> standingsBtn.setStyle(sbHover));
+                standingsBtn.setOnMouseExited(e  -> standingsBtn.setStyle(sbBase));
+                standingsBtn.setOnAction(e -> openCurrentStandings(c));
+
+                // ── Spacer pushes "Already Submitted" badge to RIGHT ──────────
+                Region spacerFlex = new Region();
+                HBox.setHgrow(spacerFlex, Priority.ALWAYS);
+
+                // ── RIGHT: live stats chip + "Already Submitted" badge ────────
+                HBox rightSide = new HBox(12);
+                rightSide.setAlignment(Pos.CENTER_RIGHT);
+
+                // Small live-rank chip (non-clickable, shows live numbers)
+                HBox statsPill = new HBox(10);
+                statsPill.setAlignment(Pos.CENTER_LEFT);
+                statsPill.setPadding(new Insets(6, 14, 6, 14));
+                statsPill.setStyle(
+                        "-fx-background-color:" + t.getAccentColor() + "14;" +
+                                "-fx-background-radius:20;" +
+                                "-fx-border-color:" + t.getAccentColor() + "44;" +
+                                "-fx-border-radius:20; -fx-border-width:1;");
+
+                Label liveRankLbl = new Label("Rank: —");
+                liveRankLbl.setStyle("-fx-text-fill:" + t.getAccentColor() +
+                        "; -fx-font-size:12px; -fx-font-weight:bold;");
+                Label mcqPtsLbl = new Label("MCQ: —");
+                mcqPtsLbl.setStyle("-fx-text-fill:#60a5fa; -fx-font-size:12px;");
+                Label totalPtsLbl = new Label("Total: —");
+                totalPtsLbl.setStyle("-fx-text-fill:#e2e8f0; -fx-font-size:12px; -fx-font-weight:bold;");
+                statsPill.getChildren().addAll(liveRankLbl, mcqPtsLbl, totalPtsLbl);
+
+                // Fetch live numbers in background
+                Thread statsThread = new Thread(() -> {
+                    ContestParticipant myRecord =
+                            contestService.getParticipantForStudent(c.getContestId(), currentUser.getId());
+                    Platform.runLater(() -> {
+                        if (myRecord != null) {
+                            liveRankLbl.setText("Rank: #" + myRecord.getLiveRank());
+                            mcqPtsLbl.setText("MCQ: " + myRecord.getMcqMarksObtained() + " pts");
+                            totalPtsLbl.setText("Total: " + myRecord.getTotalMarksObtained() + " pts");
+                        }
+                    });
+                });
+                statsThread.setDaemon(true);
+                statsThread.start();
+
                 Label done = new Label("✅  Already Submitted");
                 done.setStyle("-fx-background-color:#22c55e33; -fx-text-fill:#22c55e;" +
-                        "-fx-font-size:14px; -fx-font-weight:bold;" +
-                        "-fx-padding:10 24 10 24; -fx-background-radius:30;");
-                bottomRow.getChildren().add(done);
+                        "-fx-font-size:13px; -fx-font-weight:bold;" +
+                        "-fx-padding:8 18 8 18; -fx-background-radius:30;");
+
+                rightSide.getChildren().addAll(statsPill, done);
+                bottomRow.getChildren().addAll(standingsBtn, spacerFlex, rightSide);
+
             } else {
+                // Not submitted yet — Enter button on the right
+                Region spacerFlex = new Region();
+                HBox.setHgrow(spacerFlex, Priority.ALWAYS);
                 Button enterBtn = new Button("⚔️  ENTER CONTEST");
                 enterBtn.setStyle(
                         "-fx-background-color: linear-gradient(to right," + t.getAccentColor() + "," +
@@ -320,7 +388,7 @@ public class ContestLobbyController implements Initializable {
                 pulse.setFromY(1.0); pulse.setToY(1.04);
                 pulse.setCycleCount(Animation.INDEFINITE); pulse.setAutoReverse(true); pulse.play();
                 enterBtn.setOnAction(e -> handleEnterContest(c, enterBtn));
-                bottomRow.getChildren().add(enterBtn);
+                bottomRow.getChildren().addAll(spacerFlex, enterBtn);
             }
         } else {
             Label countdown = new Label("Starting in ...");
@@ -389,10 +457,10 @@ public class ContestLobbyController implements Initializable {
         );
         card.getChildren().add(statsRow);
 
-        // Participation badge
+        // Participation badge + cache the record for the Final Standings button
+        ContestParticipant myRecord = null;
         if (currentUser != null) {
-            ContestParticipant myRecord =
-                    contestService.getParticipantForStudent(c.getContestId(), currentUser.getId());
+            myRecord = contestService.getParticipantForStudent(c.getContestId(), currentUser.getId());
             if (myRecord != null) {
                 HBox pRow = new HBox(16);
                 pRow.setAlignment(Pos.CENTER_LEFT);
@@ -415,34 +483,59 @@ public class ContestLobbyController implements Initializable {
             }
         }
 
-        // View Questions button
-        HBox bottomRow = new HBox();
-        bottomRow.setAlignment(Pos.CENTER_RIGHT);
-        bottomRow.setPadding(new Insets(4, 0, 0, 0));
+        // ── Bottom action row ─────────────────────────────────────────────────
+        HBox bottomRow = new HBox(12);
+        bottomRow.setAlignment(Pos.CENTER_LEFT);
+        bottomRow.setPadding(new Insets(6, 0, 0, 0));
+
+        // "🏁 Final Standings" button — bottom-left, only if participated
+        final ContestParticipant finalMyRecord = myRecord;
+        if (finalMyRecord != null) {
+            Button finalStatsBtn = new Button("🏁  Final Standings");
+            String fsBase = "-fx-background-color:#7c3aed22;" +
+                    "-fx-border-color:#7c3aed;" +
+                    "-fx-text-fill:#a78bfa;" +
+                    "-fx-font-weight:bold; -fx-font-size:13px;" +
+                    "-fx-padding:9 22 9 22; -fx-background-radius:30; -fx-border-radius:30;" +
+                    "-fx-cursor:hand;";
+            String fsHover = "-fx-background-color:#7c3aed44;" +
+                    "-fx-border-color:#a78bfa;" +
+                    "-fx-text-fill:#c4b5fd;" +
+                    "-fx-font-weight:bold; -fx-font-size:13px;" +
+                    "-fx-padding:9 22 9 22; -fx-background-radius:30; -fx-border-radius:30;" +
+                    "-fx-cursor:hand;";
+            finalStatsBtn.setStyle(fsBase);
+            finalStatsBtn.setOnMouseEntered(e -> finalStatsBtn.setStyle(fsHover));
+            finalStatsBtn.setOnMouseExited(e  -> finalStatsBtn.setStyle(fsBase));
+            finalStatsBtn.setOnAction(e -> openFinalStandings(c));
+            bottomRow.getChildren().add(finalStatsBtn);
+        }
+
+        // Flexible spacer so "View Questions" drifts to the right
+        Region spacerFlex = new Region();
+        HBox.setHgrow(spacerFlex, Priority.ALWAYS);
+        bottomRow.getChildren().add(spacerFlex);
+
+        // "View Questions" button — bottom-right
         Button viewQBtn = new Button("📋  View Questions");
-        viewQBtn.setStyle(
-                "-fx-background-color:" + t.getAccentColor() + "22;" +
-                        "-fx-border-color:" + t.getAccentColor() + ";" +
-                        "-fx-text-fill:" + t.getAccentColor() + ";" +
-                        "-fx-font-weight:bold; -fx-font-size:13px;" +
-                        "-fx-padding:9 22 9 22; -fx-background-radius:30; -fx-border-radius:30;"
-        );
-        viewQBtn.setOnMouseEntered(e -> viewQBtn.setStyle(
-                "-fx-background-color:" + t.getAccentColor() + "44;" +
-                        "-fx-border-color:" + t.getAccentColor() + ";" +
-                        "-fx-text-fill:" + t.getAccentColor() + ";" +
-                        "-fx-font-weight:bold; -fx-font-size:13px;" +
-                        "-fx-padding:9 22 9 22; -fx-background-radius:30; -fx-border-radius:30;"
-        ));
-        viewQBtn.setOnMouseExited(e -> viewQBtn.setStyle(
-                "-fx-background-color:" + t.getAccentColor() + "22;" +
-                        "-fx-border-color:" + t.getAccentColor() + ";" +
-                        "-fx-text-fill:" + t.getAccentColor() + ";" +
-                        "-fx-font-weight:bold; -fx-font-size:13px;" +
-                        "-fx-padding:9 22 9 22; -fx-background-radius:30; -fx-border-radius:30;"
-        ));
+        String vqBase = "-fx-background-color:" + t.getAccentColor() + "22;" +
+                "-fx-border-color:" + t.getAccentColor() + ";" +
+                "-fx-text-fill:" + t.getAccentColor() + ";" +
+                "-fx-font-weight:bold; -fx-font-size:13px;" +
+                "-fx-padding:9 22 9 22; -fx-background-radius:30; -fx-border-radius:30;" +
+                "-fx-cursor:hand;";
+        String vqHover = "-fx-background-color:" + t.getAccentColor() + "44;" +
+                "-fx-border-color:" + t.getAccentColor() + ";" +
+                "-fx-text-fill:" + t.getAccentColor() + ";" +
+                "-fx-font-weight:bold; -fx-font-size:13px;" +
+                "-fx-padding:9 22 9 22; -fx-background-radius:30; -fx-border-radius:30;" +
+                "-fx-cursor:hand;";
+        viewQBtn.setStyle(vqBase);
+        viewQBtn.setOnMouseEntered(e -> viewQBtn.setStyle(vqHover));
+        viewQBtn.setOnMouseExited(e  -> viewQBtn.setStyle(vqBase));
         viewQBtn.setOnAction(e -> showPastContestQuestions(c));
         bottomRow.getChildren().add(viewQBtn);
+
         card.getChildren().add(bottomRow);
         return card;
     }
@@ -621,6 +714,32 @@ public class ContestLobbyController implements Initializable {
         SceneManager.switchScene("/com/examverse/fxml/contest/contest-leaderboard.fxml");
     }
 
+    /**
+     * Opens the live contest-specific leaderboard in "contest_live" mode.
+     * Called from "📊 Current Standings" on active/submitted contest cards.
+     * The leaderboard controller will show "Current Standings" as the title
+     * and highlight + scroll to the current student's row.
+     */
+    private void openCurrentStandings(Contest c) {
+        stopTimer();
+        SessionManager.getInstance().setCurrentContest(c);
+        SessionManager.getInstance().setAttribute("leaderboard_mode", "contest_live");
+        SceneManager.switchScene("/com/examverse/fxml/contest/contest-leaderboard.fxml");
+    }
+
+    /**
+     * Opens the contest-specific leaderboard in "contest_final" mode for a
+     * finished contest. Called from "🏁 Final Standings" on past contest cards.
+     * The leaderboard controller will show "Final Standings" as the title
+     * and highlight + scroll to the current student's row.
+     */
+    private void openFinalStandings(Contest c) {
+        stopTimer();
+        SessionManager.getInstance().setCurrentContest(c);
+        SessionManager.getInstance().setAttribute("leaderboard_mode", "contest_final");
+        SceneManager.switchScene("/com/examverse/fxml/contest/contest-leaderboard.fxml");
+    }
+
     @FXML private void handleBack() {
         stopTimer();
         SceneManager.switchScene("/com/examverse/fxml/dashboard/student-dashboard.fxml");
@@ -633,14 +752,43 @@ public class ContestLobbyController implements Initializable {
     // ── Rating ────────────────────────────────────────────────────────────────
     private void loadStudentRating() {
         if (currentUser == null) return;
-        if (usernameLabel  != null) usernameLabel.setText(currentUser.getFullName());
+
         int rating = contestService.getStudentRating(currentUser.getId());
-        if (ratingLabel    != null) ratingLabel.setText(String.valueOf(rating));
-        String title = StudentRating.getTitleForRating(rating);
+        String titleColor = rankColorForRating(rating);
+        String title      = StudentRating.getTitleForRating(rating);
+
+        // All three labels are tinted with the student's rank-title color.
+        // We use inline -fx-text-fill so this works even without a loaded CSS file.
+        if (usernameLabel != null) {
+            usernameLabel.setText(currentUser.getFullName());
+            usernameLabel.setStyle(usernameLabel.getStyle() +
+                    " -fx-text-fill:" + titleColor + "; -fx-font-weight:bold;");
+        }
+        if (ratingLabel != null) {
+            ratingLabel.setText(String.valueOf(rating));
+            ratingLabel.setStyle(ratingLabel.getStyle() +
+                    " -fx-text-fill:" + titleColor + "; -fx-font-weight:bold;");
+        }
         if (rankTitleLabel != null) {
             rankTitleLabel.setText(title);
-            rankTitleLabel.getStyleClass().setAll("rank-title", StudentRating.getTitleCssClass(rating));
+            // Use both inline style AND style class so either path works
+            rankTitleLabel.setStyle("-fx-text-fill:" + titleColor +
+                    "; -fx-font-size:13px; -fx-font-weight:bold;");
         }
+    }
+
+    /**
+     * Returns the hex color string that corresponds to a given rating value,
+     * matching the rank-title palette used throughout the contest UI.
+     */
+    private String rankColorForRating(int rating) {
+        if (rating >= 3000) return "#fbbf24"; // Legend   — gold
+        if (rating >= 2600) return "#a78bfa"; // Champion — purple
+        if (rating >= 2200) return "#60a5fa"; // Expert   — blue
+        if (rating >= 1800) return "#f97316"; // Advanced — orange
+        if (rating >= 1400) return "#34d399"; // Skilled  — green
+        if (rating >= 1000) return "#94a3b8"; // Learner  — slate
+        return "#6b7280";                     // Beginner — grey
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

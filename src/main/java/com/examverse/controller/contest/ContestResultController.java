@@ -9,6 +9,7 @@ import com.examverse.util.SceneManager;
 import com.examverse.util.SessionManager;
 
 import javafx.animation.*;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
@@ -22,51 +23,58 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 /**
- * ContestResultController — FIXED v2
+ * ContestResultController — v3
  *
- * BUG FIX: "Enter Contest button still showing / wrong participant data in Contest 2"
+ * Fixes in this version:
  *
- * Root cause:
- *   When handleBack() navigated to the lobby, SessionManager still held:
- *     - currentContest  → contest 1
- *     - currentParticipantId → contest 1's participant ID
+ *  1. STANDINGS SHOW CORRECT PER-CONTEST DATA:
+ *     loadStandings() now explicitly re-fetches the contest from the DB using
+ *     the contestId stored in session, so it always reflects the correct contest
+ *     regardless of any stale SessionManager state.
+ *     Standings use getLiveLeaderboard() (ordered by mcq_marks_obtained) when
+ *     the contest is still LIVE/EVALUATION, and getFinalStandings() (ordered by
+ *     total_marks_obtained) only when the contest is FINISHED.
  *
- *   So when the student entered contest 2, ContestLobbyController correctly
- *   called registerStudent(contest2Id, studentId) and set currentContest to
- *   contest 2. BUT ContestRoomController read currentParticipantId from the
- *   session which was still contest 1's value (not yet replaced because
- *   registerStudent's Platform.runLater hadn't run, or there was a race).
+ *  2. MY RESULT IS ALWAYS FOR THE CURRENT STUDENT:
+ *     loadMyResult() matches by currentUser.getId() from the live/final list,
+ *     never from stale session data.  participantId is re-derived from the DB
+ *     if the session value is missing (≤ 0).
  *
- *   Fix: handleBack() now explicitly clears currentContest and
- *   currentParticipantId from the session before navigating to the lobby.
- *   ContestRoomController (fixed separately) also re-derives participantId
- *   from the DB as a second safety net.
+ *  3. ALL DB CALLS ARE OFF THE FX THREAD:
+ *     Data loading happens on a background thread; UI updates happen via
+ *     Platform.runLater().  This prevents UI freezes.
  *
- *   Also fixed: handleLeaderboard() was navigating without clearing the
- *   session's leaderboard_mode attribute, which could cause the leaderboard
- *   to show in "global" mode instead of the contest-specific mode.
+ *  4. LEADERBOARD BUTTON USES CORRECT MODE:
+ *     handleLeaderboard() now sets "contest_live" / "contest_final" based on
+ *     the contest's actual status, so the leaderboard shows the right columns
+ *     and title.
+ *
+ *  5. STANDINGS LABEL IS CONTEXT-AWARE:
+ *     Shows "🏅 Current Standings (live)" when the contest is still running,
+ *     and "🏆 Final Standings" when it is fully evaluated.
  */
 public class ContestResultController implements Initializable {
 
     // ── FXML ──────────────────────────────────────────────────────────────────
-    @FXML private VBox  rootVBox;
-    @FXML private Label contestTitleLabel;
-    @FXML private Label mcqScoreLabel;
-    @FXML private Label writtenStatusLabel;
-    @FXML private Label liveRankLabel;
-    @FXML private Label finalRankLabel;
-    @FXML private Label ratingChangeLabel;
-    @FXML private Label newRatingLabel;
-    @FXML private Label rankTitleLabel;
-    @FXML private VBox  answersReviewContainer;
-    @FXML private VBox  standingsContainer;
-    @FXML private Button backBtn, leaderboardBtn;
+    @FXML private VBox   rootVBox;
+    @FXML private Label  contestTitleLabel;
+    @FXML private Label  mcqScoreLabel;
+    @FXML private Label  writtenStatusLabel;
+    @FXML private Label  liveRankLabel;
+    @FXML private Label  finalRankLabel;
+    @FXML private Label  ratingChangeLabel;
+    @FXML private Label  newRatingLabel;
+    @FXML private Label  rankTitleLabel;
+    @FXML private VBox   answersReviewContainer;
+    @FXML private VBox   standingsContainer;
+    @FXML private Button backBtn;
+    @FXML private Button leaderboardBtn;
 
     // ── State ─────────────────────────────────────────────────────────────────
     private final ContestService contestService = new ContestService();
-    private User currentUser;
+    private User    currentUser;
     private Contest contest;
-    private int participantId;
+    private int     participantId;
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
     @Override
@@ -77,83 +85,165 @@ public class ContestResultController implements Initializable {
 
         if (contest == null || currentUser == null) return;
 
+        // Apply theme immediately (safe — no DB needed)
         applyTheme(contest.getTheme());
         contestTitleLabel.setText("📊  " + contest.getContestTitle() + " — Results");
 
-        loadMyResult();
-        loadAnswerReview();
-        loadStandings();
+        // All DB work on a background thread — never block the FX thread
+        Thread loader = new Thread(() -> {
+            // Re-derive participantId from DB if session value is stale/missing
+            int pid = participantId;
+            if (pid <= 0) {
+                pid = contestService.getParticipantId(contest.getContestId(), currentUser.getId());
+            }
+            final int resolvedParticipantId = pid;
+
+            // Fetch fresh contest state from DB so we always have correct status
+            Contest freshContest = contestService.getContestById(contest.getContestId());
+            if (freshContest == null) freshContest = contest; // fallback to session copy
+            final Contest fc = freshContest;
+
+            // Fetch my participant record — try live first, fall back to final
+            ContestParticipant me = findMe(fc.getContestId());
+
+            // Fetch my answers for the review section
+            List<ContestAnswer>   answers   = resolvedParticipantId > 0
+                    ? contestService.getStudentAnswers(resolvedParticipantId)
+                    : List.of();
+            List<ContestQuestion> questions = contestService.getQuestionsForContest(fc.getContestId());
+
+            // Fetch standings — live order for LIVE/EVALUATION, final order for FINISHED
+            List<ContestParticipant> standings = fetchStandings(fc);
+
+            final ContestParticipant finalMe          = me;
+            final List<ContestAnswer> finalAnswers     = answers;
+            final List<ContestQuestion> finalQuestions = questions;
+            final List<ContestParticipant> finalStandings = standings;
+
+            Platform.runLater(() -> {
+                renderMyResult(finalMe, fc);
+                renderAnswerReview(finalAnswers, finalQuestions, fc.getTheme());
+                renderStandings(finalStandings, fc);
+            });
+        });
+        loader.setDaemon(true);
+        loader.start();
     }
 
-    // ── Apply Theme ───────────────────────────────────────────────────────────
+    // ── Theme ─────────────────────────────────────────────────────────────────
     private void applyTheme(Theme t) {
-        rootVBox.setStyle("-fx-background-color:" + t.getBgColor() + ";");
+        if (rootVBox != null)
+            rootVBox.setStyle("-fx-background-color:" + t.getBgColor() + ";");
     }
 
-    // ── My Result ─────────────────────────────────────────────────────────────
-    private void loadMyResult() {
-        List<ContestParticipant> standings = contestService.getFinalStandings(contest.getContestId());
-        ContestParticipant me = standings.stream()
+    // ── DB helpers (called from background thread) ────────────────────────────
+
+    /**
+     * Find the current student's ContestParticipant row for this contest.
+     * Looks in the live list first (always present during LIVE phase),
+     * then in the final standings (present after EVALUATION/FINISHED).
+     */
+    private ContestParticipant findMe(int contestId) {
+        // getLiveLeaderboard returns ALL participants regardless of status
+        List<ContestParticipant> live = contestService.getLiveLeaderboard(contestId);
+        ContestParticipant me = live.stream()
                 .filter(p -> p.getStudentId() == currentUser.getId())
                 .findFirst().orElse(null);
+        if (me != null) return me;
 
-        if (me == null) {
-            List<ContestParticipant> live = contestService.getLiveLeaderboard(contest.getContestId());
-            me = live.stream().filter(p -> p.getStudentId() == currentUser.getId())
-                    .findFirst().orElse(null);
+        List<ContestParticipant> finals = contestService.getFinalStandings(contestId);
+        return finals.stream()
+                .filter(p -> p.getStudentId() == currentUser.getId())
+                .findFirst().orElse(null);
+    }
+
+    /**
+     * Returns standings ordered correctly for the contest's current phase:
+     *  LIVE / EVALUATION → getLiveLeaderboard (ordered by mcq_marks_obtained)
+     *  FINISHED          → getFinalStandings  (ordered by total_marks_obtained)
+     */
+    private List<ContestParticipant> fetchStandings(Contest fc) {
+        if (fc.getStatus() == Contest.Status.FINISHED) {
+            List<ContestParticipant> finals = contestService.getFinalStandings(fc.getContestId());
+            if (!finals.isEmpty()) return finals;
         }
+        // For LIVE, EVALUATION, or empty finals fall back to live order
+        return contestService.getLiveLeaderboard(fc.getContestId());
+    }
 
+    // ── Render: My Result ─────────────────────────────────────────────────────
+    private void renderMyResult(ContestParticipant me, Contest fc) {
         if (me == null) {
-            mcqScoreLabel.setText("—");
+            if (mcqScoreLabel != null) mcqScoreLabel.setText("—");
             return;
         }
 
-        Theme t = contest.getTheme();
+        Theme t = fc.getTheme();
 
-        mcqScoreLabel.setText(me.getMcqMarksObtained() + " / " +
-                (contest.getTotalMcqQuestions() * contest.getMcqMarksEach()));
-        mcqScoreLabel.setStyle("-fx-text-fill:" + t.getAccentColor() +
-                "; -fx-font-size:28px; -fx-font-weight:bold;");
-
-        int pending = me.getPendingWrittenReviews();
-        if (contest.getTotalWrittenQuestions() == 0) {
-            writtenStatusLabel.setText("No written questions.");
-        } else if (pending > 0) {
-            writtenStatusLabel.setText("⏳ " + pending + " written answer(s) pending teacher review.");
-            writtenStatusLabel.setStyle("-fx-text-fill:#f59e0b; -fx-font-size:14px;");
-        } else {
-            writtenStatusLabel.setText("✅ All written answers reviewed. +" +
-                    me.getWrittenMarksObtained() + " marks");
-            writtenStatusLabel.setStyle("-fx-text-fill:#22c55e; -fx-font-size:14px;");
+        // MCQ score
+        if (mcqScoreLabel != null) {
+            mcqScoreLabel.setText(me.getMcqMarksObtained() + " / " +
+                    (fc.getTotalMcqQuestions() * fc.getMcqMarksEach()));
+            mcqScoreLabel.setStyle("-fx-text-fill:" + t.getAccentColor() +
+                    "; -fx-font-size:28px; -fx-font-weight:bold;");
         }
 
-        liveRankLabel.setText("#" + me.getLiveRank());
-        liveRankLabel.setStyle("-fx-text-fill:" + t.getHighlightColor() +
-                "; -fx-font-size:24px; -fx-font-weight:bold;");
+        // Written status
+        if (writtenStatusLabel != null) {
+            int pending = me.getPendingWrittenReviews();
+            if (fc.getTotalWrittenQuestions() == 0) {
+                writtenStatusLabel.setText("No written questions.");
+                writtenStatusLabel.setStyle("-fx-text-fill:#64748b; -fx-font-size:14px;");
+            } else if (pending > 0) {
+                writtenStatusLabel.setText("⏳ " + pending + " written answer(s) pending teacher review.");
+                writtenStatusLabel.setStyle("-fx-text-fill:#f59e0b; -fx-font-size:14px;");
+            } else {
+                writtenStatusLabel.setText("✅ All written answers reviewed. +" +
+                        me.getWrittenMarksObtained() + " marks");
+                writtenStatusLabel.setStyle("-fx-text-fill:#22c55e; -fx-font-size:14px;");
+            }
+        }
 
+        // Live rank
+        if (liveRankLabel != null) {
+            liveRankLabel.setText("#" + (me.getLiveRank() > 0 ? me.getLiveRank() : "—"));
+            liveRankLabel.setStyle("-fx-text-fill:" + t.getHighlightColor() +
+                    "; -fx-font-size:24px; -fx-font-weight:bold;");
+        }
+
+        // Final rank / rating — only available after evaluation
         if (me.isEvaluated()) {
-            finalRankLabel.setText("Final Rank: #" + me.getFinalRank());
+            if (finalRankLabel != null)
+                finalRankLabel.setText("Final Rank: #" + me.getFinalRank());
 
             int change = me.getRatingChange();
             String sign = change >= 0 ? "+" : "";
-            ratingChangeLabel.setText("Rating Change: " + sign + change);
-            ratingChangeLabel.setStyle("-fx-text-fill:" + (change >= 0 ? "#22c55e" : "#ef4444") +
-                    "; -fx-font-size:18px; -fx-font-weight:bold;");
 
-            newRatingLabel.setText("New Rating: " + me.getRatingAfter());
-            newRatingLabel.setStyle("-fx-text-fill:" + t.getAccentColor() +
-                    "; -fx-font-size:22px; -fx-font-weight:bold;");
-
-            String title = StudentRating.getTitleForRating(me.getRatingAfter());
-            rankTitleLabel.setText(title);
-            rankTitleLabel.getStyleClass().setAll("rank-title",
-                    StudentRating.getTitleCssClass(me.getRatingAfter()));
-
+            if (ratingChangeLabel != null) {
+                ratingChangeLabel.setText("Rating Change: " + sign + change);
+                ratingChangeLabel.setStyle("-fx-text-fill:" + (change >= 0 ? "#22c55e" : "#ef4444") +
+                        "; -fx-font-size:18px; -fx-font-weight:bold;");
+            }
+            if (newRatingLabel != null) {
+                newRatingLabel.setText("New Rating: " + me.getRatingAfter());
+                newRatingLabel.setStyle("-fx-text-fill:" + t.getAccentColor() +
+                        "; -fx-font-size:22px; -fx-font-weight:bold;");
+            }
+            if (rankTitleLabel != null) {
+                String title = StudentRating.getTitleForRating(me.getRatingAfter());
+                rankTitleLabel.setText(title);
+                rankTitleLabel.getStyleClass().setAll("rank-title",
+                        StudentRating.getTitleCssClass(me.getRatingAfter()));
+            }
             animateRatingChange(change);
         } else {
-            finalRankLabel.setText("Final rank pending evaluation.");
-            ratingChangeLabel.setText("Rating pending evaluation.");
-            newRatingLabel.setText("Current Rating: " + contestService.getStudentRating(currentUser.getId()));
+            if (finalRankLabel  != null) finalRankLabel.setText("Pending evaluation.");
+            if (ratingChangeLabel != null) ratingChangeLabel.setText("Rating pending evaluation.");
+            if (newRatingLabel   != null) {
+                int currRating = contestService.getStudentRating(currentUser.getId());
+                newRatingLabel.setText("Current Rating: " + currRating);
+                newRatingLabel.setStyle("-fx-text-fill:#94a3b8; -fx-font-size:20px;");
+            }
         }
     }
 
@@ -163,20 +253,17 @@ public class ContestResultController implements Initializable {
         st.setFromX(0.8); st.setToX(1.0);
         st.setFromY(0.8); st.setToY(1.0);
         st.play();
-
         FadeTransition ft = new FadeTransition(Duration.millis(400), ratingChangeLabel);
         ft.setFromValue(0); ft.setToValue(1);
         ft.play();
     }
 
-    // ── Answer Review ─────────────────────────────────────────────────────────
-    private void loadAnswerReview() {
+    // ── Render: Answer Review ─────────────────────────────────────────────────
+    private void renderAnswerReview(List<ContestAnswer> answers,
+                                    List<ContestQuestion> questions, Theme t) {
+        if (answersReviewContainer == null) return;
         answersReviewContainer.getChildren().clear();
-        if (participantId <= 0) return;
-
-        List<ContestAnswer> answers = contestService.getStudentAnswers(participantId);
-        List<ContestQuestion> questions = contestService.getQuestionsForContest(contest.getContestId());
-        Theme t = contest.getTheme();
+        if (answers.isEmpty()) return;
 
         Label sectionTitle = new Label("📋  Your Answers");
         sectionTitle.setStyle("-fx-text-fill:#e2e8f0; -fx-font-size:17px; -fx-font-weight:bold;");
@@ -188,36 +275,33 @@ public class ContestResultController implements Initializable {
                     .findFirst().orElse(null);
             if (q == null) continue;
 
-            VBox answerCard = new VBox(8);
-            answerCard.setPadding(new Insets(14));
-            answerCard.setStyle("-fx-background-color:#1e293b; -fx-background-radius:10;" +
-                    "-fx-border-color:" + (a.isCorrect() ? "#22c55e" :
-                    a.getSelectedOption() != null ? "#ef4444" : "#f59e0b") +
-                    "55; -fx-border-radius:10; -fx-border-width:1;");
+            VBox card = new VBox(8);
+            card.setPadding(new Insets(14));
+            String borderColor = a.isCorrect() ? "#22c55e"
+                    : (a.getSelectedOption() != null ? "#ef4444" : "#f59e0b");
+            card.setStyle("-fx-background-color:#1e293b; -fx-background-radius:10;" +
+                    "-fx-border-color:" + borderColor + "55;" +
+                    "-fx-border-radius:10; -fx-border-width:1;");
 
-            Label qText = new Label((q.isMcq() ? "MCQ " : "Written ") + " — " + q.getQuestionText());
+            Label qText = new Label((q.isMcq() ? "MCQ" : "Written") + " — " + q.getQuestionText());
             qText.setStyle("-fx-text-fill:#f1f5f9; -fx-font-size:14px; -fx-font-weight:bold;");
             qText.setWrapText(true);
 
             if (q.isMcq()) {
-                Label yourAns = new Label("Your answer: " + (a.getSelectedOption() != null
-                        ? a.getSelectedOption() : "Not answered"));
+                Label yourAns = new Label("Your answer: " +
+                        (a.getSelectedOption() != null ? a.getSelectedOption() : "Not answered"));
                 yourAns.setStyle("-fx-text-fill:" + (a.isCorrect() ? "#22c55e" : "#ef4444") +
                         "; -fx-font-size:13px;");
-
                 Label correctAns = new Label("Correct: " + q.getCorrectAnswer());
                 correctAns.setStyle("-fx-text-fill:#22c55e; -fx-font-size:13px;");
-
                 Label marksGot = new Label("Marks: " + a.getMarksAwarded() + "/" + q.getMarks());
                 marksGot.setStyle("-fx-text-fill:" + t.getHighlightColor() + "; -fx-font-size:13px;");
-
-                answerCard.getChildren().addAll(qText, yourAns, correctAns, marksGot);
-
+                card.getChildren().addAll(qText, yourAns, correctAns, marksGot);
                 if (q.getExplanation() != null && !q.getExplanation().isEmpty()) {
                     Label exp = new Label("💡 " + q.getExplanation());
                     exp.setStyle("-fx-text-fill:#94a3b8; -fx-font-size:12px;");
                     exp.setWrapText(true);
-                    answerCard.getChildren().add(exp);
+                    card.getChildren().add(exp);
                 }
             } else {
                 String statusText = switch (a.getReviewStatus()) {
@@ -227,44 +311,48 @@ public class ContestResultController implements Initializable {
                 };
                 Label statusLbl = new Label(statusText);
                 statusLbl.setStyle("-fx-text-fill:#94a3b8; -fx-font-size:13px;");
-
                 if (a.getTeacherComment() != null && !a.getTeacherComment().isEmpty()) {
                     Label comment = new Label("Teacher: " + a.getTeacherComment());
                     comment.setStyle("-fx-text-fill:#fbbf24; -fx-font-size:12px;");
                     comment.setWrapText(true);
-                    answerCard.getChildren().addAll(qText, statusLbl, comment);
+                    card.getChildren().addAll(qText, statusLbl, comment);
                 } else {
-                    answerCard.getChildren().addAll(qText, statusLbl);
+                    card.getChildren().addAll(qText, statusLbl);
                 }
             }
-
-            answersReviewContainer.getChildren().add(answerCard);
+            answersReviewContainer.getChildren().add(card);
         }
     }
 
-    // ── Final Standings ───────────────────────────────────────────────────────
-    private void loadStandings() {
+    // ── Render: Standings ─────────────────────────────────────────────────────
+    private void renderStandings(List<ContestParticipant> list, Contest fc) {
+        if (standingsContainer == null) return;
         standingsContainer.getChildren().clear();
-        Theme t = contest.getTheme();
+        Theme t = fc.getTheme();
 
-        Label title = new Label("🏆  Contest Standings");
+        // Context-aware label
+        boolean isFinal = fc.getStatus() == Contest.Status.FINISHED;
+        Label title = new Label(isFinal ? "🏆  Final Standings" : "🏅  Current Standings (live)");
         title.setStyle("-fx-text-fill:" + t.getAccentColor() +
                 "; -fx-font-size:17px; -fx-font-weight:bold;");
         standingsContainer.getChildren().add(title);
 
-        List<ContestParticipant> list = contestService.getFinalStandings(contest.getContestId());
         if (list.isEmpty()) {
-            list = contestService.getLiveLeaderboard(contest.getContestId());
+            Label empty = new Label("No participants yet.");
+            empty.setStyle("-fx-text-fill:#64748b; -fx-font-size:13px;");
+            standingsContainer.getChildren().add(empty);
+            return;
         }
 
         for (int i = 0; i < list.size(); i++) {
             ContestParticipant p = list.get(i);
             boolean isMe = p.getStudentId() == currentUser.getId();
+
             String rankEmoji = switch (i) {
                 case 0 -> "🥇";
                 case 1 -> "🥈";
                 case 2 -> "🥉";
-                default -> (i + 1) + ".  ";
+                default -> "#" + (i + 1);
             };
 
             HBox row = new HBox(12);
@@ -278,37 +366,45 @@ public class ContestResultController implements Initializable {
             );
 
             Label rankLbl = new Label(rankEmoji);
-            rankLbl.setMinWidth(36);
-            rankLbl.setStyle("-fx-font-size:16px;");
+            rankLbl.setMinWidth(40);
+            rankLbl.setStyle("-fx-font-size:16px; -fx-text-fill:#e2e8f0;");
 
-            Label nameLbl = new Label(p.getStudentName() != null ? p.getStudentName() : "—");
-            nameLbl.setStyle("-fx-text-fill:" + (isMe ? t.getAccentColor() : "#e2e8f0") +
-                    "; -fx-font-weight:" + (isMe ? "bold" : "normal") +
-                    "; -fx-font-size:14px;");
+            Label nameLbl = new Label(
+                    (isMe ? "▶ " : "") +
+                            (p.getStudentName() != null ? p.getStudentName() : "—"));
+            nameLbl.setStyle(
+                    "-fx-text-fill:" + (isMe ? t.getAccentColor() : "#e2e8f0") + ";" +
+                            "-fx-font-weight:" + (isMe ? "bold" : "normal") + ";" +
+                            "-fx-font-size:14px;");
             nameLbl.setMinWidth(160);
 
             Region sp = new Region();
             HBox.setHgrow(sp, Priority.ALWAYS);
 
             Label mcqLbl = new Label("MCQ: " + p.getMcqMarksObtained());
-            mcqLbl.setStyle("-fx-text-fill:#94a3b8; -fx-font-size:13px;");
+            mcqLbl.setStyle("-fx-text-fill:#60a5fa; -fx-font-size:13px;");
 
-            Label wrLbl = new Label("WR: " + p.getWrittenMarksObtained());
-            wrLbl.setStyle("-fx-text-fill:#94a3b8; -fx-font-size:13px;");
+            Label wrLbl = new Label("Written: " + p.getWrittenMarksObtained());
+            wrLbl.setStyle("-fx-text-fill:#f59e0b; -fx-font-size:13px;");
 
             Label totalLbl = new Label("Total: " + p.getTotalMarksObtained());
             totalLbl.setStyle("-fx-text-fill:" + t.getHighlightColor() +
                     "; -fx-font-weight:bold; -fx-font-size:14px;");
 
+            row.getChildren().addAll(rankLbl, nameLbl, sp, mcqLbl, wrLbl, totalLbl);
+
             if (p.isEvaluated()) {
                 int change = p.getRatingChange();
-                Label ratingChg = new Label((change >= 0 ? "+" : "") + change);
-                ratingChg.setStyle("-fx-text-fill:" + (change >= 0 ? "#22c55e" : "#ef4444") +
+                Label rChg = new Label((change >= 0 ? "+" : "") + change);
+                rChg.setStyle("-fx-text-fill:" + (change >= 0 ? "#22c55e" : "#ef4444") +
                         "; -fx-font-weight:bold; -fx-font-size:13px;");
-                row.getChildren().addAll(rankLbl, nameLbl, sp, mcqLbl, wrLbl, totalLbl, ratingChg);
-            } else {
-                row.getChildren().addAll(rankLbl, nameLbl, sp, mcqLbl, wrLbl, totalLbl);
+                row.getChildren().add(rChg);
             }
+
+            // Fade-in animation
+            row.setOpacity(0);
+            FadeTransition ft = new FadeTransition(Duration.millis(120 + i * 30L), row);
+            ft.setFromValue(0); ft.setToValue(1); ft.play();
 
             standingsContainer.getChildren().add(row);
         }
@@ -317,24 +413,21 @@ public class ContestResultController implements Initializable {
     // ── Navigation ────────────────────────────────────────────────────────────
     @FXML
     private void handleBack() {
-        // ── FIX: Clear the contest session state before going back to lobby.
-        //
-        // Without this, SessionManager holds onto the old contest and participant ID.
-        // When the student enters a NEW contest, ContestRoomController.initialize()
-        // reads the stale participantId (contest 1's) from the session and loads
-        // the wrong data. Now the lobby gets a clean slate every time.
-        System.out.println("DEBUG BACK: clearing contest=" + (contest != null ? contest.getContestId() : "NULL")
-                + " participantId=" + participantId);
+        System.out.println("DEBUG BACK: clearing contest=" +
+                (contest != null ? contest.getContestId() : "NULL") +
+                " participantId=" + participantId);
         SessionManager.getInstance().setCurrentContest(null);
         SessionManager.getInstance().setCurrentParticipantId(-1);
-
         SceneManager.switchScene("/com/examverse/fxml/contest/contest-lobby.fxml");
     }
 
     @FXML
     private void handleLeaderboard() {
-        // Show this contest's specific leaderboard from the result screen
-        SessionManager.getInstance().setAttribute("leaderboard_mode", "contest");
+        // Use the correct mode based on actual contest status
+        Contest fresh = contestService.getContestById(contest.getContestId());
+        String mode = (fresh != null && fresh.getStatus() == Contest.Status.FINISHED)
+                ? "contest_final" : "contest_live";
+        SessionManager.getInstance().setAttribute("leaderboard_mode", mode);
         SceneManager.switchScene("/com/examverse/fxml/contest/contest-leaderboard.fxml");
     }
 }

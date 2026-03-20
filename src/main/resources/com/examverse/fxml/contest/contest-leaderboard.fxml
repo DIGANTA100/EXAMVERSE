@@ -18,20 +18,30 @@
                     style="-fx-background-color:#1e293b; -fx-text-fill:#94a3b8;
                            -fx-background-radius:8; -fx-padding:8 16;"/>
 
-            <Label style="-fx-text-fill:#fbbf24; -fx-font-size:22px; -fx-font-weight:bold;">
-                🏆  Global Leaderboard
-            </Label>
+            <!--
+                fx:id="pageTitleLabel" — controller sets text dynamically:
+                  contest mode → "🏆 ContestName — Current Standings"
+                  global mode  → "🌐 Global Leaderboard"
+            -->
+            <Label fx:id="pageTitleLabel"
+                   text="🏆  Global Leaderboard"
+                   style="-fx-text-fill:#fbbf24; -fx-font-size:22px; -fx-font-weight:bold;"/>
 
             <Region HBox.hgrow="ALWAYS"/>
 
-            <!-- My stats pill -->
-            <HBox alignment="CENTER" spacing="16"
+            <!--
+                fx:id="myStatsRow" — hidden completely for admin/teacher users.
+                In contest mode the labels say "Your Rank" / "Points" / "Title".
+                In global mode they say "Your Rank" / "Rating" / "Title".
+                The controller always hides this panel when the viewer is an admin.
+            -->
+            <HBox fx:id="myStatsRow" alignment="CENTER" spacing="16"
                   style="-fx-background-color:#1e293b; -fx-background-radius:10; -fx-padding:8 20;">
-                <Label fx:id="myRankLabel" text="Your Rank: —"
+                <Label fx:id="myRankLabel"   text="Your Rank: —"
                        style="-fx-text-fill:#94a3b8; -fx-font-size:13px;"/>
                 <Label fx:id="myRatingLabel" text="Rating: —"
                        style="-fx-text-fill:#7c3aed; -fx-font-size:15px; -fx-font-weight:bold;"/>
-                <Label fx:id="myTitleLabel" text=""
+                <Label fx:id="myTitleLabel"  text=""
                        style="-fx-font-size:13px;"/>
             </HBox>
 

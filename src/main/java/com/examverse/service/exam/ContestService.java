@@ -495,6 +495,9 @@ public class ContestService {
         }
 
         recalculateMcqScore(participantId);
+        // total_marks_obtained = mcq + written; must be kept in sync after every MCQ change
+        // so that both live and final standings reflect the correct total at all times.
+        recalculateTotalScore(participantId);
         refreshLiveRanks(contestId);
 
         ContestAnswer answer = new ContestAnswer();
@@ -727,30 +730,69 @@ public class ContestService {
     }
 
     /**
-     * NEW — Contest-specific leaderboard.
-     * Returns ONLY students who have a row in contest_participants for this
-     * contestId, joined with their global rating data.
-     * Used by LeaderboardController when navigated from admin contest manager.
+     * Contest leaderboard — LIVE phase.
+     *
+     * Returns participants of a specific contest ordered by their in-contest
+     * MCQ score (DESC) with submitted_at as the tiebreaker.
+     * The StudentRating wrapper carries the student's global title/color data
+     * so the UI can render rank badges correctly, but the ORDERING is purely
+     * based on what the student scored in THIS contest — not their global rating.
+     *
+     * Used by LeaderboardController when leaderboard_mode = "contest_live".
      */
     public List<com.examverse.model.user.StudentRating> getContestLeaderboard(int contestId) {
+        return getContestLeaderboardInternal(contestId, false);
+    }
+
+    /**
+     * Contest leaderboard — FINAL phase.
+     *
+     * Same as above but ordered by total_marks_obtained (MCQ + written) DESC.
+     * Used by LeaderboardController when leaderboard_mode = "contest_final".
+     */
+    public List<com.examverse.model.user.StudentRating> getContestLeaderboardFinal(int contestId) {
+        return getContestLeaderboardInternal(contestId, true);
+    }
+
+    /**
+     * Shared implementation for both contest leaderboard variants.
+     *
+     * @param finalMode  false → order by mcq_marks_obtained (live standings)
+     *                   true  → order by total_marks_obtained (final standings)
+     *
+     * Key design decisions:
+     *  - ORDER BY uses cp.mcq_marks_obtained / cp.total_marks_obtained, NOT
+     *    sr.current_rating.  Global rating is irrelevant to in-contest rank.
+     *  - submitted_at ASC as tiebreaker: earliest submitter wins on equal score.
+     *  - participant_id ASC as final tiebreaker for determinism.
+     *  - sr columns are LEFT JOIN / COALESCE so students who have never
+     *    completed a contest yet (no student_ratings row) still appear.
+     */
+    private List<com.examverse.model.user.StudentRating> getContestLeaderboardInternal(
+            int contestId, boolean finalMode) {
+
         List<com.examverse.model.user.StudentRating> list = new ArrayList<>();
-        String sql = """
-            SELECT
-                COALESCE(sr.rating_id, 0)              AS rating_id,
-                cp.student_id,
-                u.full_name,
-                u.username,
-                COALESCE(sr.current_rating, 800)        AS current_rating,
-                COALESCE(sr.peak_rating, 800)           AS peak_rating,
-                COALESCE(sr.contests_participated, 0)   AS contests_participated,
-                COALESCE(sr.contests_won, 0)            AS contests_won,
-                COALESCE(sr.total_score, 0)             AS total_score
-            FROM contest_participants cp
-            JOIN users u ON cp.student_id = u.id
-            LEFT JOIN student_ratings sr ON sr.student_id = cp.student_id
-            WHERE cp.contest_id = ?
-            ORDER BY COALESCE(sr.current_rating, 800) DESC
-            """;
+        // Build the ORDER BY column dynamically — do NOT use a text block here
+        // because mixing text blocks with string concatenation (""" + var + """)
+        // terminates the first block and creates a broken second block, producing
+        // invalid SQL that silently returns an empty list.
+        String orderCol = finalMode ? "cp.total_marks_obtained" : "cp.mcq_marks_obtained";
+        String sql =
+                "SELECT " +
+                        "    COALESCE(sr.rating_id, 0)            AS rating_id, " +
+                        "    cp.student_id, " +
+                        "    u.full_name, " +
+                        "    u.username, " +
+                        "    COALESCE(sr.current_rating, 800)      AS current_rating, " +
+                        "    COALESCE(sr.peak_rating, 800)         AS peak_rating, " +
+                        "    COALESCE(sr.contests_participated, 0) AS contests_participated, " +
+                        "    COALESCE(sr.contests_won, 0)          AS contests_won, " +
+                        "    COALESCE(sr.total_score, 0)           AS total_score " +
+                        "FROM contest_participants cp " +
+                        "JOIN users u ON cp.student_id = u.id " +
+                        "LEFT JOIN student_ratings sr ON sr.student_id = cp.student_id " +
+                        "WHERE cp.contest_id = ? " +
+                        "ORDER BY " + orderCol + " DESC, cp.submitted_at ASC, cp.participant_id ASC";
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, contestId);
@@ -769,7 +811,7 @@ public class ContestService {
                 list.add(r);
             }
         } catch (SQLException e) {
-            System.err.println("❌ getContestLeaderboard: " + e.getMessage());
+            System.err.println("❌ getContestLeaderboardInternal(final=" + finalMode + "): " + e.getMessage());
         }
         return list;
     }
@@ -848,15 +890,43 @@ public class ContestService {
         }
     }
 
+    /**
+     * Recalculates and persists the live_rank for every participant in a contest.
+     *
+     * Ranking rule (live phase):
+     *   Primary   : mcq_marks_obtained DESC  (more MCQ points = higher rank)
+     *   Tiebreaker: submitted_at ASC          (earlier submission wins a tie)
+     *   Unsubmitted / still-active students who have answered some MCQs are
+     *   included so the in-contest leaderboard always shows everyone.
+     *
+     * Implementation note:
+     *   The old "SET @r=0; UPDATE … ORDER BY" user-variable trick is
+     *   unreliable in MySQL 8+ because the engine does not guarantee the
+     *   order in which row-level expressions referencing user variables are
+     *   evaluated during an UPDATE.  We use a JOIN against a derived-table
+     *   rank subquery instead — this is deterministic in all MySQL versions.
+     */
     private void refreshLiveRanks(int contestId) {
+        String sql = """
+            UPDATE contest_participants cp
+            JOIN (
+                SELECT participant_id,
+                       ROW_NUMBER() OVER (
+                           ORDER BY mcq_marks_obtained DESC,
+                                    submitted_at ASC,
+                                    participant_id ASC
+                       ) AS new_rank
+                FROM contest_participants
+                WHERE contest_id = ?
+            ) ranked ON cp.participant_id = ranked.participant_id
+            SET cp.live_rank = ranked.new_rank
+            WHERE cp.contest_id = ?
+            """;
         try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps1 = conn.prepareStatement("SET @r=0");
-             PreparedStatement ps2 = conn.prepareStatement(
-                     "UPDATE contest_participants SET live_rank=(@r:=@r+1) " +
-                             "WHERE contest_id=? ORDER BY mcq_marks_obtained DESC, submitted_at ASC")) {
-            ps1.execute();
-            ps2.setInt(1, contestId);
-            ps2.executeUpdate();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, contestId);
+            ps.setInt(2, contestId);
+            ps.executeUpdate();
         } catch (SQLException e) {
             System.err.println("❌ refreshLiveRanks: " + e.getMessage());
         }
@@ -897,16 +967,37 @@ public class ContestService {
         }
     }
 
+    /**
+     * Assigns final_rank to every participant who actually submitted or was
+     * evaluated.  Uses the same reliable subquery pattern as refreshLiveRanks.
+     *
+     * Ranking rule (final / post-evaluation):
+     *   Primary   : total_marks_obtained DESC  (MCQ + written)
+     *   Tiebreaker: submitted_at ASC
+     */
     private void assignFinalRanks(int contestId) {
+        String sql = """
+            UPDATE contest_participants cp
+            JOIN (
+                SELECT participant_id,
+                       ROW_NUMBER() OVER (
+                           ORDER BY total_marks_obtained DESC,
+                                    submitted_at ASC,
+                                    participant_id ASC
+                       ) AS new_rank
+                FROM contest_participants
+                WHERE contest_id = ?
+                  AND status IN ('SUBMITTED', 'EVALUATED', 'ACTIVE')
+            ) ranked ON cp.participant_id = ranked.participant_id
+            SET cp.final_rank = ranked.new_rank
+            WHERE cp.contest_id = ?
+              AND cp.status IN ('SUBMITTED', 'EVALUATED', 'ACTIVE')
+            """;
         try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps1 = conn.prepareStatement("SET @fr=0");
-             PreparedStatement ps2 = conn.prepareStatement(
-                     "UPDATE contest_participants SET final_rank=(@fr:=@fr+1) " +
-                             "WHERE contest_id=? AND status IN ('SUBMITTED','EVALUATED','ACTIVE') " +
-                             "ORDER BY total_marks_obtained DESC, submitted_at ASC")) {
-            ps1.execute();
-            ps2.setInt(1, contestId);
-            ps2.executeUpdate();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, contestId);
+            ps.setInt(2, contestId);
+            ps.executeUpdate();
         } catch (SQLException e) {
             System.err.println("❌ assignFinalRanks: " + e.getMessage());
         }
