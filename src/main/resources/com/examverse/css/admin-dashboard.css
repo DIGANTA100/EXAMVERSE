@@ -1,0 +1,584 @@
+/* ============================================================
+   admin-dashboard.css
+   ExamVerse — Admin Panel Stylesheet
+   Theme: Dark slate + deep cyan authority palette
+   Distinct from student-dashboard.css (which uses a warmer,
+   more playful feel). Admin uses cool grays, sharp borders,
+   and commanding accent colours.
+   ============================================================ */
+
+/* ─────────────────────────────────────────────
+   ROOT / SCENE
+   ───────────────────────────────────────────── */
+.root-pane {
+    -fx-background-color: #0f1117;
+    -fx-font-family: "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ─────────────────────────────────────────────
+   SIDEBAR
+   ───────────────────────────────────────────── */
+.sidebar-pane {
+    -fx-background-color: #13151c;
+    -fx-border-color: transparent #1e2231 transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-pref-width: 240px;
+    -fx-min-width: 240px;
+    -fx-max-width: 240px;
+}
+
+/* Brand block */
+.sidebar-brand {
+    -fx-padding: 0 20 0 20;
+}
+
+.brand-title {
+    -fx-text-fill: #e2e8f0;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 3px;
+}
+
+.brand-subtitle {
+    -fx-text-fill: #06b6d4;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 2px;
+    -fx-padding: 3 8 3 8;
+    -fx-background-color: rgba(6, 182, 212, 0.15);
+    -fx-background-radius: 4px;
+}
+
+/* Separator */
+.sidebar-separator {
+    -fx-background-color: #1e2231;
+    -fx-padding: 0 20 0 20;
+}
+.sidebar-separator > .line {
+    -fx-border-color: #1e2231;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* Nav container */
+.sidebar-nav {
+    -fx-padding: 0;
+}
+
+/* Base nav button */
+.sidebar-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #8b92a5;
+    -fx-font-size: 13px;
+    -fx-font-weight: normal;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 11 18 11 18;
+    -fx-background-radius: 8px;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-pref-width: 210px;
+    -fx-max-width: Infinity;
+}
+
+.sidebar-btn:hover {
+    -fx-background-color: rgba(6, 182, 212, 0.1);
+    -fx-text-fill: #c7d0e8;
+    -fx-background-radius: 8px;
+}
+
+/* Active nav button */
+.sidebar-btn-active {
+    -fx-background-color: rgba(6, 182, 212, 0.2);
+    -fx-text-fill: #67e8f9;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8px;
+    -fx-border-color: transparent transparent transparent #06b6d4;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 11 18 11 15;
+}
+
+.sidebar-btn-active:hover {
+    -fx-background-color: rgba(6, 182, 212, 0.25);
+}
+
+/* Logout button */
+.sidebar-btn-logout {
+    -fx-background-color: rgba(239, 68, 68, 0.1);
+    -fx-text-fill: #f87171;
+    -fx-font-size: 13px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 11 18 11 18;
+    -fx-background-radius: 8px;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-pref-width: 210px;
+    -fx-max-width: Infinity;
+}
+
+.sidebar-btn-logout:hover {
+    -fx-background-color: rgba(239, 68, 68, 0.2);
+    -fx-text-fill: #fca5a5;
+}
+
+/* Bottom section of sidebar */
+.sidebar-bottom {
+    -fx-padding: 0;
+}
+
+/* ─────────────────────────────────────────────
+   MAIN CONTENT AREA
+   ───────────────────────────────────────────── */
+.content-container {
+    -fx-background-color: #0f1117;
+}
+
+/* ─────────────────────────────────────────────
+   HEADER BAR
+   ───────────────────────────────────────────── */
+.header-bar {
+    -fx-background-color: #13151c;
+    -fx-border-color: transparent transparent #1e2231 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 20 30 20 30;
+}
+
+.welcome-label {
+    -fx-text-fill: #e2e8f0;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.datetime-label {
+    -fx-text-fill: #4b5568;
+    -fx-font-size: 12px;
+}
+
+/* User avatar circle */
+.user-avatar {
+    -fx-background-color: linear-gradient(to bottom right, #06b6d4, #0891b2);
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER;
+    -fx-pref-width: 42px;
+    -fx-pref-height: 42px;
+    -fx-min-width: 42px;
+    -fx-min-height: 42px;
+    -fx-background-radius: 50%;
+}
+
+/* ─────────────────────────────────────────────
+   SCROLL PANE
+   ───────────────────────────────────────────── */
+.content-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-border-color: transparent;
+}
+
+.content-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.content-scroll > .scroll-bar:vertical {
+    -fx-background-color: #13151c;
+    -fx-pref-width: 8px;
+}
+
+.content-scroll > .scroll-bar:vertical > .track {
+    -fx-background-color: #1e2231;
+    -fx-background-radius: 4px;
+}
+
+.content-scroll > .scroll-bar:vertical > .thumb {
+    -fx-background-color: #374151;
+    -fx-background-radius: 4px;
+}
+
+.content-scroll > .scroll-bar:vertical > .thumb:hover {
+    -fx-background-color: #4b5568;
+}
+
+.content-scroll > .scroll-bar:horizontal {
+    -fx-pref-height: 0;
+    -fx-opacity: 0;
+}
+
+/* Inner content pane */
+.content-pane {
+    -fx-background-color: transparent;
+}
+
+/* ─────────────────────────────────────────────
+   STAT CARDS
+   ───────────────────────────────────────────── */
+.stat-card {
+    -fx-background-color: #13151c;
+    -fx-border-color: #1e2231;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+    -fx-padding: 22 24 22 24;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 10, 0, 0, 3);
+}
+
+.stat-card:hover {
+    -fx-border-color: #06b6d4;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.2), 16, 0, 0, 4);
+}
+
+/* ─────────────────────────────────────────────
+   TYPOGRAPHY  (label style classes)
+   ───────────────────────────────────────────── */
+
+/* Section headings  e.g. "Quick Actions", "Recent Exams" */
+.label-subtitle {
+    -fx-text-fill: #e2e8f0;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+/* Stat card captions  e.g. "📚 Total Exams" */
+.label-caption {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 12px;
+    -fx-font-weight: normal;
+}
+
+/* Big stat number */
+.label-title {
+    -fx-text-fill: #67e8f9;
+    -fx-font-size: 36px;
+    -fx-font-weight: bold;
+}
+
+/* Subtext  e.g. "Active exams in system" */
+.label-body {
+    -fx-text-fill: #4b5568;
+    -fx-font-size: 12px;
+}
+
+/* ─────────────────────────────────────────────
+   BUTTONS
+   ───────────────────────────────────────────── */
+
+/* Primary action button */
+.btn-primary {
+    -fx-background-color: linear-gradient(to right, #06b6d4, #0891b2);
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8px;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.35), 8, 0, 0, 3);
+}
+
+.btn-primary:hover {
+    -fx-background-color: linear-gradient(to right, #0e7490, #0284c7);
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.55), 12, 0, 0, 4);
+    -fx-scale-x: 1.02;
+    -fx-scale-y: 1.02;
+}
+
+.btn-primary:pressed {
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.25), 4, 0, 0, 1);
+}
+
+/* Secondary action button */
+.btn-secondary {
+    -fx-background-color: #1e2231;
+    -fx-text-fill: #8b92a5;
+    -fx-font-size: 13px;
+    -fx-font-weight: normal;
+    -fx-background-radius: 8px;
+    -fx-border-color: #2d3348;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-cursor: hand;
+}
+
+.btn-secondary:hover {
+    -fx-background-color: #252a3a;
+    -fx-text-fill: #c7d0e8;
+    -fx-border-color: #06b6d4;
+}
+
+.btn-secondary:pressed {
+    -fx-background-color: #1a1f2e;
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+
+/* ─────────────────────────────────────────────
+   EXAM CARD  (built dynamically in controller)
+   ───────────────────────────────────────────── */
+.exam-card {
+    -fx-background-color: #13151c;
+    -fx-border-color: #1e2231;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0, 0, 2);
+}
+
+.exam-card:hover {
+    -fx-border-color: #374151;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.15), 14, 0, 0, 4);
+}
+
+/* ─────────────────────────────────────────────
+   BADGES
+   ───────────────────────────────────────────── */
+.badge {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 9 3 9;
+    -fx-background-radius: 20px;
+    -fx-border-radius: 20px;
+}
+
+.badge-primary {
+    -fx-background-color: rgba(6, 182, 212, 0.15);
+    -fx-text-fill: #67e8f9;
+    -fx-border-color: rgba(6, 182, 212, 0.3);
+    -fx-border-width: 1px;
+}
+
+.badge-success {
+    -fx-background-color: rgba(16, 185, 129, 0.15);
+    -fx-text-fill: #6ee7b7;
+    -fx-border-color: rgba(16, 185, 129, 0.3);
+    -fx-border-width: 1px;
+}
+
+.badge-warning {
+    -fx-background-color: rgba(245, 158, 11, 0.15);
+    -fx-text-fill: #fcd34d;
+    -fx-border-color: rgba(245, 158, 11, 0.3);
+    -fx-border-width: 1px;
+}
+
+.badge-danger {
+    -fx-background-color: rgba(239, 68, 68, 0.15);
+    -fx-text-fill: #fca5a5;
+    -fx-border-color: rgba(239, 68, 68, 0.3);
+    -fx-border-width: 1px;
+}
+
+/* ─────────────────────────────────────────────
+   DIALOG / ALERT  (Create Exam dialog)
+   ───────────────────────────────────────────── */
+.alert {
+    -fx-background-color: #13151c;
+}
+
+.dialog-pane {
+    -fx-background-color: #13151c;
+    -fx-border-color: #1e2231;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+}
+
+.dialog-pane > .header-panel {
+    -fx-background-color: #0f1117;
+    -fx-border-color: transparent transparent #1e2231 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 18 24 18 24;
+}
+
+.dialog-pane > .header-panel > .label {
+    -fx-text-fill: #e2e8f0;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.dialog-pane > .content {
+    -fx-background-color: #13151c;
+    -fx-padding: 20 24 20 24;
+}
+
+.dialog-pane > .content > .label {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 13px;
+}
+
+.dialog-pane > .button-bar {
+    -fx-background-color: #0f1117;
+    -fx-border-color: #1e2231 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 14 24 14 24;
+}
+
+/* Dialog form labels */
+.dialog-pane .label {
+    -fx-text-fill: #8b92a5;
+    -fx-font-size: 13px;
+}
+
+/* ─────────────────────────────────────────────
+   TEXT FIELDS / TEXT AREAS / COMBO BOX
+   (used inside Create Exam dialog)
+   ───────────────────────────────────────────── */
+.text-field,
+.text-area,
+.combo-box {
+    -fx-background-color: #1a1f2e;
+    -fx-text-fill: #e2e8f0;
+    -fx-prompt-text-fill: #4b5568;
+    -fx-border-color: #2d3348;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-font-size: 13px;
+    -fx-padding: 8 12 8 12;
+}
+
+.text-field:focused,
+.text-area:focused {
+    -fx-border-color: #06b6d4;
+    -fx-background-color: #1e2231;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.25), 6, 0, 0, 0);
+}
+
+.text-area > .scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.text-area > .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.combo-box > .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e2e8f0;
+    -fx-padding: 6 12 6 12;
+}
+
+.combo-box-popup > .list-view {
+    -fx-background-color: #1a1f2e;
+    -fx-border-color: #2d3348;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 12, 0, 0, 4);
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #c7d0e8;
+    -fx-font-size: 13px;
+    -fx-padding: 8 12 8 12;
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:hover {
+    -fx-background-color: rgba(6, 182, 212, 0.15);
+    -fx-text-fill: #67e8f9;
+}
+
+.combo-box > .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.combo-box > .arrow-button > .arrow {
+    -fx-background-color: #6b7280;
+}
+
+/* ─────────────────────────────────────────────
+   TABLE VIEW  (used in reports / future tables)
+   ───────────────────────────────────────────── */
+.table-view {
+    -fx-background-color: #13151c;
+    -fx-border-color: #1e2231;
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-table-cell-border-color: #1e2231;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #0f1117;
+    -fx-border-color: transparent transparent #1e2231 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-size: 40px;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 12 0 12;
+}
+
+.table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #1a1f2e transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-table-cell-border-color: transparent;
+    -fx-padding: 4 0 4 0;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: rgba(255, 255, 255, 0.015);
+}
+
+.table-row-cell:hover {
+    -fx-background-color: rgba(6, 182, 212, 0.08);
+}
+
+.table-row-cell:selected {
+    -fx-background-color: rgba(6, 182, 212, 0.2);
+}
+
+.table-cell {
+    -fx-text-fill: #c7d0e8;
+    -fx-font-size: 13px;
+    -fx-padding: 10 12 10 12;
+    -fx-border-color: transparent;
+}
+
+/* ─────────────────────────────────────────────
+   SCROLL BAR  (general)
+   ───────────────────────────────────────────── */
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar > .track-background {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar > .track {
+    -fx-background-color: #1e2231;
+    -fx-background-radius: 4px;
+}
+
+.scroll-bar > .thumb {
+    -fx-background-color: #374151;
+    -fx-background-radius: 4px;
+}
+
+.scroll-bar > .thumb:hover {
+    -fx-background-color: #06b6d4;
+}
+
+.scroll-bar > .increment-button,
+.scroll-bar > .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-pref-height: 0;
+    -fx-pref-width: 0;
+}
+
+.scroll-bar > .increment-arrow,
+.scroll-bar > .decrement-arrow {
+    -fx-shape: " ";
+    -fx-pref-height: 0;
+    -fx-pref-width: 0;
+}

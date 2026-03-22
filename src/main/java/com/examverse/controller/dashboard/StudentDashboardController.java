@@ -1,10 +1,12 @@
 package com.examverse.controller.dashboard;
 
+import com.examverse.controller.dashboard.sections.*;
 import com.examverse.model.exam.Exam;
-import com.examverse.model.exam.StudentExamAttempt;
-import com.examverse.model.user.StudentStats;
 import com.examverse.model.exam.Question;
+import com.examverse.model.exam.StudentExamAttempt;
 import com.examverse.model.user.User;
+import com.examverse.service.ai.GeminiService;
+import com.examverse.service.dashboard.NotificationService;
 import com.examverse.service.exam.AnswerService;
 import com.examverse.service.exam.ExamService;
 import com.examverse.service.exam.QuestionService;
@@ -12,12 +14,16 @@ import com.examverse.util.SceneManager;
 import com.examverse.util.SessionManager;
 import javafx.animation.*;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -30,40 +36,33 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
-import javafx.geometry.HPos;
-import com.examverse.service.ai.GeminiService;
-import javafx.concurrent.Task;
-import javafx.scene.Parent;
-import javafx.scene.layout.Pane;
 
 /**
- * StudentDashboardController — Fixed & Fully Featured
+ * StudentDashboardController — Refactored slim orchestrator.
  *
- * Bugs fixed:
- * 1. Background offset / colour issue
- * 2. Notification bell — now opens a popup panel
- * 3. Profile icon — now opens profile view
- * 4. Filter by Subject & Difficulty — now live-filters the grid
- * 5. Resume button in Ongoing tab — navigates back into exam
- * 6. "Failed to load exam data" — robust null-check + proper session storage
- * 7. Hover style mutation (+=) bug replaced with clean style swap
+ * Feature logic has been extracted to dedicated section classes:
+ *   DashboardHomeSection   — dashboard home panel
+ *   ProfileSection         — profile + StudentRating display
+ *   NotificationPanel      — DB-backed notification popup
+ *   DashboardUIFactory     — shared UI helpers
  *
- * Implemented features:
- * - Results & Analytics (full screen with stats charts/bars)
- * - Practice Mode (subject-based practice session flow)
- * - Profile (editable profile card)
- * - Recent Activity on Dashboard Home (real DB data)
- * - Notification panel with dismiss
+ * This class only:
+ *   1. Wires FXML injections
+ *   2. Calls section builders
+ *   3. Handles sidebar navigation & active-state
+ *   4. Manages the background image + particle layer
+ *   5. Keeps exam actions (start, resume) because they need session writes
+ *   6. Keeps AI assistant (heavy Gemini chat state)
+ *   7. Keeps Results & Practice (standalone, reasonable length)
  */
 public class StudentDashboardController implements Initializable {
 
     // ── FXML injections ──────────────────────────────────────────────────────
 
     @FXML private BorderPane rootPane;
-    @FXML private VBox      sidebarPane;
-    @FXML private VBox      contentPane;
+    @FXML private VBox       sidebarPane;
+    @FXML private VBox       contentPane;
 
-    // Sidebar buttons
     @FXML private Button dashboardBtn;
     @FXML private Button myExamsBtn;
     @FXML private Button practiceBtn;
@@ -73,43 +72,37 @@ public class StudentDashboardController implements Initializable {
     @FXML private Button aiAssistantBtn;
     @FXML private Button contestsBtn;
 
-    // Header
     @FXML private Label  welcomeLabel;
     @FXML private Label  dateTimeLabel;
     @FXML private Label  notificationBadge;
-    @FXML private Button notificationBtn;   // bell button
-    @FXML private Button avatarBtn;         // profile avatar button
+    @FXML private Button notificationBtn;
+    @FXML private Button avatarBtn;
 
-    // Content scroll
     @FXML private ScrollPane contentScrollPane;
 
-    // ── Services / state ─────────────────────────────────────────────────────
+    // ── Services ─────────────────────────────────────────────────────────────
 
     private ExamService     examService;
     private QuestionService questionService;
     private AnswerService   answerService;
+    private GeminiService   geminiService;
+    private NotificationService notificationService;
 
-    private GeminiService geminiService;
+    // ── State ─────────────────────────────────────────────────────────────────
 
-    // AI chat state
-    private VBox          chatMessagesBox;    // scrollable message history container
-    private ScrollPane    chatScrollPane;     // so we can auto-scroll to bottom
-    private TextField     chatInputField;     // reuse across messages
-    private Button        chatSendBtn;        // to enable/disable during API call
+    private User    currentUser;
+    private Timeline clockTimeline;
 
+    // ── Section helpers ───────────────────────────────────────────────────────
 
-    private User         currentUser;
-    private StudentStats studentStats;
-    private Timeline     clockTimeline;
+    private NotificationPanel notificationPanel;
 
-    // Notification data (in-memory, extend to DB later)
-    private final String[] NOTIFICATIONS = {
-            "📢  New exam 'Java Fundamentals' is now available!",
-            "✅  You passed 'Database Basics' — 87%",
-            "⏰  Reminder: 'Web Dev Quiz' ends in 2 days"
-    };
-    private boolean notificationPanelVisible = false;
-    private VBox    notificationOverlay;
+    // ── AI chat state ─────────────────────────────────────────────────────────
+
+    private VBox       chatMessagesBox;
+    private ScrollPane chatScrollPane;
+    private TextField  chatInputField;
+    private Button     chatSendBtn;
 
     // ─────────────────────────────────────────────────────────────────────────
     //  INITIALIZE
@@ -117,10 +110,14 @@ public class StudentDashboardController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        examService     = new ExamService();
-        questionService = new QuestionService();
-        answerService   = new AnswerService();
-        geminiService = new GeminiService();
+        examService         = new ExamService();
+        questionService     = new QuestionService();
+        answerService       = new AnswerService();
+        geminiService       = new GeminiService();
+        notificationService = new NotificationService();
+
+        // Ensure notification tables exist
+        NotificationService.ensureTablesExist();
 
         currentUser = SessionManager.getInstance().getCurrentUser();
         if (currentUser == null) {
@@ -138,49 +135,112 @@ public class StudentDashboardController implements Initializable {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  SETUP HELPERS
+    //  BACKGROUND  — fixed image + particle overlay
     // ─────────────────────────────────────────────────────────────────────────
 
-    /** Fix: set the background on rootPane directly so no offset occurs */
     private void setupBackground() {
+        /*
+         * Strategy: place a full-size ImageView at index 0 inside the BorderPane's
+         * children list so it sits behind all UI. The rootPane keeps its CSS
+         * background-color as a dark fallback that shows through when no image
+         * is present. Using an ImageView (rather than BackgroundImage or setStyle)
+         * means the CSS gradient overlay we apply in-code won't erase the image.
+         *
+         * ➤ Name your background image  dashboard-bg.jpg  (or .png) and place it at:
+         *     src/main/resources/com/examverse/assets/images/dashboard-bg.jpg
+         */
+
+        // 1. Set a solid dark fallback on rootPane (CSS file says transparent — override here)
         rootPane.setStyle(
-                "-fx-background-color: linear-gradient(to bottom right, #020617 0%, #0f172a 40%, #1a1040 100%);"
+                "-fx-background-color: linear-gradient(" +
+                        "to bottom right,#020617 0%,#0f172a 40%,#1a1040 100%);"
         );
 
-        // Subtle animated particle layer
+        // 2. Try loading the bg image; if found, wire it as a fixed ImageView
+        try {
+            URL imgUrl = getClass().getResource("/com/examverse/assets/images/dashboard-bg.jpg");
+            if (imgUrl == null)
+                imgUrl = getClass().getResource("/com/examverse/assets/images/dashboard-bg.png");
+
+            if (imgUrl != null) {
+                Image bgImage = new Image(imgUrl.toExternalForm(), true); // background loading
+
+                javafx.scene.image.ImageView bgView = new javafx.scene.image.ImageView(bgImage);
+                bgView.setPreserveRatio(false);
+                bgView.setSmooth(true);
+
+                // Bind size to rootPane so it always fills and stays fixed on scroll
+                bgView.fitWidthProperty().bind(rootPane.widthProperty());
+                bgView.fitHeightProperty().bind(rootPane.heightProperty());
+
+                // Dark gradient overlay ON TOP of the image (semi-transparent Pane)
+                Pane overlay = new Pane();
+                overlay.setMouseTransparent(true);
+                overlay.setStyle(
+                        "-fx-background-color: linear-gradient(" +
+                                "to bottom right," +
+                                "#020617d1 0%," +   // #RRGGBBAA — ~82% opacity
+                                "#0f172ac7 40%," +  // ~78% opacity
+                                "#1a1040bf 100%);"  // ~75% opacity
+                );
+                overlay.prefWidthProperty().bind(rootPane.widthProperty());
+                overlay.prefHeightProperty().bind(rootPane.heightProperty());
+
+                // Insert bg image then overlay at the very bottom of the children stack
+                rootPane.getChildren().add(0, overlay);
+                rootPane.getChildren().add(0, bgView);
+
+                // Make the pane itself transparent so the ImageView shows through
+                rootPane.setStyle("-fx-background-color: transparent;");
+
+                System.out.println("✅ Dashboard background image loaded.");
+            } else {
+                System.out.println("ℹ️ No dashboard-bg image found — using gradient fallback.");
+            }
+        } catch (Exception e) {
+            System.out.println("⚠️ Background image load failed: " + e.getMessage());
+        }
+
+        // Animated particle layer (always on top of background, behind UI)
         Pane particleLayer = new Pane();
         particleLayer.setMouseTransparent(true);
         particleLayer.setStyle("-fx-background-color: transparent;");
 
-        for (int i = 0; i < 25; i++) {
-            double r = 1.5 + Math.random() * 2.5;
-            Circle p = new Circle(r);
-            double alpha = 0.15 + Math.random() * 0.25;
-            p.setFill(Color.rgb(34, 211, 238, alpha));
+        String[] particleColors = {"#22d3ee", "#a78bfa", "#e879f9", "#34d399"};
+        for (int i = 0; i < 30; i++) {
+            double r     = 1.2 + Math.random() * 2.8;
+            Circle p     = new Circle(r);
+            String col   = particleColors[i % particleColors.length];
+            double alpha = 0.10 + Math.random() * 0.22;
+            p.setFill(Color.web(col, alpha));
             p.setLayoutX(Math.random() * 1440);
             p.setLayoutY(Math.random() * 900);
 
-            TranslateTransition tt = new TranslateTransition(Duration.seconds(8 + Math.random() * 12), p);
-            tt.setByY(-(40 + Math.random() * 80));
-            tt.setByX(-15 + Math.random() * 30);
+            TranslateTransition tt = new TranslateTransition(
+                    Duration.seconds(9 + Math.random() * 13), p);
+            tt.setByY(-(50 + Math.random() * 90));
+            tt.setByX(-20 + Math.random() * 40);
             tt.setCycleCount(Animation.INDEFINITE);
             tt.setAutoReverse(true);
             tt.setInterpolator(Interpolator.EASE_BOTH);
             tt.play();
 
-            FadeTransition ft = new FadeTransition(Duration.seconds(2 + Math.random() * 3), p);
-            ft.setFromValue(0.1);
-            ft.setToValue(0.5);
+            FadeTransition ft = new FadeTransition(
+                    Duration.seconds(2.5 + Math.random() * 3.5), p);
+            ft.setFromValue(0.05);
+            ft.setToValue(0.45);
             ft.setCycleCount(Animation.INDEFINITE);
             ft.setAutoReverse(true);
             ft.play();
 
             particleLayer.getChildren().add(p);
         }
-
-        // Insert behind everything
         rootPane.getChildren().add(0, particleLayer);
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  HEADER SETUP
+    // ─────────────────────────────────────────────────────────────────────────
 
     private void setupHeader() {
         welcomeLabel.setText("Welcome back, " + currentUser.getFullName() + " 👋");
@@ -190,31 +250,63 @@ public class StudentDashboardController implements Initializable {
         clockTimeline.setCycleCount(Timeline.INDEFINITE);
         clockTimeline.play();
 
-        // Badge
-        notificationBadge.setText(String.valueOf(NOTIFICATIONS.length));
-        notificationBadge.setVisible(true);
+        // Notification panel — pass rootPane as anchor node (panel resolves scene root itself)
+        notificationPanel = new NotificationPanel(
+                currentUser,
+                notificationBadge,
+                rootPane,
+                count -> {}
+        );
+        notificationPanel.refreshBadge();
 
-        // ── FIX: Notification bell ───────────────────────────────────────────
         if (notificationBtn != null) {
-            notificationBtn.setOnAction(e -> toggleNotificationPanel());
+            notificationBtn.setOnAction(e -> notificationPanel.toggle());
         }
 
-        // ── FIX: Avatar / profile button ─────────────────────────────────────
+        // Avatar button — initials + rank-matching color loaded from DB
         if (avatarBtn != null) {
-            String initials = getInitials(currentUser.getFullName());
-            avatarBtn.setText(initials);
-            avatarBtn.setOnAction(e -> {
-                setActiveButton(profileBtn);
-                loadProfile();
+            avatarBtn.setText(getInitials(currentUser.getFullName()));
+            avatarBtn.setOnAction(e -> { setActiveButton(profileBtn); loadProfile(); });
+
+            // Load rank color off the UI thread so startup isn't blocked
+            Task<String> rankColorTask = new Task<>() {
+                @Override protected String call() {
+                    try (java.sql.Connection conn = com.examverse.config.DatabaseConfig.getConnection();
+                         java.sql.PreparedStatement ps = conn.prepareStatement(
+                                 "SELECT current_rating FROM student_ratings WHERE student_id = ?")) {
+                        ps.setInt(1, currentUser.getId());
+                        java.sql.ResultSet rs = ps.executeQuery();
+                        if (rs.next()) {
+                            return com.examverse.controller.dashboard.sections.ProfileSection
+                                    .getRankColor(rs.getInt(1));
+                        }
+                    } catch (Exception ignored) {}
+                    return "#6b7280"; // Beginner default
+                }
+            };
+            rankColorTask.setOnSucceeded(e -> {
+                String c = rankColorTask.getValue();
+                avatarBtn.setStyle(
+                        "-fx-background-color: linear-gradient(to bottom," + c + "cc," + c + "88);" +
+                                "-fx-text-fill: #0f172a;" +
+                                "-fx-font-size: 13px; -fx-font-weight: 800;" +
+                                "-fx-padding: 9 13; -fx-background-radius: 50%; -fx-cursor: hand;" +
+                                "-fx-border-color: " + c + "99; -fx-border-width: 2; -fx-border-radius: 50%;" +
+                                "-fx-effect: dropshadow(gaussian," + c + "66,10,0.4,0,0);" +
+                                "-fx-min-width: 40; -fx-min-height: 40;"
+                );
             });
+            Thread t = new Thread(rankColorTask, "rank-color-loader");
+            t.setDaemon(true);
+            t.start();
         }
     }
 
     private String getInitials(String name) {
         if (name == null || name.isBlank()) return "?";
-        String[] parts = name.trim().split("\\s+");
-        if (parts.length == 1) return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
-        return (parts[0].charAt(0) + "" + parts[parts.length - 1].charAt(0)).toUpperCase();
+        String[] p = name.trim().split("\\s+");
+        if (p.length == 1) return p[0].substring(0, Math.min(2, p[0].length())).toUpperCase();
+        return (p[0].charAt(0) + "" + p[p.length - 1].charAt(0)).toUpperCase();
     }
 
     private void updateDateTime() {
@@ -223,27 +315,29 @@ public class StudentDashboardController implements Initializable {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  NAVIGATION HANDLERS (FXML)
+    //  NAVIGATION HANDLERS
     // ─────────────────────────────────────────────────────────────────────────
 
-    @FXML private void handleDashboard()  { setActiveButton(dashboardBtn); loadDashboardHome(); }
-    @FXML private void handleMyExams()    { setActiveButton(myExamsBtn);   loadMyExams(); }
-    @FXML private void handlePractice()   { setActiveButton(practiceBtn);  loadPracticeMode(); }
-    @FXML private void handleResults()    { setActiveButton(resultsBtn);   loadResultsAnalytics(); }
-    @FXML private void handleProfile()    { setActiveButton(profileBtn);   loadProfile(); }
-    @FXML private void handleAiAssistant() { setActiveButton(aiAssistantBtn); loadAiAssistant(); }
+    @FXML private void handleDashboard()    { setActiveButton(dashboardBtn);    loadDashboardHome(); }
+    @FXML private void handleMyExams()      { setActiveButton(myExamsBtn);      loadMyExams(); }
+    @FXML private void handlePractice()     { setActiveButton(practiceBtn);     loadPracticeMode(); }
+    @FXML private void handleResults()      { setActiveButton(resultsBtn);      loadResultsAnalytics(); }
+    @FXML private void handleProfile()      { setActiveButton(profileBtn);      loadProfile(); }
+    @FXML private void handleAiAssistant()  { setActiveButton(aiAssistantBtn);  loadAiAssistant(); }
+    @FXML private void handleNotification() { if (notificationPanel != null) notificationPanel.toggle(); }
+
     @FXML private void handleContests() {
         setActiveButton(contestsBtn);
         SceneManager.switchScene("/com/examverse/fxml/contest/contest-lobby.fxml");
     }
-    @FXML
-    private void handleLogout() {
-        if (clockTimeline != null) clockTimeline.stop();
 
-        Alert dlg = new Alert(Alert.AlertType.CONFIRMATION);
-        dlg.setTitle("Logout");
-        dlg.setHeaderText("Are you sure you want to logout?");
-        dlg.setContentText("Your session will be cleared.");
+    @FXML private void handleLogout() {
+        if (clockTimeline != null) clockTimeline.stop();
+        if (notificationPanel != null) notificationPanel.close();
+
+        Alert dlg = styledAlert(Alert.AlertType.CONFIRMATION,
+                "Logout", "Are you sure you want to logout?",
+                "Your session will be cleared.");
         dlg.showAndWait().ifPresent(r -> {
             if (r == ButtonType.OK) {
                 SessionManager.getInstance().clearSession();
@@ -252,168 +346,21 @@ public class StudentDashboardController implements Initializable {
         });
     }
 
-    /** Toggle notification panel overlay */
-    @FXML
-    private void handleNotification() {
-        toggleNotificationPanel();
-    }
-
     // ─────────────────────────────────────────────────────────────────────────
-    //  NOTIFICATION PANEL
+    //  ACTIVE BUTTON STATE
     // ─────────────────────────────────────────────────────────────────────────
 
-    private void toggleNotificationPanel() {
-        if (notificationPanelVisible) {
-            closeNotificationPanel();
-        } else {
-            openNotificationPanel();
-        }
-    }
-
-    private void openNotificationPanel() {
-        notificationPanelVisible = true;
-
-        notificationOverlay = new VBox(0);
-        notificationOverlay.setStyle("""
-            -fx-background-color: rgba(15, 23, 42, 0.97);
-            -fx-background-radius: 14;
-            -fx-border-color: rgba(34, 211, 238, 0.35);
-            -fx-border-width: 1;
-            -fx-border-radius: 14;
-            -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.7), 30, 0.5, 0, 8);
-            """);
-        notificationOverlay.setPrefWidth(360);
-        notificationOverlay.setMaxHeight(400);
-
-        // Header
-        HBox header = new HBox();
-        header.setAlignment(Pos.CENTER_LEFT);
-        header.setPadding(new Insets(16, 18, 12, 18));
-        header.setStyle("-fx-border-color: rgba(51,65,85,0.4); -fx-border-width: 0 0 1 0;");
-
-        Label title = new Label("🔔  Notifications");
-        title.setStyle("-fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: 700;");
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        Button closeBtn = new Button("✕");
-        closeBtn.setStyle("""
-            -fx-background-color: transparent;
-            -fx-text-fill: #94a3b8;
-            -fx-font-size: 14px;
-            -fx-cursor: hand;
-            -fx-padding: 2 6;
-            """);
-        closeBtn.setOnAction(e -> closeNotificationPanel());
-
-        header.getChildren().addAll(title, spacer, closeBtn);
-
-        // Notification items
-        VBox itemsBox = new VBox(0);
-        for (int i = 0; i < NOTIFICATIONS.length; i++) {
-            String msg = NOTIFICATIONS[i];
-            HBox item = new HBox(12);
-            item.setAlignment(Pos.CENTER_LEFT);
-            item.setPadding(new Insets(14, 18, 14, 18));
-            item.setStyle("-fx-border-color: rgba(51,65,85,0.25); -fx-border-width: 0 0 1 0;");
-
-            // Dot
-            Circle dot = new Circle(5, Color.web("#22d3ee"));
-
-            Label lbl = new Label(msg);
-            lbl.setStyle("-fx-text-fill: #cbd5e1; -fx-font-size: 13px;");
-            lbl.setWrapText(true);
-            lbl.setMaxWidth(290);
-
-            item.getChildren().addAll(dot, lbl);
-
-            // Hover
-            item.setOnMouseEntered(ev -> item.setStyle("""
-                -fx-background-color: rgba(34,211,238,0.06);
-                -fx-border-color: rgba(51,65,85,0.25);
-                -fx-border-width: 0 0 1 0;
-                """));
-            item.setOnMouseExited(ev -> item.setStyle(
-                    "-fx-border-color: rgba(51,65,85,0.25); -fx-border-width: 0 0 1 0;"));
-
-            itemsBox.getChildren().add(item);
-        }
-
-        // Footer
-        HBox footer = new HBox();
-        footer.setAlignment(Pos.CENTER);
-        footer.setPadding(new Insets(12));
-        Button clearBtn = new Button("Clear All Notifications");
-        clearBtn.setStyle("""
-            -fx-background-color: transparent;
-            -fx-text-fill: #22d3ee;
-            -fx-font-size: 13px;
-            -fx-cursor: hand;
-            -fx-font-weight: 600;
-            """);
-        clearBtn.setOnAction(e -> {
-            notificationBadge.setText("0");
-            notificationBadge.setVisible(false);
-            closeNotificationPanel();
-        });
-        footer.getChildren().add(clearBtn);
-
-        notificationOverlay.getChildren().addAll(header, itemsBox, footer);
-
-        // Absolute positioning over main content
-        StackPane.setAlignment(notificationOverlay, Pos.TOP_RIGHT);
-        notificationOverlay.setTranslateX(-20);
-        notificationOverlay.setTranslateY(70);
-
-        // Wrap rootPane in StackPane if not already, or use existing approach
-        // We add it directly to rootPane children with absolute coords
-        notificationOverlay.setLayoutX(rootPane.getWidth() - 390);
-        notificationOverlay.setLayoutY(65);
-        notificationOverlay.setPickOnBounds(false);
-
-        if (!rootPane.getChildren().contains(notificationOverlay)) {
-            rootPane.getChildren().add(notificationOverlay);
-        }
-
-        // Animate in
-        notificationOverlay.setOpacity(0);
-        notificationOverlay.setTranslateY(notificationOverlay.getTranslateY() - 10);
-        FadeTransition ft = new FadeTransition(Duration.millis(180), notificationOverlay);
-        ft.setToValue(1);
-        TranslateTransition tt = new TranslateTransition(Duration.millis(180), notificationOverlay);
-        tt.setByY(10);
-        new ParallelTransition(ft, tt).play();
-    }
-
-    private void closeNotificationPanel() {
-        if (notificationOverlay != null) {
-            FadeTransition ft = new FadeTransition(Duration.millis(150), notificationOverlay);
-            ft.setToValue(0);
-            ft.setOnFinished(e -> {
-                rootPane.getChildren().remove(notificationOverlay);
-                notificationPanelVisible = false;
-            });
-            ft.play();
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  ACTIVE BUTTON STYLING
-    // ─────────────────────────────────────────────────────────────────────────
-
-    private void setActiveButton(Button activeBtn) {
-        for (Button b : new Button[]{dashboardBtn, myExamsBtn, practiceBtn, resultsBtn, profileBtn, aiAssistantBtn, contestsBtn}) {
-
+    private void setActiveButton(Button active) {
+        Button[] all = {dashboardBtn, myExamsBtn, practiceBtn, resultsBtn,
+                profileBtn, aiAssistantBtn, contestsBtn};
+        for (Button b : all) {
             if (b == null) continue;
             b.getStyleClass().removeAll("sidebar-btn-active");
-            if (!b.getStyleClass().contains("sidebar-btn")) {
+            if (!b.getStyleClass().contains("sidebar-btn"))
                 b.getStyleClass().add("sidebar-btn");
-            }
         }
-        if (activeBtn != null && !activeBtn.getStyleClass().contains("sidebar-btn-active")) {
-            activeBtn.getStyleClass().add("sidebar-btn-active");
-        }
+        if (active != null && !active.getStyleClass().contains("sidebar-btn-active"))
+            active.getStyleClass().add("sidebar-btn-active");
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -423,257 +370,79 @@ public class StudentDashboardController implements Initializable {
     private void setContentWithAnimation(VBox content) {
         content.setOpacity(0);
         contentPane.getChildren().setAll(content);
-
-        FadeTransition fade = new FadeTransition(Duration.millis(250), content);
-        fade.setFromValue(0);
-        fade.setToValue(1);
-
+        FadeTransition fade  = new FadeTransition(Duration.millis(250), content);
+        fade.setFromValue(0); fade.setToValue(1);
         TranslateTransition slide = new TranslateTransition(Duration.millis(250), content);
-        slide.setFromY(12);
-        slide.setToY(0);
-
+        slide.setFromY(14); slide.setToY(0);
         new ParallelTransition(fade, slide).play();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //  SECTION: DASHBOARD HOME
+    //  SECTION: DASHBOARD HOME  — delegated to DashboardHomeSection
     // ═══════════════════════════════════════════════════════════════════════
 
     private void loadDashboardHome() {
-        VBox content = new VBox(28);
-        content.setPadding(new Insets(32, 36, 32, 36));
-        content.setStyle("-fx-background-color: transparent;");
-
-        // ── Title ──────────────────────────────────────────────────────────
-        Label titleLabel = sectionTitle("📊  Dashboard Overview");
-
-        // ── Stats ──────────────────────────────────────────────────────────
-        studentStats = examService.getStudentStats(currentUser.getId());
-
-        HBox statsRow = new HBox(20);
-        statsRow.setAlignment(Pos.CENTER_LEFT);
-
-        statsRow.getChildren().addAll(
-                createStatCard("📝", "Attempted",   String.valueOf(studentStats.getTotalExamsAttempted()), "#22d3ee", "#0ea5e9"),
-                createStatCard("📈", "Avg Score",   studentStats.getFormattedAverageScore(), "#10b981", "#059669"),
-                createStatCard("🎯", "Accuracy",    studentStats.getFormattedAccuracy(), "#a78bfa", "#7c3aed"),
-                createStatCard("✅", "Passed",      String.valueOf(studentStats.getTotalExamsPassed()), "#22c55e", "#16a34a")
+        DashboardHomeSection section = new DashboardHomeSection(
+                examService, currentUser, contentScrollPane,
+                this::handleStartExam,
+                this::handleResumeExam,
+                () -> { setActiveButton(myExamsBtn); loadMyExams(); },
+                () -> { setActiveButton(myExamsBtn); loadMyExamsTab("ongoing"); },
+                () -> { setActiveButton(practiceBtn); loadPracticeMode(); },
+                () -> { setActiveButton(resultsBtn); loadResultsAnalytics(); },
+                () -> { setActiveButton(contestsBtn); handleContests(); }
         );
-
-        // ── Quick Actions ──────────────────────────────────────────────────
-        Label actTitle = sectionSubtitle("⚡  Quick Actions");
-
-        HBox actions = new HBox(14);
-        actions.setAlignment(Pos.CENTER_LEFT);
-
-        Button a1 = quickActionBtn("🚀  Start New Exam",   "#22d3ee", "#0e7490");
-        Button a2 = quickActionBtn("▶️  Resume Exam",      "#f59e0b", "#b45309");
-        Button a3 = quickActionBtn("💪  Practice Mode",    "#a78bfa", "#6d28d9");
-        Button a4 = quickActionBtn("📊  My Results",       "#34d399", "#059669");
-        Button a5 = quickActionBtn("⚔️  Live Contests", "#7c3aed", "#5b21b6");
-
-
-        a1.setOnAction(e -> { setActiveButton(myExamsBtn); loadMyExams(); });
-        a2.setOnAction(e -> { setActiveButton(myExamsBtn); loadMyExamsTab("ongoing"); });
-        a3.setOnAction(e -> { setActiveButton(practiceBtn); loadPracticeMode(); });
-        a4.setOnAction(e -> { setActiveButton(resultsBtn); loadResultsAnalytics(); });
-        a5.setOnAction(e -> { setActiveButton(contestsBtn); handleContests(); });
-        actions.getChildren().add(a5);
-
-        actions.getChildren().addAll(a1, a2, a3, a4);
-
-        // ── Recent Activity ─────────────────────────────────────────────────
-        Label recentTitle = sectionSubtitle("🕐  Recent Activity");
-        VBox recentBox = buildRecentActivity();
-
-        // ── Upcoming Exams ──────────────────────────────────────────────────
-        Label upcomingTitle = sectionSubtitle("📅  Available Exams");
-        VBox upcomingBox = buildUpcomingExamsPreview();
-
-        content.getChildren().addAll(
-                titleLabel,
-                statsRow,
-                divider(),
-                actTitle, actions,
-                divider(),
-                recentTitle, recentBox,
-                divider(),
-                upcomingTitle, upcomingBox
-        );
-
-        setContentWithAnimation(content);
+        setContentWithAnimation(section.build());
     }
 
-    private VBox buildRecentActivity() {
-        VBox box = glassCard();
-        box.setSpacing(0);
+    // ═══════════════════════════════════════════════════════════════════════
+    //  SECTION: PROFILE  — delegated to ProfileSection
+    // ═══════════════════════════════════════════════════════════════════════
 
-        List<StudentExamAttempt> completed = examService.getCompletedExams(currentUser.getId());
-
-        if (completed.isEmpty()) {
-            Label empty = new Label("No recent activity yet. Start an exam to see your progress!");
-            empty.setStyle("-fx-text-fill: #64748b; -fx-font-size: 14px;");
-            empty.setPadding(new Insets(10, 0, 0, 0));
-            box.getChildren().add(empty);
-            return box;
-        }
-
-        int shown = Math.min(completed.size(), 5);
-        for (int i = 0; i < shown; i++) {
-            StudentExamAttempt a = completed.get(i);
-            HBox row = new HBox(16);
-            row.setAlignment(Pos.CENTER_LEFT);
-            row.setPadding(new Insets(12, 16, 12, 16));
-            if (i < shown - 1) {
-                row.setStyle("-fx-border-color: rgba(51,65,85,0.3); -fx-border-width: 0 0 1 0;");
-            }
-
-            // Result dot
-            Circle dot = new Circle(6, Color.web(a.getResultColor()));
-
-            VBox info = new VBox(3);
-            Label name = new Label(a.getExamTitle());
-            name.setStyle("-fx-text-fill: #e2e8f0; -fx-font-size: 14px; -fx-font-weight: 600;");
-            Label sub = new Label(a.getSubject() != null ? a.getSubject() : "");
-            sub.setStyle("-fx-text-fill: #64748b; -fx-font-size: 12px;");
-            info.getChildren().addAll(name, sub);
-
-            Region sp = new Region();
-            HBox.setHgrow(sp, Priority.ALWAYS);
-
-            VBox scoreBox = new VBox(2);
-            scoreBox.setAlignment(Pos.CENTER_RIGHT);
-            Label pct = new Label(String.format("%.1f%%", a.getPercentage()));
-            pct.setStyle("-fx-text-fill: " + a.getResultColor() + "; -fx-font-size: 16px; -fx-font-weight: 700;");
-            Label res = new Label(a.getResult() != null ? a.getResult() : "PENDING");
-            res.setStyle("-fx-text-fill: " + a.getResultColor() + "; -fx-font-size: 11px;");
-            scoreBox.getChildren().addAll(pct, res);
-
-            row.getChildren().addAll(dot, info, sp, scoreBox);
-            box.getChildren().add(row);
-        }
-        return box;
-    }
-
-    private VBox buildUpcomingExamsPreview() {
-        VBox box = new VBox(12);
-        List<Exam> exams = examService.getAllActiveExams();
-        int shown = Math.min(exams.size(), 3);
-
-        if (exams.isEmpty()) {
-            VBox empty = glassCard();
-
-            Label lbl = new Label("No active exams available right now.");
-            lbl.setStyle("-fx-text-fill: #64748b; -fx-font-size: 14px;");
-
-            empty.getChildren().add(lbl);
-            box.getChildren().add(empty);
-            return box;
-        }
-
-
-        for (int i = 0; i < shown; i++) {
-            Exam exam = exams.get(i);
-            HBox card = new HBox(16);
-            card.setAlignment(Pos.CENTER_LEFT);
-            card.setPadding(new Insets(16, 20, 16, 20));
-            card.setStyle("""
-                -fx-background-color: rgba(30,41,59,0.55);
-                -fx-background-radius: 10;
-                -fx-border-color: rgba(51,65,85,0.45);
-                -fx-border-width: 1;
-                -fx-border-radius: 10;
-                """);
-
-            // Difficulty colour strip
-            Rectangle strip = new Rectangle(4, 40);
-            strip.setArcWidth(4);
-            strip.setArcHeight(4);
-            strip.setFill(Color.web(exam.getDifficultyColor()));
-
-            VBox info = new VBox(4);
-            Label name = new Label(exam.getExamTitle());
-            name.setStyle("-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: 700;");
-            Label meta = new Label("📚 " + exam.getSubject() + "   ⏱ " + exam.getFormattedDuration()
-                    + "   📝 " + exam.getTotalQuestions() + " Qs");
-            meta.setStyle("-fx-text-fill: #64748b; -fx-font-size: 12px;");
-            info.getChildren().addAll(name, meta);
-
-            Region sp = new Region();
-            HBox.setHgrow(sp, Priority.ALWAYS);
-
-            Button go = miniBtn("Start →", "#22d3ee");
-            go.setOnAction(e -> handleStartExam(exam));
-
-            card.getChildren().addAll(strip, info, sp, go);
-
-            // Hover
-            card.setOnMouseEntered(ev -> card.setStyle("""
-                -fx-background-color: rgba(34,211,238,0.08);
-                -fx-background-radius: 10;
-                -fx-border-color: rgba(34,211,238,0.45);
-                -fx-border-width: 1;
-                -fx-border-radius: 10;
-                """));
-            card.setOnMouseExited(ev -> card.setStyle("""
-                -fx-background-color: rgba(30,41,59,0.55);
-                -fx-background-radius: 10;
-                -fx-border-color: rgba(51,65,85,0.45);
-                -fx-border-width: 1;
-                -fx-border-radius: 10;
-                """));
-
-            box.getChildren().add(card);
-        }
-        return box;
+    private void loadProfile() {
+        ProfileSection section = new ProfileSection(examService, currentUser);
+        setContentWithAnimation(section.build());
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     //  SECTION: MY EXAMS
     // ═══════════════════════════════════════════════════════════════════════
 
-    private void loadMyExams() {
-        loadMyExamsTab("available");
-    }
+    private void loadMyExams() { loadMyExamsTab("available"); }
 
     private void loadMyExamsTab(String defaultTab) {
         VBox content = new VBox(24);
         content.setPadding(new Insets(32, 36, 32, 36));
         content.setStyle("-fx-background-color: transparent;");
 
-        Label titleLabel = sectionTitle("📚  My Exams");
+        Label titleLabel = DashboardUIFactory.sectionTitle("📚  My Exams");
 
-        // ── Tab navigation ──────────────────────────────────────────────────
-        HBox tabNav = new HBox(10);
+        Button availableTab = DashboardUIFactory.tabButton("📘  Available");
+        Button ongoingTab   = DashboardUIFactory.tabButton("📕  Ongoing");
+        Button completedTab = DashboardUIFactory.tabButton("📗  Completed");
+
+        HBox tabNav = new HBox(10, availableTab, ongoingTab, completedTab);
         tabNav.setAlignment(Pos.CENTER_LEFT);
 
-        Button availableTab  = createTabButton("📘  Available",  false);
-        Button ongoingTab    = createTabButton("📕  Ongoing",    false);
-        Button completedTab  = createTabButton("📗  Completed",  false);
-
-        tabNav.getChildren().addAll(availableTab, ongoingTab, completedTab);
-
-        // Tab content holder
         VBox tabContent = new VBox(16);
 
         Runnable showAvailable = () -> {
-            setTabActive(availableTab, ongoingTab, completedTab);
+            DashboardUIFactory.setTabActive(availableTab, ongoingTab, completedTab);
             tabContent.getChildren().setAll(createAvailableExamsTab());
         };
         Runnable showOngoing = () -> {
-            setTabActive(ongoingTab, availableTab, completedTab);
+            DashboardUIFactory.setTabActive(ongoingTab, availableTab, completedTab);
             tabContent.getChildren().setAll(createOngoingExamsTab());
         };
         Runnable showCompleted = () -> {
-            setTabActive(completedTab, availableTab, ongoingTab);
+            DashboardUIFactory.setTabActive(completedTab, availableTab, ongoingTab);
             tabContent.getChildren().setAll(createCompletedExamsTab());
         };
 
         availableTab.setOnAction(e -> showAvailable.run());
-        ongoingTab.setOnAction(e -> showOngoing.run());
+        ongoingTab.setOnAction(e   -> showOngoing.run());
         completedTab.setOnAction(e -> showCompleted.run());
 
-        // Default tab
         switch (defaultTab) {
             case "ongoing"   -> showOngoing.run();
             case "completed" -> showCompleted.run();
@@ -684,148 +453,104 @@ public class StudentDashboardController implements Initializable {
         setContentWithAnimation(content);
     }
 
-    // ── Available Exams ──────────────────────────────────────────────────────
-
     private VBox createAvailableExamsTab() {
         VBox container = new VBox(16);
 
-        // ── FIX: Filters now actually filter ─────────────────────────────────
         HBox filtersRow = new HBox(14);
         filtersRow.setAlignment(Pos.CENTER_LEFT);
-
         Label filterLbl = new Label("🔍  Filter:");
         filterLbl.setStyle("-fx-text-fill: #e2e8f0; -fx-font-size: 14px; -fx-font-weight: 600;");
 
-        ComboBox<String> subjectFilter    = styledCombo();
-        ComboBox<String> difficultyFilter = styledCombo();
-
-        // Populate subjects from DB
-        List<String> subjects = examService.getAllSubjects();
+        ComboBox<String> subjectFilter    = DashboardUIFactory.styledCombo();
+        ComboBox<String> difficultyFilter = DashboardUIFactory.styledCombo();
         subjectFilter.getItems().add("All Subjects");
-        subjectFilter.getItems().addAll(subjects);
+        subjectFilter.getItems().addAll(examService.getAllSubjects());
         subjectFilter.setValue("All Subjects");
-
         difficultyFilter.getItems().addAll("All Levels", "EASY", "MEDIUM", "HARD");
         difficultyFilter.setValue("All Levels");
-
         filtersRow.getChildren().addAll(filterLbl, subjectFilter, difficultyFilter);
 
-        // Exam grid (scrollable, 2 cols)
         FlowPane examGrid = new FlowPane();
-        examGrid.setHgap(20);
-        examGrid.setVgap(20);
+        examGrid.setHgap(20); examGrid.setVgap(20);
         examGrid.setAlignment(Pos.TOP_LEFT);
         examGrid.setColumnHalignment(HPos.LEFT);
-        // FIX: constrain FlowPane so cards wrap within the visible content area
-        // instead of stretching indefinitely to the right.
         examGrid.setMaxWidth(Double.MAX_VALUE);
-        examGrid.setPrefWrapLength(900); // fallback; binding below overrides it
-        // Bind the wrap length to the ScrollPane viewport so it always fits on screen.
-        // We use contentScrollPane which has fitToWidth=true; subtracting the
-        // horizontal padding of the outer VBox (36*2 = 72) keeps it flush.
-        contentScrollPane.widthProperty().addListener((obs, oldW, newW) ->
-                examGrid.setPrefWrapLength(newW.doubleValue() - 72));
-        // Set immediately in case the scene is already laid out
-        if (contentScrollPane.getWidth() > 0) {
+        examGrid.setPrefWrapLength(900);
+        contentScrollPane.widthProperty().addListener((o, ov, nv) ->
+                examGrid.setPrefWrapLength(nv.doubleValue() - 72));
+        if (contentScrollPane.getWidth() > 0)
             examGrid.setPrefWrapLength(contentScrollPane.getWidth() - 72);
-        }
-        // All active exams
-        List<Exam> allExams = examService.getAllActiveExams();
-        final List<Exam> examRef = new java.util.ArrayList<>(allExams);
 
-        // Render grid helper
+        List<Exam> allExams = examService.getAllActiveExams();
         Runnable renderGrid = () -> {
             examGrid.getChildren().clear();
             String selSubject    = subjectFilter.getValue();
             String selDifficulty = difficultyFilter.getValue();
-
-            List<Exam> filtered = examRef.stream()
-                    .filter(ex -> "All Subjects".equals(selSubject) || selSubject.equalsIgnoreCase(ex.getSubject()))
+            List<Exam> filtered  = allExams.stream()
+                    .filter(ex -> "All Subjects".equals(selSubject)  || selSubject.equalsIgnoreCase(ex.getSubject()))
                     .filter(ex -> "All Levels".equals(selDifficulty) || selDifficulty.equalsIgnoreCase(ex.getDifficulty()))
                     .collect(Collectors.toList());
-
             if (filtered.isEmpty()) {
                 Label none = new Label("📭  No exams match the selected filters.");
                 none.setStyle("-fx-text-fill: #64748b; -fx-font-size: 15px;");
                 examGrid.getChildren().add(none);
             } else {
-                for (Exam exam : filtered) {
-                    examGrid.getChildren().add(createExamCard(exam));
-                }
+                filtered.forEach(ex -> examGrid.getChildren().add(createExamCard(ex)));
             }
         };
-
-        // ── FIX: wire up filter change listeners ────────────────────────────
-        subjectFilter.setOnAction(e -> renderGrid.run());
+        subjectFilter.setOnAction(e    -> renderGrid.run());
         difficultyFilter.setOnAction(e -> renderGrid.run());
-        renderGrid.run(); // initial render
+        renderGrid.run();
 
         container.getChildren().addAll(filtersRow, examGrid);
         return container;
     }
 
-    // ── Ongoing Exams ────────────────────────────────────────────────────────
-
     private VBox createOngoingExamsTab() {
         VBox container = new VBox(14);
         List<StudentExamAttempt> ongoing = examService.getOngoingExams(currentUser.getId());
-
         if (ongoing.isEmpty()) {
             Label none = new Label("📭  No ongoing exams. Start a new exam!");
             none.setStyle("-fx-text-fill: #64748b; -fx-font-size: 15px;");
             container.getChildren().add(none);
         } else {
-            for (StudentExamAttempt attempt : ongoing) {
-                container.getChildren().add(createOngoingExamCard(attempt));
-            }
+            ongoing.forEach(a -> container.getChildren().add(createOngoingExamCard(a)));
         }
         return container;
     }
 
-    // ── Completed Exams ──────────────────────────────────────────────────────
-
     private VBox createCompletedExamsTab() {
         VBox container = new VBox(14);
         List<StudentExamAttempt> completed = examService.getCompletedExams(currentUser.getId());
-
         if (completed.isEmpty()) {
             Label none = new Label("📭  No completed exams yet.");
             none.setStyle("-fx-text-fill: #64748b; -fx-font-size: 15px;");
             container.getChildren().add(none);
         } else {
-            for (StudentExamAttempt attempt : completed) {
-                container.getChildren().add(createCompletedExamCard(attempt));
-            }
+            completed.forEach(a -> container.getChildren().add(createCompletedExamCard(a)));
         }
         return container;
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //  CARD BUILDERS
+    //  EXAM CARDS
     // ═══════════════════════════════════════════════════════════════════════
 
-    /** Available exam card (2-col grid) */
     private VBox createExamCard(Exam exam) {
         VBox card = new VBox(14);
-        card.setPrefWidth(440);
-        card.setMaxWidth(520);   // allow slight growth but never blow out the row
-        card.setMinWidth(300);   // shrink gracefully on small viewports
+        card.setPrefWidth(440); card.setMaxWidth(520); card.setMinWidth(300);
         card.setPadding(new Insets(22));
-        String baseStyle = """
-            -fx-background-color: rgba(30,41,59,0.72);
-            -fx-background-radius: 14;
+        String base = """
+            -fx-background-color: rgba(15,22,40,0.80);
+            -fx-background-radius: 16;
             -fx-border-color: rgba(51,65,85,0.5);
-            -fx-border-width: 1;
-            -fx-border-radius: 14;
-            -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.35),12,0.3,0,3);
+            -fx-border-width: 1; -fx-border-radius: 16;
+            -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.5),16,0.3,0,4);
             """;
-        card.setStyle(baseStyle);
+        card.setStyle(base);
 
-        // Colour-coded top bar matching difficulty
         Rectangle topBar = new Rectangle();
-        topBar.setHeight(3);
-        topBar.setArcWidth(6);
-        topBar.setArcHeight(6);
+        topBar.setHeight(3); topBar.setArcWidth(6); topBar.setArcHeight(6);
         topBar.setFill(Color.web(exam.getDifficultyColor()));
         topBar.widthProperty().bind(card.widthProperty().subtract(44));
 
@@ -836,97 +561,66 @@ public class StudentDashboardController implements Initializable {
         HBox badges = new HBox(8);
         badges.setAlignment(Pos.CENTER_LEFT);
         badges.getChildren().addAll(
-                badge("📚 " + exam.getSubject(), "rgba(34,211,238,0.18)", "#22d3ee"),
-                badge(exam.getDifficultyBadge() + " " + exam.getDifficulty(),
-                        "rgba(255,255,255,0.07)", exam.getDifficultyColor())
+                DashboardUIFactory.badge("📚 " + exam.getSubject(), "rgba(34,211,238,0.15)", "#22d3ee"),
+                DashboardUIFactory.badge(exam.getDifficultyBadge() + " " + exam.getDifficulty(),
+                        "rgba(255,255,255,0.06)", exam.getDifficultyColor())
         );
 
         Label desc = new Label(exam.getDescription() != null ? exam.getDescription() : "");
         desc.setStyle("-fx-text-fill: #64748b; -fx-font-size: 13px;");
-        desc.setWrapText(true);
-        desc.setMaxHeight(36);
+        desc.setWrapText(true); desc.setMaxHeight(36);
 
-        // Info row
         HBox infoRow = new HBox(22);
         infoRow.setAlignment(Pos.CENTER_LEFT);
         infoRow.getChildren().addAll(
-                infoChip("📝", exam.getTotalQuestions() + " Qs"),
-                infoChip("⏱", exam.getFormattedDuration()),
-                infoChip("🏆", exam.getTotalMarks() + " marks"),
-                infoChip("✅", exam.getPassingMarks() + " to pass")
+                DashboardUIFactory.infoChip("📝", exam.getTotalQuestions() + " Qs"),
+                DashboardUIFactory.infoChip("⏱", exam.getFormattedDuration()),
+                DashboardUIFactory.infoChip("🏆", exam.getTotalMarks() + " marks"),
+                DashboardUIFactory.infoChip("✅", exam.getPassingMarks() + " to pass")
         );
 
         Button startBtn = new Button("🚀  Start Exam");
         startBtn.setMaxWidth(Double.MAX_VALUE);
-        startBtn.setStyle("""
+        String btnBase = """
             -fx-background-color: linear-gradient(90deg,#22d3ee,#06b6d4);
-            -fx-text-fill: #0f172a;
-            -fx-font-size: 14px;
-            -fx-font-weight: 700;
-            -fx-padding: 11 0;
-            -fx-background-radius: 8;
-            -fx-cursor: hand;
-            -fx-effect: dropshadow(gaussian,rgba(34,211,238,0.4),12,0.4,0,2);
-            """);
+            -fx-text-fill: #0f172a; -fx-font-size: 14px; -fx-font-weight: 700;
+            -fx-padding: 12 0; -fx-background-radius: 9; -fx-cursor: hand;
+            -fx-effect: dropshadow(gaussian,rgba(34,211,238,0.45),14,0.4,0,2);
+            """;
+        startBtn.setStyle(btnBase);
         startBtn.setOnAction(e -> handleStartExam(exam));
-
-        startBtn.setOnMouseEntered(ev -> startBtn.setStyle("""
-            -fx-background-color: linear-gradient(90deg,#06b6d4,#0891b2);
-            -fx-text-fill: #0f172a;
-            -fx-font-size: 14px;
-            -fx-font-weight: 700;
-            -fx-padding: 11 0;
-            -fx-background-radius: 8;
-            -fx-cursor: hand;
-            -fx-effect: dropshadow(gaussian,rgba(34,211,238,0.6),18,0.5,0,3);
-            """));
-        startBtn.setOnMouseExited(ev -> startBtn.setStyle("""
-            -fx-background-color: linear-gradient(90deg,#22d3ee,#06b6d4);
-            -fx-text-fill: #0f172a;
-            -fx-font-size: 14px;
-            -fx-font-weight: 700;
-            -fx-padding: 11 0;
-            -fx-background-radius: 8;
-            -fx-cursor: hand;
-            -fx-effect: dropshadow(gaussian,rgba(34,211,238,0.4),12,0.4,0,2);
-            """));
+        startBtn.setOnMouseEntered(ev -> startBtn.setStyle(btnBase
+                .replace("linear-gradient(90deg,#22d3ee,#06b6d4)",
+                        "linear-gradient(90deg,#06b6d4,#0891b2)")));
+        startBtn.setOnMouseExited(ev -> startBtn.setStyle(btnBase));
 
         card.getChildren().addAll(topBar, title, badges, desc, infoRow, startBtn);
-
-        // Hover - clean swap, no += bug
-        card.setOnMouseEntered(e -> card.setStyle("""
+        card.setOnMouseEntered(ev -> card.setStyle("""
             -fx-background-color: rgba(34,211,238,0.07);
-            -fx-background-radius: 14;
+            -fx-background-radius: 16;
             -fx-border-color: rgba(34,211,238,0.55);
-            -fx-border-width: 1;
-            -fx-border-radius: 14;
-            -fx-effect: dropshadow(gaussian,rgba(34,211,238,0.25),18,0.4,0,4);
+            -fx-border-width: 1; -fx-border-radius: 16;
+            -fx-effect: dropshadow(gaussian,rgba(34,211,238,0.25),20,0.4,0,4);
             """));
-        card.setOnMouseExited(e -> card.setStyle(baseStyle));
-
+        card.setOnMouseExited(ev -> card.setStyle(base));
         return card;
     }
 
-    /** Ongoing exam card with working Resume button */
     private VBox createOngoingExamCard(StudentExamAttempt attempt) {
         VBox card = new VBox(14);
         card.setPadding(new Insets(22));
-        String baseStyle = """
-            -fx-background-color: rgba(30,41,59,0.72);
-            -fx-background-radius: 14;
-            -fx-border-color: rgba(251,191,36,0.5);
-            -fx-border-width: 2;
-            -fx-border-radius: 14;
-            -fx-effect: dropshadow(gaussian,rgba(251,191,36,0.15),12,0.3,0,3);
+        String base = """
+            -fx-background-color: rgba(15,22,40,0.80);
+            -fx-background-radius: 16;
+            -fx-border-color: rgba(245,158,11,0.5);
+            -fx-border-width: 2; -fx-border-radius: 16;
+            -fx-effect: dropshadow(gaussian,rgba(245,158,11,0.15),14,0.3,0,3);
             """;
-        card.setStyle(baseStyle);
+        card.setStyle(base);
 
         HBox header = new HBox(14);
         header.setAlignment(Pos.CENTER_LEFT);
-
-        Label pulse = new Label("⏳");
-        pulse.setStyle("-fx-font-size: 24px;");
-
+        Label pulse = new Label("⏳"); pulse.setStyle("-fx-font-size: 24px;");
         VBox titleBox = new VBox(4);
         Label title = new Label(attempt.getExamTitle());
         title.setStyle("-fx-text-fill: white; -fx-font-size: 17px; -fx-font-weight: 700;");
@@ -939,82 +633,51 @@ public class StudentDashboardController implements Initializable {
 
         Label statusBadge = new Label("● ONGOING");
         statusBadge.setStyle("""
-            -fx-background-color: rgba(245,158,11,0.2);
-            -fx-text-fill: #f59e0b;
-            -fx-padding: 5 14;
-            -fx-background-radius: 20;
-            -fx-font-size: 12px;
-            -fx-font-weight: 700;
+            -fx-background-color: rgba(245,158,11,0.18); -fx-text-fill: #f59e0b;
+            -fx-padding: 5 14; -fx-background-radius: 20;
+            -fx-font-size: 12px; -fx-font-weight: 700;
             """);
-
         header.getChildren().addAll(pulse, titleBox, sp, statusBadge);
 
-        // Info
-        // Show how many questions have been answered so far
-        int answeredSoFar = answerService.getAnsweredCount(attempt.getAttemptId());
+        int answered = answerService.getAnsweredCount(attempt.getAttemptId());
         HBox info = new HBox(24);
         info.setAlignment(Pos.CENTER_LEFT);
         info.getChildren().addAll(
-                infoChip("📝", answeredSoFar + "/" + attempt.getTotalQuestions() + " answered"),
-                infoChip("🏆", attempt.getTotalMarks() + " marks")
+                DashboardUIFactory.infoChip("📝", answered + "/" + attempt.getTotalQuestions() + " answered"),
+                DashboardUIFactory.infoChip("🏆", attempt.getTotalMarks() + " marks")
         );
-        // ── FIX: Resume button with proper session setup ─────────────────────
-        Button resumeBtn = new Button("▶️  Resume Exam");
-        resumeBtn.setStyle("""
-            -fx-background-color: linear-gradient(90deg,#f59e0b,#d97706);
-            -fx-text-fill: #0f172a;
-            -fx-font-size: 14px;
-            -fx-font-weight: 700;
-            -fx-padding: 11 28;
-            -fx-background-radius: 8;
-            -fx-cursor: hand;
-            -fx-effect: dropshadow(gaussian,rgba(245,158,11,0.4),12,0.4,0,2);
-            """);
-        resumeBtn.setOnAction(e -> handleResumeExam(attempt));
 
-        resumeBtn.setOnMouseEntered(ev -> resumeBtn.setStyle("""
-            -fx-background-color: linear-gradient(90deg,#d97706,#b45309);
-            -fx-text-fill: #0f172a;
-            -fx-font-size: 14px;
-            -fx-font-weight: 700;
-            -fx-padding: 11 28;
-            -fx-background-radius: 8;
-            -fx-cursor: hand;
-            -fx-effect: dropshadow(gaussian,rgba(245,158,11,0.6),18,0.5,0,3);
-            """));
-        resumeBtn.setOnMouseExited(ev -> resumeBtn.setStyle("""
+        Button resumeBtn = new Button("▶️  Resume Exam");
+        String rbBase = """
             -fx-background-color: linear-gradient(90deg,#f59e0b,#d97706);
-            -fx-text-fill: #0f172a;
-            -fx-font-size: 14px;
-            -fx-font-weight: 700;
-            -fx-padding: 11 28;
-            -fx-background-radius: 8;
-            -fx-cursor: hand;
+            -fx-text-fill: #0f172a; -fx-font-size: 14px; -fx-font-weight: 700;
+            -fx-padding: 11 28; -fx-background-radius: 9; -fx-cursor: hand;
             -fx-effect: dropshadow(gaussian,rgba(245,158,11,0.4),12,0.4,0,2);
-            """));
+            """;
+        resumeBtn.setStyle(rbBase);
+        resumeBtn.setOnAction(e -> handleResumeExam(attempt));
+        resumeBtn.setOnMouseEntered(ev -> resumeBtn.setStyle(rbBase
+                .replace("linear-gradient(90deg,#f59e0b,#d97706)",
+                        "linear-gradient(90deg,#d97706,#b45309)")));
+        resumeBtn.setOnMouseExited(ev -> resumeBtn.setStyle(rbBase));
 
         card.getChildren().addAll(header, info, resumeBtn);
         return card;
     }
 
-    /** Completed exam card with View Details working */
     private VBox createCompletedExamCard(StudentExamAttempt attempt) {
         VBox card = new VBox(14);
         card.setPadding(new Insets(22));
-        boolean passed = "PASSED".equalsIgnoreCase(attempt.getResult());
-        String borderColor = passed ? "rgba(34,197,94,0.4)" : "rgba(239,68,68,0.35)";
-        String baseStyle = String.format("""
-            -fx-background-color: rgba(30,41,59,0.72);
-            -fx-background-radius: 14;
-            -fx-border-color: %s;
-            -fx-border-width: 1;
-            -fx-border-radius: 14;
-            """, borderColor);
-        card.setStyle(baseStyle);
+        boolean passed    = "PASSED".equalsIgnoreCase(attempt.getResult());
+        String borderColor= passed ? "rgba(34,197,94,0.4)" : "rgba(239,68,68,0.35)";
+        String base = "-fx-background-color: rgba(15,22,40,0.80);"
+                + " -fx-background-radius: 16;"
+                + " -fx-border-color: " + borderColor + ";"
+                + " -fx-border-width: 1; -fx-border-radius: 16;";
+        card.setStyle(base);
 
         HBox header = new HBox(16);
         header.setAlignment(Pos.CENTER_LEFT);
-
         VBox titleBox = new VBox(4);
         Label title = new Label(attempt.getExamTitle());
         title.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: 700;");
@@ -1028,43 +691,40 @@ public class StudentDashboardController implements Initializable {
         VBox scoreBox = new VBox(3);
         scoreBox.setAlignment(Pos.CENTER_RIGHT);
         Label pct = new Label(String.format("%.1f%%", attempt.getPercentage()));
-        pct.setStyle("-fx-text-fill: " + attempt.getResultColor() + "; -fx-font-size: 26px; -fx-font-weight: 800;");
+        pct.setStyle("-fx-text-fill: " + attempt.getResultColor()
+                + "; -fx-font-size: 26px; -fx-font-weight: 800;");
         Label res = new Label(passed ? "✅ PASSED" : "❌ FAILED");
-        res.setStyle("-fx-text-fill: " + attempt.getResultColor() + "; -fx-font-size: 13px; -fx-font-weight: 600;");
+        res.setStyle("-fx-text-fill: " + attempt.getResultColor()
+                + "; -fx-font-size: 13px; -fx-font-weight: 600;");
         scoreBox.getChildren().addAll(pct, res);
-
         header.getChildren().addAll(titleBox, sp, scoreBox);
 
         HBox stats = new HBox(28);
         stats.setAlignment(Pos.CENTER_LEFT);
         stats.getChildren().addAll(
-                infoChip("🏆", attempt.getObtainedMarks() + "/" + attempt.getTotalMarks()),
-                infoChip("🎯", String.format("%.1f%% accuracy", attempt.getAccuracy())),
-                infoChip("⏱", attempt.getTimeSpentMinutes() + " min")
+                DashboardUIFactory.infoChip("🏆", attempt.getObtainedMarks() + "/" + attempt.getTotalMarks()),
+                DashboardUIFactory.infoChip("🎯", String.format("%.1f%% accuracy", attempt.getAccuracy())),
+                DashboardUIFactory.infoChip("⏱", attempt.getTimeSpentMinutes() + " min")
         );
 
-        // ── View Details button wired up properly ────────────────────────────
         Button viewBtn = new Button("📊  View Details");
         viewBtn.setStyle("""
-            -fx-background-color: rgba(34,211,238,0.12);
-            -fx-text-fill: #22d3ee;
-            -fx-font-size: 13px;
-            -fx-font-weight: 600;
-            -fx-padding: 9 18;
-            -fx-background-radius: 7;
-            -fx-cursor: hand;
-            -fx-border-color: rgba(34,211,238,0.45);
-            -fx-border-width: 1;
-            -fx-border-radius: 7;
+            -fx-background-color: rgba(34,211,238,0.10); -fx-text-fill: #22d3ee;
+            -fx-font-size: 13px; -fx-font-weight: 600; -fx-padding: 9 18;
+            -fx-background-radius: 7; -fx-cursor: hand;
+            -fx-border-color: rgba(34,211,238,0.4); -fx-border-width: 1; -fx-border-radius: 7;
             """);
-        viewBtn.setOnAction(e -> showAttemptDetails(attempt));
+        viewBtn.setOnAction(e -> {
+            SessionManager.getInstance().setAttribute("attemptId", (Integer) attempt.getAttemptId());
+            SceneManager.switchScene("/com/examverse/fxml/exam/exam-result.fxml");
+        });
 
         card.getChildren().addAll(header, stats, viewBtn);
         return card;
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //  SECTION: RESULTS & ANALYTICS  (was "Coming Soon")
+    //  SECTION: RESULTS & ANALYTICS
     // ═══════════════════════════════════════════════════════════════════════
 
     private void loadResultsAnalytics() {
@@ -1072,48 +732,39 @@ public class StudentDashboardController implements Initializable {
         content.setPadding(new Insets(32, 36, 32, 36));
         content.setStyle("-fx-background-color: transparent;");
 
-        Label title = sectionTitle("📊  Results & Analytics");
-
-        // ── Summary cards ───────────────────────────────────────────────────
-        studentStats = examService.getStudentStats(currentUser.getId());
+        Label title = DashboardUIFactory.sectionTitle("📊  Results & Analytics");
+        var stats   = examService.getStudentStats(currentUser.getId());
 
         HBox statsRow = new HBox(20);
         statsRow.getChildren().addAll(
-                createStatCard("📝", "Total Attempted", String.valueOf(studentStats.getTotalExamsAttempted()), "#22d3ee", "#0ea5e9"),
-                createStatCard("✅", "Passed",          String.valueOf(studentStats.getTotalExamsPassed()), "#22c55e", "#16a34a"),
-                createStatCard("❌", "Failed",          String.valueOf(studentStats.getTotalExamsFailed()), "#ef4444", "#dc2626"),
-                createStatCard("📈", "Pass Rate",       String.format("%.1f%%", studentStats.getPassRate()), "#a78bfa", "#7c3aed")
+                DashboardUIFactory.statCard("📝", "Total Attempted", String.valueOf(stats.getTotalExamsAttempted()), "#22d3ee", "#0ea5e9"),
+                DashboardUIFactory.statCard("✅", "Passed",          String.valueOf(stats.getTotalExamsPassed()),   "#22c55e", "#16a34a"),
+                DashboardUIFactory.statCard("❌", "Failed",          String.valueOf(stats.getTotalExamsFailed()),   "#ef4444", "#dc2626"),
+                DashboardUIFactory.statCard("📈", "Pass Rate",       String.format("%.1f%%", stats.getPassRate()), "#a78bfa", "#7c3aed")
         );
 
-        // ── Performance bar ─────────────────────────────────────────────────
-        Label perfTitle = sectionSubtitle("📈  Performance Overview");
-        VBox perfCard = glassCard();
+        Label perfTitle = DashboardUIFactory.sectionSubtitle("📈  Performance Overview");
+        VBox perfCard   = DashboardUIFactory.glassCard();
+        addAnalyticsRow(perfCard, "Average Score",    stats.getAverageScore(),    "#22d3ee");
+        addAnalyticsRow(perfCard, "Overall Accuracy", stats.getOverallAccuracy(), "#10b981");
+        addAnalyticsRow(perfCard, "Pass Rate",        stats.getPassRate(),        "#a78bfa");
 
-        addAnalyticsRow(perfCard, "Average Score",    studentStats.getAverageScore(), "#22d3ee");
-        addAnalyticsRow(perfCard, "Overall Accuracy", studentStats.getOverallAccuracy(), "#10b981");
-        addAnalyticsRow(perfCard, "Pass Rate",        studentStats.getPassRate(), "#a78bfa");
-
-        // ── Recent results table ─────────────────────────────────────────────
-        Label tableTitle = sectionSubtitle("📋  Recent Exam Results");
-
+        Label tableTitle = DashboardUIFactory.sectionSubtitle("📋  Recent Exam Results");
         VBox tableBox = new VBox(0);
         tableBox.setStyle("""
-            -fx-background-color: rgba(15,23,42,0.7);
+            -fx-background-color: rgba(10,17,32,0.8);
             -fx-background-radius: 12;
             -fx-border-color: rgba(51,65,85,0.4);
-            -fx-border-width: 1;
-            -fx-border-radius: 12;
+            -fx-border-width: 1; -fx-border-radius: 12;
             """);
 
-        // Table header
         HBox tableHeader = new HBox();
         tableHeader.setPadding(new Insets(12, 20, 12, 20));
         tableHeader.setStyle("-fx-background-color: rgba(30,41,59,0.7); -fx-background-radius: 12 12 0 0;");
         for (String col : new String[]{"Exam", "Subject", "Score", "Accuracy", "Result"}) {
             Label h = new Label(col);
-            h.setStyle("-fx-text-fill: #64748b; -fx-font-size: 12px; -fx-font-weight: 700;");
-            HBox.setHgrow(h, Priority.ALWAYS);
-            h.setMaxWidth(Double.MAX_VALUE);
+            h.setStyle("-fx-text-fill: #475569; -fx-font-size: 12px; -fx-font-weight: 700;");
+            HBox.setHgrow(h, Priority.ALWAYS); h.setMaxWidth(Double.MAX_VALUE);
             tableHeader.getChildren().add(h);
         }
         tableBox.getChildren().add(tableHeader);
@@ -1129,10 +780,7 @@ public class StudentDashboardController implements Initializable {
                 HBox row = new HBox();
                 row.setPadding(new Insets(13, 20, 13, 20));
                 row.setAlignment(Pos.CENTER_LEFT);
-                if (i % 2 == 0) {
-                    row.setStyle("-fx-background-color: rgba(30,41,59,0.3);");
-                }
-
+                if (i % 2 == 0) row.setStyle("-fx-background-color: rgba(30,41,59,0.25);");
                 Label[] cells = {
                         new Label(a.getExamTitle()),
                         new Label(a.getSubject() != null ? a.getSubject() : "-"),
@@ -1140,54 +788,44 @@ public class StudentDashboardController implements Initializable {
                         new Label(String.format("%.1f%%", a.getAccuracy())),
                         new Label(a.getResult() != null ? a.getResult() : "PENDING")
                 };
-
                 for (int j = 0; j < cells.length; j++) {
                     Label c = cells[j];
                     c.setStyle("-fx-text-fill: " + (j == 4 ? a.getResultColor() : "#cbd5e1")
                             + "; -fx-font-size: 13px;" + (j == 4 ? " -fx-font-weight: 700;" : ""));
-                    HBox.setHgrow(c, Priority.ALWAYS);
-                    c.setMaxWidth(Double.MAX_VALUE);
+                    HBox.setHgrow(c, Priority.ALWAYS); c.setMaxWidth(Double.MAX_VALUE);
                     row.getChildren().add(c);
                 }
                 tableBox.getChildren().add(row);
             }
         }
 
-        content.getChildren().addAll(title, statsRow, divider(), perfTitle, perfCard, divider(), tableTitle, tableBox);
+        content.getChildren().addAll(title, statsRow,
+                DashboardUIFactory.divider(), perfTitle, perfCard,
+                DashboardUIFactory.divider(), tableTitle, tableBox);
         setContentWithAnimation(content);
     }
 
     private void addAnalyticsRow(VBox parent, String label, double value, String color) {
         VBox row = new VBox(6);
         row.setPadding(new Insets(8, 0, 8, 0));
-
         HBox labelRow = new HBox();
         labelRow.setAlignment(Pos.CENTER_LEFT);
         Label lbl = new Label(label);
         lbl.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 13px;");
-        Region sp = new Region();
-        HBox.setHgrow(sp, Priority.ALWAYS);
+        Region sp = new Region(); HBox.setHgrow(sp, Priority.ALWAYS);
         Label valLbl = new Label(String.format("%.1f%%", value));
         valLbl.setStyle("-fx-text-fill: " + color + "; -fx-font-size: 13px; -fx-font-weight: 700;");
         labelRow.getChildren().addAll(lbl, sp, valLbl);
-
         ProgressBar pb = new ProgressBar(Math.min(value / 100.0, 1.0));
-        pb.setMaxWidth(Double.MAX_VALUE);
-        pb.setPrefHeight(10);
-        pb.setStyle(
-                "-fx-accent: " + color + "; -fx-background-color: rgba(51,65,85,0.4); -fx-background-radius: 5;"
-        );
-
+        pb.setMaxWidth(Double.MAX_VALUE); pb.setPrefHeight(10);
+        pb.setStyle("-fx-accent: " + color
+                + "; -fx-background-color: rgba(51,65,85,0.4); -fx-background-radius: 5;");
         row.getChildren().addAll(labelRow, pb);
         parent.getChildren().add(row);
-
-        Separator sep = new Separator();
-        sep.setStyle("-fx-background-color: rgba(51,65,85,0.25);");
-        if (parent.getChildren().size() < 6) parent.getChildren().add(sep); // don't add after last
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //  SECTION: PRACTICE MODE  (was "Coming Soon")
+    //  SECTION: PRACTICE MODE
     // ═══════════════════════════════════════════════════════════════════════
 
     private void loadPracticeMode() {
@@ -1195,69 +833,61 @@ public class StudentDashboardController implements Initializable {
         content.setPadding(new Insets(32, 36, 32, 36));
         content.setStyle("-fx-background-color: transparent;");
 
-        Label title = sectionTitle("💪  Practice Mode");
-        Label subtitle = new Label("Choose a subject to start an un-timed practice session. Answers are shown immediately.");
+        Label title    = DashboardUIFactory.sectionTitle("💪  Practice Mode");
+        Label subtitle = new Label("Choose a subject to start an un-timed practice session.");
         subtitle.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 14px;");
         subtitle.setWrapText(true);
 
-        Label selectLbl = sectionSubtitle("📚  Select Subject");
+        Label selectLbl = DashboardUIFactory.sectionSubtitle("📚  Select Subject");
 
         FlowPane subjectGrid = new FlowPane();
-        subjectGrid.setHgap(16);
-        subjectGrid.setVgap(16);
+        subjectGrid.setHgap(16); subjectGrid.setVgap(16);
 
         List<String> subjects = examService.getAllSubjects();
-        String[] subjectIcons = {"⚡","🗄️","🌐","💻","🔬","🧮","📐","🔧"};
+        String[] icons = {"⚡","🗄️","🌐","💻","🔬","🧮","📐","🔧"};
+        String[] colors = {"#22d3ee","#a78bfa","#34d399","#f59e0b","#f43f5e","#60a5fa","#fb7185","#e879f9"};
 
         if (subjects.isEmpty()) {
-            Label none = new Label("No subjects available. Exams need to be created first.");
+            Label none = new Label("No subjects available.");
             none.setStyle("-fx-text-fill: #64748b; -fx-font-size: 14px;");
             subjectGrid.getChildren().add(none);
         } else {
             for (int i = 0; i < subjects.size(); i++) {
-                String s = subjects.get(i);
-                String icon = subjectIcons[i % subjectIcons.length];
+                String s    = subjects.get(i);
+                String icon = icons[i % icons.length];
+                String col  = colors[i % colors.length];
 
                 VBox card = new VBox(10);
                 card.setAlignment(Pos.CENTER);
-                card.setPrefSize(180, 110);
+                card.setPrefSize(180, 115);
                 card.setPadding(new Insets(16));
-                String cs = """
-                    -fx-background-color: rgba(30,41,59,0.7);
-                    -fx-background-radius: 12;
-                    -fx-border-color: rgba(51,65,85,0.5);
-                    -fx-border-width: 1;
-                    -fx-border-radius: 12;
-                    -fx-cursor: hand;
-                    """;
+                String cs = "-fx-background-color: rgba(15,22,40,0.8);"
+                        + " -fx-background-radius: 14;"
+                        + " -fx-border-color: rgba(51,65,85,0.5);"
+                        + " -fx-border-width: 1; -fx-border-radius: 14; -fx-cursor: hand;";
                 card.setStyle(cs);
 
-                Label ic = new Label(icon);
-                ic.setStyle("-fx-font-size: 28px;");
+                Label ic = new Label(icon); ic.setStyle("-fx-font-size: 28px;");
                 Label sl = new Label(s);
-                sl.setStyle("-fx-text-fill: #e2e8f0; -fx-font-size: 14px; -fx-font-weight: 600;");
-                sl.setWrapText(true);
-                sl.setAlignment(Pos.CENTER);
+                sl.setStyle("-fx-text-fill: #e2e8f0; -fx-font-size: 13px; -fx-font-weight: 600;");
+                sl.setWrapText(true); sl.setAlignment(Pos.CENTER);
                 card.getChildren().addAll(ic, sl);
 
-                card.setOnMouseEntered(e -> card.setStyle("""
-                    -fx-background-color: rgba(167,139,250,0.12);
-                    -fx-background-radius: 12;
-                    -fx-border-color: rgba(167,139,250,0.6);
-                    -fx-border-width: 1;
-                    -fx-border-radius: 12;
-                    -fx-cursor: hand;
-                    -fx-effect: dropshadow(gaussian,rgba(167,139,250,0.3),14,0.4,0,3);
-                    """));
-                card.setOnMouseExited(e -> card.setStyle(cs));
-                card.setOnMouseClicked(e -> startPracticeBySubject(s));
+                String hoverCs = "-fx-background-color: " + col + "1a;"
+                        + " -fx-background-radius: 14;"
+                        + " -fx-border-color: " + col + "99;"
+                        + " -fx-border-width: 1; -fx-border-radius: 14; -fx-cursor: hand;"
+                        + " -fx-effect: dropshadow(gaussian," + col + "44,14,0.4,0,3);";
 
+                card.setOnMouseEntered(e -> card.setStyle(hoverCs));
+                card.setOnMouseExited(e  -> card.setStyle(cs));
+                card.setOnMouseClicked(e -> startPracticeBySubject(s));
                 subjectGrid.getChildren().add(card);
             }
         }
 
-        Label howTitle = sectionSubtitle("ℹ️  How Practice Mode Works");
-        VBox howBox = glassCard();
+        Label howTitle = DashboardUIFactory.sectionSubtitle("ℹ️  How Practice Mode Works");
+        VBox howBox = DashboardUIFactory.glassCard();
         for (String line : new String[]{
                 "• 📖  Questions are shuffled each session",
                 "• ⏱  No time limit — take your time to think",
@@ -1271,32 +901,27 @@ public class StudentDashboardController implements Initializable {
             howBox.getChildren().add(l);
         }
 
-        content.getChildren().addAll(title, subtitle, divider(), selectLbl, subjectGrid, divider(), howTitle, howBox);
+        content.getChildren().addAll(title, subtitle,
+                DashboardUIFactory.divider(), selectLbl, subjectGrid,
+                DashboardUIFactory.divider(), howTitle, howBox);
         setContentWithAnimation(content);
     }
 
     private void startPracticeBySubject(String subject) {
-        // Find an exam matching the subject
         List<Exam> exams = examService.getExamsBySubject(subject);
         if (exams.isEmpty()) {
             showInfoAlert("No Exams Found",
-                    "There are no available exams for subject: " + subject + ".\nAsk your admin to add questions.");
+                    "No available exams for subject: " + subject + ".");
             return;
         }
-
         Exam exam = exams.get(0);
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Start Practice");
-        confirm.setHeaderText("Practice: " + exam.getExamTitle());
-        confirm.setContentText(
-                "Subject: " + subject + "\n" +
-                        "Questions: " + exam.getTotalQuestions() + "\n\n" +
-                        "This is practice mode — no marks will be recorded.\nReady?"
-        );
+        Alert confirm = styledAlert(Alert.AlertType.CONFIRMATION,
+                "Start Practice",
+                "Practice: " + exam.getExamTitle(),
+                "Subject: " + subject + "\nQuestions: " + exam.getTotalQuestions()
+                        + "\n\nThis is practice mode — no marks will be recorded.\nReady?");
         confirm.showAndWait().ifPresent(r -> {
             if (r == ButtonType.OK) {
-                // Store in session — ExamController uses these
-                // Practice mode flag so ExamController can skip saving
                 SessionManager.getInstance().setAttribute("practiceMode", true);
                 int attemptId = examService.startExamAttempt(currentUser.getId(), exam.getExamId());
                 if (attemptId > 0) {
@@ -1304,689 +929,279 @@ public class StudentDashboardController implements Initializable {
                     SessionManager.getInstance().setAttribute("examId", exam.getExamId());
                     SceneManager.switchScene("/com/examverse/fxml/exam/exam-taking.fxml");
                 } else {
-                    showErrorAlert("Failed to start practice session. Please try again.");
+                    showErrorAlert("Failed to start practice session.");
                 }
             }
         });
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════
-    //  SECTION: PROFILE  (was "Coming Soon")
-    // ═══════════════════════════════════════════════════════════════════════
-
-    private void loadProfile() {
-        VBox content = new VBox(28);
-        content.setPadding(new Insets(32, 36, 32, 36));
-        content.setStyle("-fx-background-color: transparent;");
-
-        Label titleLabel = sectionTitle("👤  My Profile");
-
-        // ── Avatar card ──────────────────────────────────────────────────────
-        VBox profileCard = glassCard();
-        profileCard.setAlignment(Pos.CENTER);
-        profileCard.setSpacing(16);
-        profileCard.setPadding(new Insets(36, 40, 36, 40));
-
-        // Big avatar circle
-        StackPane avatarCircle = new StackPane();
-        Circle bg = new Circle(52);
-        bg.setFill(Color.web("#0e7490"));
-        bg.setStroke(Color.web("#22d3ee"));
-        bg.setStrokeWidth(3);
-
-        String initials = getInitials(currentUser.getFullName());
-        Label initLbl = new Label(initials);
-        initLbl.setStyle("-fx-text-fill: white; -fx-font-size: 32px; -fx-font-weight: 800;");
-        avatarCircle.getChildren().addAll(bg, initLbl);
-
-        Label nameLabel = new Label(currentUser.getFullName());
-        nameLabel.setStyle("-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: 700;");
-
-        Label roleLabel = new Label("🎓  Student");
-        roleLabel.setStyle("""
-            -fx-background-color: rgba(34,211,238,0.18);
-            -fx-text-fill: #22d3ee;
-            -fx-padding: 5 16;
-            -fx-background-radius: 20;
-            -fx-font-size: 13px;
-            -fx-font-weight: 600;
-            """);
-
-        profileCard.getChildren().addAll(avatarCircle, nameLabel, roleLabel);
-
-        // ── Info grid ────────────────────────────────────────────────────────
-        VBox infoCard = glassCard();
-        infoCard.setSpacing(0);
-
-        addProfileRow(infoCard, "👤  Full Name",  currentUser.getFullName(),   true);
-        addProfileRow(infoCard, "📧  Email",      currentUser.getEmail(),       true);
-        addProfileRow(infoCard, "🔑  Username",   currentUser.getUsername(),    true);
-        addProfileRow(infoCard, "🎭  Role",       currentUser.getUserType(),    true);
-        addProfileRow(infoCard, "✅  Account Status",
-                currentUser.isActive() ? "Active" : "Inactive", false);
-
-        // ── Stats summary ────────────────────────────────────────────────────
-        Label statsTitle = sectionSubtitle("📊  My Statistics");
-        studentStats = examService.getStudentStats(currentUser.getId());
-
-        HBox statsRow = new HBox(20);
-        statsRow.getChildren().addAll(
-                createStatCard("📝", "Attempted",  String.valueOf(studentStats.getTotalExamsAttempted()), "#22d3ee", "#0ea5e9"),
-                createStatCard("✅", "Passed",     String.valueOf(studentStats.getTotalExamsPassed()), "#22c55e", "#16a34a"),
-                createStatCard("📈", "Avg Score",  studentStats.getFormattedAverageScore(), "#a78bfa", "#7c3aed"),
-                createStatCard("⏱", "Time Spent",
-                        studentStats.getTotalTimeSpentMinutes() + " min", "#f59e0b", "#d97706")
-        );
-
-        // ── Change password placeholder ──────────────────────────────────────
-        Label secTitle = sectionSubtitle("🔒  Security");
-        VBox secCard = glassCard();
-
-        Button changePwdBtn = new Button("🔑  Change Password");
-        changePwdBtn.setStyle("""
-            -fx-background-color: rgba(34,211,238,0.12);
-            -fx-text-fill: #22d3ee;
-            -fx-font-size: 14px;
-            -fx-font-weight: 600;
-            -fx-padding: 11 24;
-            -fx-background-radius: 8;
-            -fx-cursor: hand;
-            -fx-border-color: rgba(34,211,238,0.4);
-            -fx-border-width: 1;
-            -fx-border-radius: 8;
-            """);
-        changePwdBtn.setOnAction(e ->
-                SceneManager.switchScene("/com/examverse/fxml/auth/reset-password.fxml"));
-
-        secCard.getChildren().add(changePwdBtn);
-
-        content.getChildren().addAll(
-                titleLabel, profileCard,
-                divider(),
-                sectionSubtitle("📋  Account Information"), infoCard,
-                divider(),
-                statsTitle, statsRow,
-                divider(),
-                secTitle, secCard
-        );
-        setContentWithAnimation(content);
-    }
-
-    private void addProfileRow(VBox parent, String label, String value, boolean hasDivider) {
-        HBox row = new HBox(20);
-        row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(14, 20, 14, 20));
-        if (hasDivider) {
-            row.setStyle("-fx-border-color: rgba(51,65,85,0.3); -fx-border-width: 0 0 1 0;");
-        }
-
-        Label lbl = new Label(label);
-        lbl.setStyle("-fx-text-fill: #64748b; -fx-font-size: 13px;");
-        lbl.setPrefWidth(180);
-
-        Label val = new Label(value != null ? value : "-");
-        val.setStyle("-fx-text-fill: #e2e8f0; -fx-font-size: 14px; -fx-font-weight: 600;");
-
-        row.getChildren().addAll(lbl, val);
-        parent.getChildren().add(row);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     //  EXAM ACTIONS
     // ═══════════════════════════════════════════════════════════════════════
 
-    /**
-     * FIX: Start exam with proper session attributes and null-safe exam check
-     */
     private void handleStartExam(Exam exam) {
-        if (exam == null) {
-            showErrorAlert("Cannot start exam: exam data is missing.");
-            return;
-        }
-
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Start Exam");
-        confirm.setHeaderText("📝  " + exam.getExamTitle());
-        confirm.setContentText(String.format(
-                "Subject: %s\nDifficulty: %s\nDuration: %s\nQuestions: %d\nTotal Marks: %d\nPassing Marks: %d\n\n" +
-                        "⚠ The timer starts immediately after you click OK.\nAre you ready?",
-                exam.getSubject(),
-                exam.getDifficulty(),
-                exam.getFormattedDuration(),
-                exam.getTotalQuestions(),
-                exam.getTotalMarks(),
-                exam.getPassingMarks()
-        ));
+        if (exam == null) { showErrorAlert("Exam data is missing."); return; }
+        Alert confirm = styledAlert(Alert.AlertType.CONFIRMATION,
+                "Start Exam", "📝  " + exam.getExamTitle(),
+                String.format("Subject: %s\nDifficulty: %s\nDuration: %s\n"
+                                + "Questions: %d\nTotal Marks: %d\nPassing Marks: %d\n\n"
+                                + "⚠ The timer starts immediately. Ready?",
+                        exam.getSubject(), exam.getDifficulty(), exam.getFormattedDuration(),
+                        exam.getTotalQuestions(), exam.getTotalMarks(), exam.getPassingMarks()));
 
         confirm.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                int attemptId = examService.startExamAttempt(currentUser.getId(), exam.getExamId());
-
-                if (attemptId <= 0) {
-                    showErrorAlert("Failed to start exam. The exam may no longer be available. Please try again.");
-                    return;
-                }
-
-                // Verify questions exist before navigating
-                List<Question> checkQuestions = questionService.getQuestionsByExamId(exam.getExamId());
-                if (checkQuestions == null || checkQuestions.isEmpty()) {
-                    showErrorAlert("This exam has no questions. Please contact your administrator.");
-                    examService.deleteAttempt(attemptId); // clean up orphaned row
-                    return;
-                }
-
-                System.out.println("✅ Starting exam — attemptId=" + attemptId + " examId=" + exam.getExamId());
-
-                SessionManager.getInstance().setAttribute("attemptId",    (Integer) attemptId);
-                SessionManager.getInstance().setAttribute("examId",       (Integer) exam.getExamId());
-                SessionManager.getInstance().setAttribute("practiceMode", false);
-                SessionManager.getInstance().setAttribute("resumeMode",   false);  // ← ADD THIS LINE
-
-                SceneManager.switchScene("/com/examverse/fxml/exam/exam-taking.fxml");
-
+            if (response != ButtonType.OK) return;
+            int attemptId = examService.startExamAttempt(currentUser.getId(), exam.getExamId());
+            if (attemptId <= 0) { showErrorAlert("Failed to start exam."); return; }
+            List<Question> qs = questionService.getQuestionsByExamId(exam.getExamId());
+            if (qs == null || qs.isEmpty()) {
+                showErrorAlert("This exam has no questions. Contact your administrator.");
+                examService.deleteAttempt(attemptId);
+                return;
             }
+            SessionManager.getInstance().setAttribute("attemptId",    (Integer) attemptId);
+            SessionManager.getInstance().setAttribute("examId",       (Integer) exam.getExamId());
+            SessionManager.getInstance().setAttribute("practiceMode", false);
+            SessionManager.getInstance().setAttribute("resumeMode",   false);
+            SceneManager.switchScene("/com/examverse/fxml/exam/exam-taking.fxml");
         });
     }
 
-    /**
-     * FIX: Resume exam properly sets both attemptId and examId into session
-     */
     private void handleResumeExam(StudentExamAttempt attempt) {
-        if (attempt == null) {
-            showErrorAlert("Cannot resume: attempt data is missing.");
-            return;
-        }
-
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Resume Exam");
-        confirm.setHeaderText("▶️  Resume: " + attempt.getExamTitle());
-        confirm.setContentText(
-                "You have an ongoing exam.\nYour previous answers will be preserved.\n\nContinue?"
-        );
-
+        if (attempt == null) { showErrorAlert("Attempt data is missing."); return; }
+        Alert confirm = styledAlert(Alert.AlertType.CONFIRMATION,
+                "Resume Exam", "▶️  Resume: " + attempt.getExamTitle(),
+                "Your previous answers will be preserved.\n\nContinue?");
         confirm.showAndWait().ifPresent(r -> {
             if (r == ButtonType.OK) {
-                System.out.println("✅ Resuming exam — Attempt ID: " + attempt.getAttemptId()
-                        + ", Exam ID: " + attempt.getExamId());
-
                 SessionManager.getInstance().setAttribute("attemptId",   (Integer) attempt.getAttemptId());
                 SessionManager.getInstance().setAttribute("examId",      (Integer) attempt.getExamId());
                 SessionManager.getInstance().setAttribute("practiceMode", false);
-                // Tell ExamController NOT to wipe saved answers — this is a resume
                 SessionManager.getInstance().setAttribute("resumeMode",   true);
-
                 SceneManager.switchScene("/com/examverse/fxml/exam/exam-taking.fxml");
             }
         });
     }
 
-    /** View Details for completed attempt */
-    private void showAttemptDetails(StudentExamAttempt attempt) {
-        SessionManager.getInstance().setAttribute("attemptId", (Integer) attempt.getAttemptId());
-        SceneManager.switchScene("/com/examverse/fxml/exam/exam-result.fxml");
-    }
-
     // ═══════════════════════════════════════════════════════════════════════
-    //  REUSABLE UI COMPONENTS
+    //  SECTION: AI ASSISTANT  (kept here — owns heavy Gemini chat state)
     // ═══════════════════════════════════════════════════════════════════════
-
-    private VBox createStatCard(String icon, String lbl, String value, String mainColor, String gradTo) {
-        VBox card = new VBox(10);
-        card.setPrefWidth(220);
-        card.setPrefHeight(120);
-        card.setPadding(new Insets(20));
-        card.setAlignment(Pos.CENTER_LEFT);
-        String base = String.format("""
-            -fx-background-color: linear-gradient(135deg, rgba(30,41,59,0.85) 0%%, rgba(15,23,42,0.9) 100%%);
-            -fx-background-radius: 14;
-            -fx-border-color: rgba(51,65,85,0.45);
-            -fx-border-width: 1;
-            -fx-border-radius: 14;
-            -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.35),12,0.3,0,3);
-            """);
-        card.setStyle(base);
-
-        Label iconL = new Label(icon);
-        iconL.setStyle("-fx-font-size: 28px;");
-
-        Label nameL = new Label(lbl);
-        nameL.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 12px; -fx-font-weight: 600;");
-
-        Label valL = new Label(value);
-        valL.setStyle(String.format("-fx-text-fill: %s; -fx-font-size: 26px; -fx-font-weight: 800;", mainColor));
-
-        card.getChildren().addAll(iconL, nameL, valL);
-
-        String hoverStyle = String.format("""
-            -fx-background-color: linear-gradient(135deg, rgba(30,41,59,0.9) 0%%, rgba(15,23,42,0.95) 100%%);
-            -fx-background-radius: 14;
-            -fx-border-color: %s;
-            -fx-border-width: 1;
-            -fx-border-radius: 14;
-            -fx-effect: dropshadow(gaussian,%s,18,0.4,0,4);
-            """, mainColor, mainColor);
-
-        card.setOnMouseEntered(e -> card.setStyle(hoverStyle));
-        card.setOnMouseExited(e  -> card.setStyle(base));
-
-        return card;
-    }
-
-    private Button createTabButton(String text, boolean active) {
-        Button btn = new Button(text);
-        applyTabStyle(btn, active);
-        return btn;
-    }
-
-    private void setTabActive(Button active, Button... others) {
-        applyTabStyle(active, true);
-        for (Button b : others) applyTabStyle(b, false);
-    }
-
-    private void applyTabStyle(Button btn, boolean active) {
-        if (active) {
-            btn.setStyle("""
-                -fx-background-color: #22d3ee;
-                -fx-text-fill: #0f172a;
-                -fx-font-size: 14px;
-                -fx-font-weight: 700;
-                -fx-padding: 10 22;
-                -fx-background-radius: 8;
-                -fx-cursor: hand;
-                -fx-effect: dropshadow(gaussian,rgba(34,211,238,0.4),10,0.4,0,2);
-                """);
-        } else {
-            btn.setStyle("""
-                -fx-background-color: rgba(30,41,59,0.6);
-                -fx-text-fill: #94a3b8;
-                -fx-font-size: 14px;
-                -fx-font-weight: 600;
-                -fx-padding: 10 22;
-                -fx-background-radius: 8;
-                -fx-cursor: hand;
-                -fx-border-color: rgba(51,65,85,0.5);
-                -fx-border-width: 1;
-                -fx-border-radius: 8;
-                """);
-        }
-    }
-
-    private Button quickActionBtn(String text, String bg, String hoverBg) {
-        Button btn = new Button(text);
-        String base = String.format("""
-            -fx-background-color: %s;
-            -fx-text-fill: #0f172a;
-            -fx-font-size: 13px;
-            -fx-font-weight: 700;
-            -fx-padding: 12 22;
-            -fx-background-radius: 9;
-            -fx-cursor: hand;
-            """, bg);
-        btn.setStyle(base);
-        btn.setOnMouseEntered(e -> btn.setStyle(base.replace(bg, hoverBg)));
-        btn.setOnMouseExited(e  -> btn.setStyle(base));
-        return btn;
-    }
-
-    private Button miniBtn(String text, String color) {
-        Button btn = new Button(text);
-        btn.setStyle(String.format("""
-            -fx-background-color: rgba(34,211,238,0.12);
-            -fx-text-fill: %s;
-            -fx-font-size: 13px;
-            -fx-font-weight: 700;
-            -fx-padding: 8 16;
-            -fx-background-radius: 7;
-            -fx-cursor: hand;
-            -fx-border-color: %s;
-            -fx-border-width: 1;
-            -fx-border-radius: 7;
-            """, color, color));
-        return btn;
-    }
-
-    private Label badge(String text, String bg, String fg) {
-        Label lbl = new Label(text);
-        lbl.setStyle(String.format("""
-            -fx-background-color: %s;
-            -fx-text-fill: %s;
-            -fx-padding: 4 12;
-            -fx-background-radius: 20;
-            -fx-font-size: 12px;
-            -fx-font-weight: 600;
-            """, bg, fg));
-        return lbl;
-    }
-
-    private HBox infoChip(String icon, String value) {
-        HBox box = new HBox(5);
-        box.setAlignment(Pos.CENTER_LEFT);
-        Label ic = new Label(icon);
-        ic.setStyle("-fx-font-size: 13px;");
-        Label vl = new Label(value);
-        vl.setStyle("-fx-text-fill: #cbd5e1; -fx-font-size: 13px; -fx-font-weight: 600;");
-        box.getChildren().addAll(ic, vl);
-        return box;
-    }
-
-    private ComboBox<String> styledCombo() {
-        ComboBox<String> cb = new ComboBox<>();
-        cb.setStyle("""
-            -fx-background-color: rgba(30,41,59,0.85);
-            -fx-text-fill: white;
-            -fx-font-size: 13px;
-            -fx-background-radius: 7;
-            -fx-border-color: rgba(51,65,85,0.55);
-            -fx-border-width: 1;
-            -fx-border-radius: 7;
-            -fx-padding: 6 10;
-            """);
-        cb.setPrefWidth(170);
-        return cb;
-    }
-
-    private VBox glassCard() {
-        VBox card = new VBox(10);
-        card.setPadding(new Insets(20));
-        card.setStyle("""
-            -fx-background-color: rgba(30,41,59,0.65);
-            -fx-background-radius: 12;
-            -fx-border-color: rgba(51,65,85,0.4);
-            -fx-border-width: 1;
-            -fx-border-radius: 12;
-            """);
-        return card;
-    }
-
-    private Label sectionTitle(String text) {
-        Label lbl = new Label(text);
-        lbl.setStyle("-fx-text-fill: white; -fx-font-size: 26px; -fx-font-weight: 800;");
-        return lbl;
-    }
-
-    private Label sectionSubtitle(String text) {
-        Label lbl = new Label(text);
-        lbl.setStyle("-fx-text-fill: #e2e8f0; -fx-font-size: 17px; -fx-font-weight: 700;");
-        return lbl;
-    }
-
-    private Separator divider() {
-        Separator sep = new Separator();
-        sep.setStyle("-fx-background-color: rgba(51,65,85,0.3); -fx-opacity: 0.5;");
-        return sep;
-    }
-
-    // ── Alert helpers ────────────────────────────────────────────────────────
-
-    private void showErrorAlert(String msg) {
-        Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle("Error");
-        a.setHeaderText(null);
-        a.setContentText(msg);
-        a.showAndWait();
-    }
-
 
     private void loadAiAssistant() {
-        // Reset per-view state so switching away and back gives a fresh UI
-        // (the GeminiService keeps history across navigation — intentional)
-        chatMessagesBox = null;
-        chatScrollPane  = null;
-        chatInputField  = null;
-        chatSendBtn     = null;
+        chatMessagesBox = null; chatScrollPane = null;
+        chatInputField  = null; chatSendBtn    = null;
 
         VBox root = new VBox(0);
         root.setPadding(new Insets(30));
 
-        // ── Title row ────────────────────────────────────────────────────────
         HBox titleRow = new HBox(14);
         titleRow.setAlignment(Pos.CENTER_LEFT);
         VBox.setMargin(titleRow, new Insets(0, 0, 20, 0));
 
-        Label icon  = new Label("🤖");
-        icon.setStyle("-fx-font-size: 32px;");
+        Label icon = new Label("🤖"); icon.setStyle("-fx-font-size: 32px;");
         VBox titleText = new VBox(2);
-        Label title = sectionTitle("AI Assistant");
+        Label title = DashboardUIFactory.sectionTitle("AI Assistant");
         Label sub   = new Label("Powered by Gemini • Ask anything about your studies");
         sub.setStyle("-fx-text-fill: #64748b; -fx-font-size: 13px;");
         titleText.getChildren().addAll(title, sub);
 
-        // New Chat button (top-right)
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        Button newChatBtn = miniBtn("✨  New Chat", "#22d3ee");
-        newChatBtn.setOnAction(e -> {
-            geminiService.clearHistory();
-            loadAiAssistant();
-        });
-
+        Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
+        Button newChatBtn = DashboardUIFactory.miniBtn("✨  New Chat", "#22d3ee");
+        newChatBtn.setOnAction(e -> { geminiService.clearHistory(); loadAiAssistant(); });
         titleRow.getChildren().addAll(icon, titleText, spacer, newChatBtn);
 
-        // ── Suggestion chips ─────────────────────────────────────────────────
         HBox chips = new HBox(10);
         chips.setAlignment(Pos.CENTER_LEFT);
         VBox.setMargin(chips, new Insets(0, 0, 18, 0));
-
-        String[] suggestions = {
-                "📖  Explain a concept",
-                "📝  Help me study",
-                "🧮  Solve a problem",
-                "💡  Study tips"
-        };
-        for (String s : suggestions) {
+        for (String s : new String[]{"📖  Explain a concept","📝  Help me study","🧮  Solve a problem","💡  Study tips"}) {
             Button chip = new Button(s);
             chip.getStyleClass().add("suggestion-chip");
             chip.setOnAction(e -> sendAiMessage(s.replaceAll("^[^ ]+ {2}", "")));
             chips.getChildren().add(chip);
         }
 
-        // ── Chat messages container ───────────────────────────────────────────
         chatMessagesBox = new VBox(14);
         chatMessagesBox.setPadding(new Insets(20));
         chatMessagesBox.setFillWidth(true);
 
         chatScrollPane = new ScrollPane(chatMessagesBox);
-        chatScrollPane.setFitToWidth(true);
-        chatScrollPane.setFitToHeight(false);
-        chatScrollPane.setPrefHeight(420);
+        chatScrollPane.setFitToWidth(true); chatScrollPane.setPrefHeight(420);
         chatScrollPane.setMinHeight(300);
         VBox.setVgrow(chatScrollPane, Priority.ALWAYS);
         chatScrollPane.setStyle("""
-        -fx-background-color: rgba(15,23,42,0.6);
-        -fx-background-radius: 14;
-        -fx-border-color: rgba(51,65,85,0.4);
-        -fx-border-width: 1;
-        -fx-border-radius: 14;
-        -fx-padding: 0;
-        """);
+            -fx-background-color: rgba(10,16,30,0.7);
+            -fx-background-radius: 14;
+            -fx-border-color: rgba(51,65,85,0.4);
+            -fx-border-width: 1; -fx-border-radius: 14; -fx-padding: 0;
+            """);
         chatScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         chatScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
-        // Welcome message
-        appendAiMessage("👋  Hello! I'm **ExamVerse AI**, your personal study assistant.\n\n" +
-                "I can help you understand concepts, solve practice problems, " +
-                "create study plans, and answer questions about any subject. " +
-                "What would you like to explore today?");
+        appendAiMessage("👋  Hello! I'm **ExamVerse AI**, your personal study assistant.\n\n"
+                + "I can help you understand concepts, solve practice problems, "
+                + "create study plans, and answer questions about any subject. "
+                + "What would you like to explore today?");
 
-        // ── Input bar ─────────────────────────────────────────────────────────
         HBox inputBar = new HBox(10);
         inputBar.setAlignment(Pos.CENTER);
         VBox.setMargin(inputBar, new Insets(14, 0, 0, 0));
-
         chatInputField = new TextField();
         chatInputField.setPromptText("Ask anything about your studies…");
         chatInputField.getStyleClass().add("chat-input-field");
         HBox.setHgrow(chatInputField, Priority.ALWAYS);
         chatInputField.setOnAction(e -> sendAiMessage(chatInputField.getText()));
-
         chatSendBtn = new Button("➤");
         chatSendBtn.getStyleClass().add("chat-send-btn");
         chatSendBtn.setOnAction(e -> sendAiMessage(chatInputField.getText()));
-
         inputBar.getChildren().addAll(chatInputField, chatSendBtn);
 
-        // ── Assemble ─────────────────────────────────────────────────────────
         root.getChildren().addAll(titleRow, chips, chatScrollPane, inputBar);
-
         setContentWithAnimation(root);
-
-        // Focus the input field after layout
         Platform.runLater(() -> chatInputField.requestFocus());
     }
 
-    /**
-     * Sends a message to Gemini and appends the response bubble.
-     * The API call runs on a background thread to keep the UI responsive.
-     */
     private void sendAiMessage(String text) {
-        if (text == null || text.isBlank()) return;
-        if (chatMessagesBox == null)        return; // guard: AI view not active
-
+        if (text == null || text.isBlank() || chatMessagesBox == null) return;
         String message = text.trim();
-
-        // Show user bubble
         appendUserMessage(message);
-        chatInputField.clear();
-        chatInputField.setDisable(true);
-        chatSendBtn.setDisable(true);
-
-        // Show typing indicator
+        chatInputField.clear(); chatInputField.setDisable(true); chatSendBtn.setDisable(true);
         HBox typingRow = buildTypingIndicator();
         chatMessagesBox.getChildren().add(typingRow);
         scrollChatToBottom();
 
-        // ── Background task ───────────────────────────────────────────────────
         Task<String> task = new Task<>() {
-            @Override
-            protected String call() {
-                return geminiService.sendMessage(message);
-            }
+            @Override protected String call() { return geminiService.sendMessage(message); }
         };
-
         task.setOnSucceeded(e -> {
             chatMessagesBox.getChildren().remove(typingRow);
             String reply = task.getValue();
-            if (reply != null && reply.startsWith("ERROR:")) {
-                appendErrorMessage(reply.substring(6).trim());
-            } else {
-                appendAiMessage(reply != null ? reply : "No response received.");
-            }
-            chatInputField.setDisable(false);
-            chatSendBtn.setDisable(false);
-            chatInputField.requestFocus();
-            scrollChatToBottom();
+            if (reply != null && reply.startsWith("ERROR:")) appendErrorMessage(reply.substring(6).trim());
+            else appendAiMessage(reply != null ? reply : "No response received.");
+            chatInputField.setDisable(false); chatSendBtn.setDisable(false);
+            chatInputField.requestFocus(); scrollChatToBottom();
         });
-
         task.setOnFailed(e -> {
             chatMessagesBox.getChildren().remove(typingRow);
-            appendErrorMessage("Connection failed. Please check your internet and try again.");
-            chatInputField.setDisable(false);
-            chatSendBtn.setDisable(false);
+            appendErrorMessage("Connection failed. Check your internet and try again.");
+            chatInputField.setDisable(false); chatSendBtn.setDisable(false);
             scrollChatToBottom();
         });
-
-        Thread t = new Thread(task, "gemini-api-thread");
-        t.setDaemon(true);
-        t.start();
+        new Thread(task, "gemini-api-thread").start();
     }
 
-    /** Append a user chat bubble (right-aligned). */
     private void appendUserMessage(String text) {
         Label bubble = new Label(text);
-        bubble.getStyleClass().add("chat-bubble-user");
-        bubble.setWrapText(true);
-
-        HBox row = new HBox(bubble);
-        row.setAlignment(Pos.CENTER_RIGHT);
-        chatMessagesBox.getChildren().add(row);
-        scrollChatToBottom();
+        bubble.getStyleClass().add("chat-bubble-user"); bubble.setWrapText(true);
+        HBox row = new HBox(bubble); row.setAlignment(Pos.CENTER_RIGHT);
+        chatMessagesBox.getChildren().add(row); scrollChatToBottom();
     }
 
-    /** Append an AI chat bubble (left-aligned). */
     private void appendAiMessage(String text) {
-        // Replace **bold** markers since JavaFX Label doesn't render markdown
         String clean = text.replaceAll("\\*\\*(.*?)\\*\\*", "$1");
-
-        HBox avatarBox = new HBox(8);
-        avatarBox.setAlignment(Pos.TOP_LEFT);
-
-        Label avatar = new Label("🤖");
-        avatar.setStyle("-fx-font-size: 20px; -fx-padding: 2 0 0 0;");
-
+        Label avatar = new Label("🤖"); avatar.setStyle("-fx-font-size: 20px; -fx-padding: 2 0 0 0;");
         Label bubble = new Label(clean);
-        bubble.getStyleClass().add("chat-bubble-ai");
-        bubble.setWrapText(true);
-
-        avatarBox.getChildren().addAll(avatar, bubble);
-
-        HBox row = new HBox(avatarBox);
-        row.setAlignment(Pos.CENTER_LEFT);
-        chatMessagesBox.getChildren().add(row);
-        scrollChatToBottom();
+        bubble.getStyleClass().add("chat-bubble-ai"); bubble.setWrapText(true);
+        HBox avatarBox = new HBox(8, avatar, bubble); avatarBox.setAlignment(Pos.TOP_LEFT);
+        HBox row = new HBox(avatarBox); row.setAlignment(Pos.CENTER_LEFT);
+        chatMessagesBox.getChildren().add(row); scrollChatToBottom();
     }
 
-    /** Append an error bubble. */
     private void appendErrorMessage(String errorText) {
         Label bubble = new Label("⚠️  " + errorText);
-        bubble.getStyleClass().add("chat-bubble-error");
-        bubble.setWrapText(true);
-
-        HBox row = new HBox(bubble);
-        row.setAlignment(Pos.CENTER_LEFT);
-        chatMessagesBox.getChildren().add(row);
-        scrollChatToBottom();
+        bubble.getStyleClass().add("chat-bubble-error"); bubble.setWrapText(true);
+        HBox row = new HBox(bubble); row.setAlignment(Pos.CENTER_LEFT);
+        chatMessagesBox.getChildren().add(row); scrollChatToBottom();
     }
 
-    /** Animated three-dot typing indicator. */
     private HBox buildTypingIndicator() {
         HBox dotsBox = new HBox(5);
-        dotsBox.setAlignment(Pos.CENTER_LEFT);
-        dotsBox.setPadding(new Insets(10, 16, 10, 16));
+        dotsBox.setAlignment(Pos.CENTER_LEFT); dotsBox.setPadding(new Insets(10, 16, 10, 16));
         dotsBox.setStyle("""
-        -fx-background-color: rgba(30,41,59,0.85);
-        -fx-background-radius: 18 18 18 4;
-        -fx-border-color: rgba(51,65,85,0.5);
-        -fx-border-width: 1;
-        -fx-border-radius: 18 18 18 4;
-        """);
-
+            -fx-background-color: rgba(30,41,59,0.85);
+            -fx-background-radius: 18 18 18 4;
+            -fx-border-color: rgba(51,65,85,0.5);
+            -fx-border-width: 1; -fx-border-radius: 18 18 18 4;
+            """);
         for (int i = 0; i < 3; i++) {
-            Circle dot = new Circle(4);
-            dot.setFill(javafx.scene.paint.Color.web("#22d3ee"));
+            Circle dot = new Circle(4); dot.setFill(Color.web("#22d3ee"));
             FadeTransition ft = new FadeTransition(Duration.millis(500), dot);
-            ft.setFromValue(0.2);
-            ft.setToValue(1.0);
-            ft.setCycleCount(Animation.INDEFINITE);
-            ft.setAutoReverse(true);
-            ft.setDelay(Duration.millis(i * 180));
-            ft.play();
+            ft.setFromValue(0.2); ft.setToValue(1.0);
+            ft.setCycleCount(Animation.INDEFINITE); ft.setAutoReverse(true);
+            ft.setDelay(Duration.millis(i * 180)); ft.play();
             dotsBox.getChildren().add(dot);
         }
-
-        Label avatar = new Label("🤖");
-        avatar.setStyle("-fx-font-size: 20px; -fx-padding: 2 8 0 0;");
-
-        HBox row = new HBox(8, avatar, dotsBox);
-        row.setAlignment(Pos.CENTER_LEFT);
-        return row;
+        Label avatar = new Label("🤖"); avatar.setStyle("-fx-font-size: 20px; -fx-padding: 2 8 0 0;");
+        return new HBox(8, avatar, dotsBox);
     }
 
-    /** Scroll the chat ScrollPane to the very bottom. */
     private void scrollChatToBottom() {
         Platform.runLater(() -> {
             if (chatScrollPane != null) {
-                chatScrollPane.layout();
-                chatScrollPane.setVvalue(1.0);
+                chatScrollPane.layout(); chatScrollPane.setVvalue(1.0);
             }
         });
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    //  STYLED ALERTS  (dark-themed — no more plain white dialogs)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private Alert styledAlert(Alert.AlertType type, String title,
+                              String header, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+
+        DialogPane dp = alert.getDialogPane();
+
+        // Apply our dark stylesheet
+        try {
+            URL css = getClass().getResource("/com/examverse/css/student-dashboard.css");
+            if (css != null) dp.getStylesheets().add(css.toExternalForm());
+        } catch (Exception ignored) {}
+
+        dp.setStyle(
+                "-fx-background-color: #080e1e;" +
+                        "-fx-border-color: #22d3ee59;" +
+                        "-fx-border-width: 1; -fx-border-radius: 14; -fx-background-radius: 14;"
+        );
+
+        // setOnShown fires after JavaFX has rendered all dialog buttons —
+        // this is the only reliable hook for styling them
+        alert.setOnShown(e -> {
+            for (ButtonType bt : alert.getButtonTypes()) {
+                javafx.scene.Node btn = dp.lookupButton(bt);
+                if (btn == null) continue;
+                if (bt == ButtonType.OK || bt == ButtonType.YES) {
+                    // Cyan gradient — clearly distinct from green
+                    btn.setStyle(
+                            "-fx-background-color: linear-gradient(to right,#22d3ee,#06b6d4);" +
+                                    "-fx-text-fill: #030712; -fx-font-weight: 700; -fx-font-size: 13px;" +
+                                    "-fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 9 22;" +
+                                    "-fx-effect: dropshadow(gaussian,#22d3ee80,10,0.4,0,2);"
+                    );
+                } else {
+                    // Cancel / Close — dark ghost
+                    btn.setStyle(
+                            "-fx-background-color: #0d1428;" +
+                                    "-fx-text-fill: #94a3b8; -fx-font-size: 13px; -fx-font-weight: 600;" +
+                                    "-fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 9 22;" +
+                                    "-fx-border-color: #334155; -fx-border-width: 1; -fx-border-radius: 8;" +
+                                    "-fx-effect: none;"
+                    );
+                }
+            }
+        });
+
+        return alert;
+    }
+
+    private void showErrorAlert(String msg) {
+        styledAlert(Alert.AlertType.ERROR, "Error", null, msg).showAndWait();
+    }
 
     private void showInfoAlert(String title, String msg) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle(title);
-        a.setHeaderText(null);
-        a.setContentText(msg);
-        a.showAndWait();
+        styledAlert(Alert.AlertType.INFORMATION, title, null, msg).showAndWait();
     }
 }

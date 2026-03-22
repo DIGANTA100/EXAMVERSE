@@ -7,7 +7,7 @@
 <BorderPane fx:id="rootPane" xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.examverse.controller.exam.ExamController"
-            stylesheets="@../../css/student-dashboard.css"
+            stylesheets="@../../css/admin-dashboard.css"
             styleClass="root-pane">
 
     <!-- Define ToggleGroup at ROOT level (not as a child of any container) -->

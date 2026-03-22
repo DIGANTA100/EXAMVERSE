@@ -350,7 +350,7 @@ public class AdminDashboardController implements Initializable {
 
         // Set dialog style
         DialogPane dialogPane = dialog.getDialogPane();
-        dialogPane.getStylesheets().add(getClass().getResource("/com/examverse/css/student-dashboard.css").toExternalForm());
+        dialogPane.getStylesheets().add(getClass().getResource("/com/examverse/css/admin-dashboard.css").toExternalForm());
         dialogPane.getStyleClass().add("alert");
 
         // Add buttons

@@ -7,7 +7,7 @@
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.examverse.controller.exam.ResultController"
-            stylesheets="@../../css/student-dashboard.css"
+            stylesheets="@../../css/admin-dashboard.css"
             styleClass="root-pane">
 
     <!-- ============================================
