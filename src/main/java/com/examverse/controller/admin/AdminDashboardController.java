@@ -279,7 +279,7 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void handleExams() {
         setActiveButton(examsBtn);
-        showAlert("All Exams", "All Exams view - Coming in next step!");
+        SceneManager.switchScene("/com/examverse/fxml/dashboard/all-exams.fxml");
     }
 
     @FXML
