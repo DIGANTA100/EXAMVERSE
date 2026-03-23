@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.examverse.controller.admin.StudentsController"
+            stylesheets="@../../css/admin-dashboard.css"
+            styleClass="root-pane">
+
+    <!-- ============================================
+         TOP BAR - Header with Stats
+         ============================================ -->
+    <top>
+        <VBox styleClass="header-bar">
+            <padding>
+                <Insets top="20" right="30" bottom="20" left="30"/>
+            </padding>
+
+            <!-- Title Row -->
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Button text="← Back" styleClass="btn-secondary" onAction="#handleBack">
+                    <padding>
+                        <Insets top="10" right="20" bottom="10" left="20"/>
+                    </padding>
+                </Button>
+
+                <Label text="👥 Students Management" styleClass="welcome-label" HBox.hgrow="ALWAYS"/>
+            </HBox>
+
+            <!-- Stats Row -->
+            <HBox spacing="20" alignment="CENTER_LEFT">
+                <VBox.margin>
+                    <Insets top="20"/>
+                </VBox.margin>
+
+                <!-- Total Students -->
+                <VBox styleClass="stat-card-small" spacing="5" alignment="CENTER">
+                    <padding>
+                        <Insets top="15" right="20" bottom="15" left="20"/>
+                    </padding>
+                    <Label text="Total Students" styleClass="label-caption"/>
+                    <Label fx:id="totalStudentsLabel" text="0" styleClass="label-value"
+                           style="-fx-text-fill: #22d3ee; -fx-font-size: 24px; -fx-font-weight: bold;"/>
+                </VBox>
+
+                <!-- Active Students -->
+                <VBox styleClass="stat-card-small" spacing="5" alignment="CENTER">
+                    <padding>
+                        <Insets top="15" right="20" bottom="15" left="20"/>
+                    </padding>
+                    <Label text="Active Students" styleClass="label-caption"/>
+                    <Label fx:id="activeStudentsLabel" text="0" styleClass="label-value"
+                           style="-fx-text-fill: #22c55e; -fx-font-size: 24px; -fx-font-weight: bold;"/>
+                </VBox>
+
+                <!-- Inactive Students -->
+                <VBox styleClass="stat-card-small" spacing="5" alignment="CENTER">
+                    <padding>
+                        <Insets top="15" right="20" bottom="15" left="20"/>
+                    </padding>
+                    <Label text="Inactive Students" styleClass="label-caption"/>
+                    <Label fx:id="inactiveStudentsLabel" text="0" styleClass="label-value"
+                           style="-fx-text-fill: #ef4444; -fx-font-size: 24px; -fx-font-weight: bold;"/>
+                </VBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <!-- Search and Filter -->
+                <VBox spacing="5">
+                    <Label text="Search:" styleClass="label-caption"/>
+                    <TextField fx:id="searchField" promptText="Search students..." prefWidth="250"/>
+                </VBox>
+
+                <VBox spacing="5">
+                    <Label text="Status:" styleClass="label-caption"/>
+                    <ComboBox fx:id="statusFilter" prefWidth="150"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- ============================================
+         CENTER - Students List
+         ============================================ -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="content-scroll">
+            <VBox fx:id="studentsContainer" spacing="20">
+                <padding>
+                    <Insets top="30" right="30" bottom="30" left="30"/>
+                </padding>
+
+                <!-- Student cards will be added dynamically -->
+                <Label text="Loading students..." styleClass="label-body"
+                       style="-fx-text-fill: #94a3b8; -fx-font-size: 16px;"/>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

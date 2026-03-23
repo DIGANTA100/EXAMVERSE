@@ -297,7 +297,7 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void handleStudents() {
         setActiveButton(studentsBtn);
-        showAlert("Students", "Students view - Coming soon!");
+        SceneManager.switchScene("/com/examverse/fxml/dashboard/students-view.fxml");
     }
 
     @FXML
