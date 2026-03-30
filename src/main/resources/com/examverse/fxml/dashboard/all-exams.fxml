@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.examverse.controller.admin.AllExamsController"
+            stylesheets="@../../css/admin-dashboard.css"
+            styleClass="root-pane">
+
+    <!-- ============================================
+         TOP BAR - Header with Title and Actions
+         ============================================ -->
+    <top>
+        <VBox styleClass="header-bar">
+            <padding>
+                <Insets top="20" right="30" bottom="20" left="30"/>
+            </padding>
+
+            <!-- Title Row -->
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Button text="← Back" styleClass="btn-secondary" onAction="#handleBack">
+                    <padding>
+                        <Insets top="10" right="20" bottom="10" left="20"/>
+                    </padding>
+                </Button>
+
+                <Label text="📚 All Exams Management" styleClass="welcome-label" HBox.hgrow="ALWAYS"/>
+
+                <Button text="➕ Create New Exam" styleClass="btn-success" onAction="#handleCreateExam">
+                    <padding>
+                        <Insets top="12" right="25" bottom="12" left="25"/>
+                    </padding>
+                </Button>
+            </HBox>
+
+            <!-- Filters Row -->
+            <HBox spacing="15" alignment="CENTER_LEFT">
+                <VBox.margin>
+                    <Insets top="20"/>
+                </VBox.margin>
+
+                <!-- Search -->
+                <VBox spacing="5">
+                    <Label text="Search:" styleClass="label-caption"/>
+                    <TextField fx:id="searchField" promptText="Search exams..." prefWidth="250"
+                               styleClass="text-field"/>
+                </VBox>
+
+                <!-- Status Filter -->
+                <VBox spacing="5">
+                    <Label text="Status:" styleClass="label-caption"/>
+                    <ComboBox fx:id="statusFilter" prefWidth="150" styleClass="combo-box"/>
+                </VBox>
+
+                <!-- Subject Filter -->
+                <VBox spacing="5">
+                    <Label text="Subject:" styleClass="label-caption"/>
+                    <ComboBox fx:id="subjectFilter" prefWidth="150" styleClass="combo-box"/>
+                </VBox>
+
+                <!-- Difficulty Filter -->
+                <VBox spacing="5">
+                    <Label text="Difficulty:" styleClass="label-caption"/>
+                    <ComboBox fx:id="difficultyFilter" prefWidth="150" styleClass="combo-box"/>
+                </VBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <!-- Total Count -->
+                <VBox spacing="5" alignment="CENTER_RIGHT">
+                    <Label text="Total Exams" styleClass="label-caption"/>
+                    <Label fx:id="totalExamsLabel" text="0 exam(s)" styleClass="label-value"
+                           style="-fx-text-fill: #22d3ee; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- ============================================
+         CENTER - Exams List
+         ============================================ -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="content-scroll">
+            <VBox fx:id="examsContainer" spacing="20">
+                <padding>
+                    <Insets top="30" right="30" bottom="30" left="30"/>
+                </padding>
+
+                <!-- Exam cards will be added dynamically -->
+                <Label text="Loading exams..." styleClass="label-body"
+                       style="-fx-text-fill: #94a3b8; -fx-font-size: 16px;"/>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>
