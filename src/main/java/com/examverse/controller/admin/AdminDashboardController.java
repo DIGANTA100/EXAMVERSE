@@ -9,6 +9,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.util.Duration;
 
 import com.examverse.model.exam.Exam;
 import com.examverse.model.user.User;
@@ -27,6 +28,11 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
+import com.examverse.controller.forum.AdminForumController;
+import javafx.fxml.FXMLLoader;
+import javafx.animation.FadeTransition;
+import javafx.animation.ParallelTransition;
+import javafx.animation.TranslateTransition;
 
 /**
  * AdminDashboardController - Controls the admin dashboard interface
@@ -44,7 +50,11 @@ public class AdminDashboardController implements Initializable {
     private Button dashboardBtn, examsBtn, createExamBtn, questionsBtn, studentsBtn, resultsBtn, logoutBtn;
 
     @FXML
-    private Label welcomeLabel, dateTimeLabel, userAvatar;
+
+   private Label welcomeLabel, dateTimeLabel;
+
+  @FXML
+  private Button userAvatar;
 
     @FXML
     private Label totalExamsLabel, totalQuestionsLabel, totalStudentsLabel, totalAttemptsLabel;
@@ -58,13 +68,19 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private Button contestsBtn;
 
+    @FXML private Button forumBtn;
+
+    @FXML private Button sendNotifBtn;
+
     // Services
     private ExamService examService;
     private QuestionService questionService;
-
+    private AdminForumController activeForum;
+    private AdminNotificationSender notificationSender;
     // Data
     private User currentUser;
     private Timer dateTimeTimer;
+    private javafx.scene.Node originalCenter;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -77,7 +93,38 @@ public class AdminDashboardController implements Initializable {
 
         if (currentUser != null) {
             welcomeLabel.setText("Welcome back, " + currentUser.getFullName());
-            userAvatar.setText(currentUser.getUsername().substring(0, 1).toUpperCase());
+
+            // Avatar button — gold ring, initials, opens profile on click
+            String initials = getAdminInitials(currentUser.getFullName());
+            userAvatar.setText(initials);
+            userAvatar.setStyle(
+                    "-fx-background-color: linear-gradient(to bottom, #f59e0bcc, #d97706aa);" +
+                            "-fx-text-fill: #0a0500;" +
+                            "-fx-font-size: 14px; -fx-font-weight: 800;" +
+                            "-fx-padding: 9 13; -fx-background-radius: 50%; -fx-cursor: hand;" +
+                            "-fx-border-color: #f59e0b99; -fx-border-width: 2; -fx-border-radius: 50%;" +
+                            "-fx-effect: dropshadow(gaussian,#f59e0b66,12,0.4,0,0);" +
+                            "-fx-min-width: 42; -fx-min-height: 42;"
+            );
+            // Hover brighten
+            userAvatar.setOnMouseEntered(e -> userAvatar.setStyle(
+                    "-fx-background-color: linear-gradient(to bottom, #fbbf24dd, #f59e0bcc);" +
+                            "-fx-text-fill: #0a0500;" +
+                            "-fx-font-size: 14px; -fx-font-weight: 800;" +
+                            "-fx-padding: 9 13; -fx-background-radius: 50%; -fx-cursor: hand;" +
+                            "-fx-border-color: #fbbf24; -fx-border-width: 2; -fx-border-radius: 50%;" +
+                            "-fx-effect: dropshadow(gaussian,#f59e0b99,16,0.5,0,0);" +
+                            "-fx-min-width: 42; -fx-min-height: 42;"
+            ));
+            userAvatar.setOnMouseExited(e -> userAvatar.setStyle(
+                    "-fx-background-color: linear-gradient(to bottom, #f59e0bcc, #d97706aa);" +
+                            "-fx-text-fill: #0a0500;" +
+                            "-fx-font-size: 14px; -fx-font-weight: 800;" +
+                            "-fx-padding: 9 13; -fx-background-radius: 50%; -fx-cursor: hand;" +
+                            "-fx-border-color: #f59e0b99; -fx-border-width: 2; -fx-border-radius: 50%;" +
+                            "-fx-effect: dropshadow(gaussian,#f59e0b66,12,0.4,0,0);" +
+                            "-fx-min-width: 42; -fx-min-height: 42;"
+            ));
         }
 
         // Start datetime update
@@ -88,6 +135,8 @@ public class AdminDashboardController implements Initializable {
         loadRecentExams();
 
         System.out.println("✅ Admin Dashboard initialized for: " + currentUser.getUsername());
+        notificationSender = new AdminNotificationSender(sendNotifBtn);
+        originalCenter = rootPane.getCenter();
     }
 
     /**
@@ -271,11 +320,22 @@ public class AdminDashboardController implements Initializable {
 
     @FXML
     private void handleDashboard() {
+        // If the forum (or any other full-screen view) replaced the center,
+        // restore the original content-container first.
+        if (rootPane.getCenter() != originalCenter) {
+            rootPane.setCenter(originalCenter);
+        }
+
+        // Stop forum polling if it was running
+        if (activeForum != null) {
+            activeForum.stopPolling();
+            activeForum = null;
+        }
+
         setActiveButton(dashboardBtn);
         loadDashboardStats();
         loadRecentExams();
     }
-
     @FXML
     private void handleExams() {
         setActiveButton(examsBtn);
@@ -316,11 +376,159 @@ public class AdminDashboardController implements Initializable {
 
     @FXML
     private void handleLogout() {
-        if (dateTimeTimer != null) {
-            dateTimeTimer.cancel();
+        // ── Styled confirmation dialog ────────────────────────────────
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Logout");
+        alert.setHeaderText(null);
+        alert.setContentText("Are you sure you want to logout?");
+
+        DialogPane dp = alert.getDialogPane();
+
+        // Load our admin stylesheet so all base colours apply
+        try {
+            java.net.URL css = getClass().getResource("/com/examverse/css/admin-dashboard.css");
+            if (css != null) dp.getStylesheets().add(css.toExternalForm());
+        } catch (Exception ignored) {}
+
+        // Override the dialog pane background and border
+        dp.setStyle(
+                "-fx-background-color: #0d1428;" +
+                        "-fx-border-color: #06b6d444;" +
+                        "-fx-border-width: 1.5;" +
+                        "-fx-border-radius: 14;" +
+                        "-fx-background-radius: 14;"
+        );
+
+        // Style the content label (the question text)
+           javafx.scene.Node contentLbl = dp.lookup(".content.label");
+   if (contentLbl != null)
+       contentLbl.setStyle("-fx-text-fill: #e2e8f0; -fx-font-size: 14px;");
+
+        // Style buttons after the dialog is shown (only reliable hook)
+        alert.setOnShown(e -> {
+            javafx.scene.Node okBtn = dp.lookupButton(ButtonType.OK);
+            javafx.scene.Node cancelBtn = dp.lookupButton(ButtonType.CANCEL);
+
+            if (okBtn != null) okBtn.setStyle(
+                    "-fx-background-color: linear-gradient(to right,#ef4444,#dc2626);" +
+                            "-fx-text-fill: white; -fx-font-weight: 700; -fx-font-size: 13px;" +
+                            "-fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 9 22;" +
+                            "-fx-effect: dropshadow(gaussian,#ef444460,8,0.4,0,2);"
+            );
+            if (cancelBtn != null) cancelBtn.setStyle(
+                    "-fx-background-color: #1e2231;" +
+                            "-fx-text-fill: #94a3b8; -fx-font-size: 13px; -fx-font-weight: 600;" +
+                            "-fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 9 22;" +
+                            "-fx-border-color: #2d3348; -fx-border-width: 1; -fx-border-radius: 8;"
+            );
+        });
+
+        // Only logout if the admin confirmed
+        alert.showAndWait().ifPresent(result -> {
+            if (result == ButtonType.OK) {
+                if (dateTimeTimer != null) dateTimeTimer.cancel();
+                if (activeForum != null)   activeForum.stopPolling();
+                if (notificationSender != null) notificationSender.close();
+                SessionManager.getInstance().clearSession();
+                SceneManager.switchScene("/com/examverse/fxml/dashboard/dashboard-landing.fxml");
+            }
+        });
+    }
+    @FXML
+    private void handleForum() {
+        setActiveButton(forumBtn);
+        loadAdminForum();
+    }
+
+
+    private void loadAdminForum() {
+        if (activeForum != null) {
+            activeForum.stopPolling();
+            activeForum = null;
         }
-        SessionManager.getInstance().clearSession();
-        SceneManager.switchScene("/com/examverse/fxml/dashboard/dashboard-landing.fxml");
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/com/examverse/fxml/forum/admin-forum.fxml"));
+            javafx.scene.layout.BorderPane forumView = loader.load();
+            activeForum = loader.getController();
+
+            // Place directly in rootPane center for full height
+            rootPane.setCenter(forumView);
+
+        } catch (Exception e) {
+            System.err.println("❌ Failed to load admin forum: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+    @FXML
+    private void handleAvatarClick() {
+        loadAdminProfile();
+    }
+
+    @FXML
+    private void handleSendNotification() {
+        notificationSender.toggle();
+    }
+
+
+    private void loadAdminProfile() {
+        AdminProfileSection profile = new AdminProfileSection(currentUser);
+        VBox profileView = profile.build();
+
+        // ── Back button ───────────────────────────────────────────────
+        Button backBtn = new Button("← Back to Dashboard");
+        backBtn.setStyle(
+                "-fx-background-color: transparent;" +
+                        "-fx-text-fill: #06b6d4;" +
+                        "-fx-font-size: 13px; -fx-font-weight: 600;" +
+                        "-fx-cursor: hand; -fx-border-width: 0;" +
+                        "-fx-padding: 0;"
+        );
+        backBtn.setOnMouseEntered(e -> backBtn.setStyle(
+                "-fx-background-color: transparent;" +
+                        "-fx-text-fill: #22d3ee;" +
+                        "-fx-font-size: 13px; -fx-font-weight: 600;" +
+                        "-fx-cursor: hand; -fx-border-width: 0;" +
+                        "-fx-padding: 0;"
+        ));
+        backBtn.setOnMouseExited(e -> backBtn.setStyle(
+                "-fx-background-color: transparent;" +
+                        "-fx-text-fill: #06b6d4;" +
+                        "-fx-font-size: 13px; -fx-font-weight: 600;" +
+                        "-fx-cursor: hand; -fx-border-width: 0;" +
+                        "-fx-padding: 0;"
+        ));
+        backBtn.setOnAction(e -> handleDashboard());
+
+        // Wrap button in a padded HBox so it sits flush with the profile content
+        HBox backBar = new HBox(backBtn);
+        backBar.setPadding(new Insets(20, 36, 0, 36));
+
+        // Insert back bar at the very top of the profile view
+        profileView.getChildren().add(0, backBar);
+
+        // ── Animate in ────────────────────────────────────────────────
+        profileView.setOpacity(0);
+        contentPane.getChildren().setAll(profileView);
+
+        FadeTransition ft = new FadeTransition(javafx.util.Duration.millis(250), profileView);
+        ft.setFromValue(0); ft.setToValue(1);
+        TranslateTransition tt = new TranslateTransition(javafx.util.Duration.millis(250), profileView);
+        tt.setFromY(14); tt.setToY(0);
+        new ParallelTransition(ft, tt).play();
+
+        if (contentScroll != null) {
+            javafx.application.Platform.runLater(() -> contentScroll.setVvalue(0));
+        }
+    }
+
+    private static String getAdminInitials(String name) {
+        if (name == null || name.isBlank()) return "A";
+        String[] p = name.trim().split("\\s+");
+        if (p.length == 1) return p[0].substring(0, Math.min(2, p[0].length())).toUpperCase();
+        return ("" + p[0].charAt(0) + p[p.length - 1].charAt(0)).toUpperCase();
     }
 
     // ==================== EXAM ACTIONS ====================
@@ -453,6 +661,7 @@ public class AdminDashboardController implements Initializable {
         questionsBtn.getStyleClass().remove("sidebar-btn-active");
         studentsBtn.getStyleClass().remove("sidebar-btn-active");
         resultsBtn.getStyleClass().remove("sidebar-btn-active");
+        forumBtn.getStyleClass().remove("sidebar-btn-active");
 
         // Add active class to clicked button
         if (!activeBtn.getStyleClass().contains("sidebar-btn-active")) {

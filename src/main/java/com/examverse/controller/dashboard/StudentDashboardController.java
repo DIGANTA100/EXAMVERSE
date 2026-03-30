@@ -36,7 +36,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
-
+import com.examverse.controller.forum.DiscussionForumController;
+import javafx.fxml.FXMLLoader;
 /**
  * StudentDashboardController — Refactored slim orchestrator.
  *
@@ -79,6 +80,7 @@ public class StudentDashboardController implements Initializable {
     @FXML private Button avatarBtn;
 
     @FXML private ScrollPane contentScrollPane;
+    @FXML private Button forumBtn;
 
     // ── Services ─────────────────────────────────────────────────────────────
 
@@ -340,11 +342,18 @@ public class StudentDashboardController implements Initializable {
                 "Your session will be cleared.");
         dlg.showAndWait().ifPresent(r -> {
             if (r == ButtonType.OK) {
+                if (activeForum != null) activeForum.stopPolling();
                 SessionManager.getInstance().clearSession();
                 SceneManager.switchScene("/com/examverse/fxml/auth/login.fxml");
             }
         });
     }
+    @FXML
+    private void handleForum() {
+        setActiveButton(forumBtn);
+        loadForum();
+    }
+
 
     // ─────────────────────────────────────────────────────────────────────────
     //  ACTIVE BUTTON STATE
@@ -352,7 +361,7 @@ public class StudentDashboardController implements Initializable {
 
     private void setActiveButton(Button active) {
         Button[] all = {dashboardBtn, myExamsBtn, practiceBtn, resultsBtn,
-                profileBtn, aiAssistantBtn, contestsBtn};
+                profileBtn, aiAssistantBtn, contestsBtn, forumBtn};
         for (Button b : all) {
             if (b == null) continue;
             b.getStyleClass().removeAll("sidebar-btn-active");
@@ -376,6 +385,31 @@ public class StudentDashboardController implements Initializable {
         slide.setFromY(14); slide.setToY(0);
         new ParallelTransition(fade, slide).play();
     }
+
+    private DiscussionForumController activeForum; // keep reference to stop polling on nav away
+
+    private void loadForum() {
+        if (activeForum != null) {
+            activeForum.stopPolling();
+            activeForum = null;
+        }
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/com/examverse/fxml/forum/discussion-forum.fxml"));
+            // Root is now BorderPane — place it directly as center of rootPane
+            // so it fills the full screen height (no ScrollPane wrapper)
+            javafx.scene.layout.BorderPane forumView = loader.load();
+            activeForum = loader.getController();
+
+            // Bind width to the content-container area (exclude sidebar)
+            rootPane.setCenter(forumView);
+
+        } catch (Exception e) {
+            System.err.println("❌ Failed to load discussion forum: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 
     // ═══════════════════════════════════════════════════════════════════════
     //  SECTION: DASHBOARD HOME  — delegated to DashboardHomeSection

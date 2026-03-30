@@ -34,31 +34,35 @@
             <VBox styleClass="sidebar-nav" spacing="6">
                 <VBox.margin><Insets top="18"/></VBox.margin>
 
-                <Button fx:id="dashboardBtn"  text="📊  Dashboard"
+                <Button fx:id="dashboardBtn"   text="📊  Dashboard"
                         styleClass="sidebar-btn" onAction="#handleDashboard"/>
 
-                <Button fx:id="myExamsBtn"    text="📚  My Exams"
+                <Button fx:id="myExamsBtn"     text="📚  My Exams"
                         styleClass="sidebar-btn" onAction="#handleMyExams"/>
 
-                <Button fx:id="practiceBtn"   text="💪  Practice"
+                <Button fx:id="practiceBtn"    text="💪  Practice"
                         styleClass="sidebar-btn" onAction="#handlePractice"/>
 
-                <Button fx:id="resultsBtn"    text="📈  Results"
+                <Button fx:id="resultsBtn"     text="📈  Results"
                         styleClass="sidebar-btn" onAction="#handleResults"/>
 
-                <Button fx:id="profileBtn"    text="👤  Profile"
+                <Button fx:id="profileBtn"     text="👤  Profile"
                         styleClass="sidebar-btn" onAction="#handleProfile"/>
 
                 <Button fx:id="aiAssistantBtn" text="🤖  AI Assistant"
                         styleClass="sidebar-btn" onAction="#handleAiAssistant"/>
 
-                <Button fx:id="contestsBtn"   text="⚔️  Contests"
+                <Button fx:id="contestsBtn"    text="⚔️  Contests"
                         styleClass="sidebar-btn" onAction="#handleContests"/>
+
+                <!-- Discussion Forum -->
+                <Button fx:id="forumBtn"       text="💬  Discussion"
+                        styleClass="sidebar-btn" onAction="#handleForum"/>
             </VBox>
 
             <Region VBox.vgrow="ALWAYS"/>
 
-            <!-- Bottom: logout — fixed spacing ensures button is always reachable -->
+            <!-- Bottom: logout -->
             <VBox styleClass="sidebar-bottom" spacing="10">
                 <VBox.margin><Insets top="8" bottom="16"/></VBox.margin>
                 <Separator styleClass="sidebar-separator"/>
@@ -90,24 +94,19 @@
 
                 <!-- Header right: notification bell + avatar -->
                 <HBox alignment="CENTER" spacing="12">
-
-                    <!-- Notification bell with badge -->
                     <StackPane>
-                        <!-- fx:id="notificationBtn" wires the bell to the controller -->
                         <Button fx:id="notificationBtn" text="🔔"
                                 styleClass="notification-btn"
                                 onAction="#handleNotification"/>
                         <Label fx:id="notificationBadge" text="0"
                                styleClass="notification-badge" visible="false"/>
                     </StackPane>
-
-                    <!-- Profile avatar button (shows initials, opens profile) -->
                     <Button fx:id="avatarBtn" text="?"
                             styleClass="avatar-btn"/>
                 </HBox>
             </HBox>
 
-            <!-- Dynamic content area -->
+            <!-- Dynamic content area — forum bypasses this via rootPane.setCenter() -->
             <ScrollPane fx:id="contentScrollPane" fitToWidth="true"
                         styleClass="content-scroll" VBox.vgrow="ALWAYS">
                 <VBox fx:id="contentPane" styleClass="content-pane"/>
