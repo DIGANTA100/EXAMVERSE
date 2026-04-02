@@ -40,161 +40,474 @@
                 <VBox alignment="CENTER" spacing="10" styleClass="page-header">
                     <Label text="DOCUMENTATION" styleClass="page-eyebrow"/>
                     <Label text="ExamVerse User Guide" styleClass="page-title"/>
-                    <Label text="Everything you need to get started, configure, and make the most of ExamVerse."
+                    <Label text="Complete reference for students, admins, and developers."
                            styleClass="page-description" textAlignment="CENTER"/>
                 </VBox>
 
                 <!-- Docs Body: Sidebar + Content -->
                 <HBox spacing="30" alignment="TOP_LEFT">
 
-
-                    <VBox spacing="4" minWidth="200" maxWidth="200">
+                    <!-- ====== SIDEBAR ====== -->
+                    <VBox spacing="4" minWidth="210" maxWidth="210">
                         <padding><Insets top="6"/></padding>
 
                         <Label text="GETTING STARTED" styleClass="docs-sidebar-section"/>
-                        <padding><Insets bottom="4"/></padding>
-
-                        <Button text="  Overview" styleClass="docs-sidebar-item-active" maxWidth="Infinity">
-                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
-                        </Button>
-                        <Button text="  Installation" styleClass="docs-sidebar-item" maxWidth="Infinity">
-                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
-                        </Button>
-                        <Button text="  First Login" styleClass="docs-sidebar-item" maxWidth="Infinity">
-                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
-                        </Button>
+                        <Button fx:id="btnOverview"      text="  Overview"          styleClass="docs-sidebar-item-active" maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
+                        <Button fx:id="btnInstallation"  text="  Installation"      styleClass="docs-sidebar-item"        maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
+                        <Button fx:id="btnFirstLogin"    text="  First Login"       styleClass="docs-sidebar-item"        maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
 
                         <Region prefHeight="12"/>
                         <Label text="STUDENT GUIDE" styleClass="docs-sidebar-section"/>
-
-                        <Button text="  Taking an Exam" styleClass="docs-sidebar-item" maxWidth="Infinity">
-                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
-                        </Button>
-                        <Button text="  Practice Mode" styleClass="docs-sidebar-item" maxWidth="Infinity">
-                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
-                        </Button>
-                        <Button text="  Viewing Results" styleClass="docs-sidebar-item" maxWidth="Infinity">
-                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
-                        </Button>
+                        <Button fx:id="btnTakingExam"    text="  Taking an Exam"    styleClass="docs-sidebar-item"        maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
+                        <Button fx:id="btnPractice"      text="  Practice Mode"     styleClass="docs-sidebar-item"        maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
+                        <Button fx:id="btnContests"      text="  Contests"          styleClass="docs-sidebar-item"        maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
+                        <Button fx:id="btnLeaderboard"   text="  Leaderboard"       styleClass="docs-sidebar-item"        maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
+                        <Button fx:id="btnForum"         text="  Discussion Forum"  styleClass="docs-sidebar-item"        maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
+                        <Button fx:id="btnResults"       text="  Viewing Results"   styleClass="docs-sidebar-item"        maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
 
                         <Region prefHeight="12"/>
                         <Label text="ADMIN GUIDE" styleClass="docs-sidebar-section"/>
-
-                        <Button text="  Managing Questions" styleClass="docs-sidebar-item" maxWidth="Infinity">
-                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
-                        </Button>
-                        <Button text="  Creating Exams" styleClass="docs-sidebar-item" maxWidth="Infinity">
-                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
-                        </Button>
-                        <Button text="  User Management" styleClass="docs-sidebar-item" maxWidth="Infinity">
-                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
-                        </Button>
+                        <Button fx:id="btnAdminDash"     text="  Admin Dashboard"   styleClass="docs-sidebar-item"        maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
+                        <Button fx:id="btnManageQ"       text="  Managing Questions" styleClass="docs-sidebar-item"       maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
+                        <Button fx:id="btnContestMgr"    text="  Contest Manager"   styleClass="docs-sidebar-item"        maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
+                        <Button fx:id="btnReports"       text="  Exam Reports"      styleClass="docs-sidebar-item"        maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
 
                         <Region prefHeight="12"/>
                         <Label text="SYSTEM" styleClass="docs-sidebar-section"/>
-                        <Button text="  Configuration" styleClass="docs-sidebar-item" maxWidth="Infinity">
-                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
-                        </Button>
-                        <Button text="  Database Setup" styleClass="docs-sidebar-item" maxWidth="Infinity">
-                            <padding><Insets top="9" bottom="9" left="14" right="14"/></padding>
-                        </Button>
+                        <Button fx:id="btnConfig"        text="  Configuration"     styleClass="docs-sidebar-item"        maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
+                        <Button fx:id="btnDatabase"      text="  Database Setup"    styleClass="docs-sidebar-item"        maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
+                        <Button fx:id="btnStructure"     text="  Project Structure" styleClass="docs-sidebar-item"        maxWidth="Infinity" onAction="#handleTabSwitch"><padding><Insets top="9" bottom="9" left="14" right="14"/></padding></Button>
                     </VBox>
 
+                    <!-- ====== CONTENT PANELS (only one visible at a time) ====== -->
+                    <StackPane HBox.hgrow="ALWAYS">
 
-                    <VBox styleClass="docs-content-area" HBox.hgrow="ALWAYS">
-                        <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
-                        <VBox spacing="32">
-
-                            <!-- Section: Overview -->
-                            <VBox spacing="12">
+                        <!-- ── Overview ── -->
+                        <VBox fx:id="panelOverview" styleClass="docs-content-area" visible="true" managed="true">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
                                 <Label text="Overview" styleClass="docs-h1"/>
                                 <Region styleClass="section-divider"/>
-                                <Label text="ExamVerse is a desktop-based academic examination platform built with Java and JavaFX. It provides a complete end-to-end solution for conducting online examinations, managing question banks, and tracking student performance — all within a beautifully designed, offline-capable application."
-                                       styleClass="docs-body" wrapText="true"/>
+                                <Label text="ExamVerse is a desktop-based academic examination platform built with Java 17 and JavaFX. It provides a complete end-to-end solution for conducting online exams, running live competitive contests, managing question banks, fostering discussion, and tracking student performance — all within a beautifully designed, MySQL-backed application." styleClass="docs-body" wrapText="true"/>
+                                <Label text="The system supports two distinct user roles — Student and Admin/Teacher — each with a tailored dashboard, feature set, and permission boundary. A cinematic intro plays on first launch, setting the tone for the ExamVerse experience." styleClass="docs-body" wrapText="true"/>
+
+                                <Region prefHeight="8"/>
+                                <Label text="Key Highlights" styleClass="docs-h2"/>
+                                <VBox spacing="8">
+                                    <Label text="→  Timed MCQ exams with auto-evaluation and instant results" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Live competitive contest rooms with real-time leaderboard" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Practice mode with per-question immediate feedback" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Discussion forum with admin moderation" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Gemini AI-powered hints and question suggestions" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Full email integration (signup, password reset, contact)" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Admin dashboard with reports, notifications, and user management" styleClass="docs-body" wrapText="true"/>
+                                </VBox>
                             </VBox>
+                        </VBox>
 
-                            <!-- Section: Getting Started -->
-                            <VBox spacing="14">
-                                <Label text="Getting Started" styleClass="docs-h2"/>
+                        <!-- ── Installation ── -->
+                        <VBox fx:id="panelInstallation" styleClass="docs-content-area" visible="false" managed="false">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
+                                <Label text="Installation &amp; Running" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
 
-                                <!-- Step 1 -->
+                                <Label text="Prerequisites" styleClass="docs-h2"/>
+                                <VBox spacing="6">
+                                    <Label text="→  Java 17 or higher (JDK)" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  JavaFX 17+ (included via Gradle)" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  MySQL 8.0 or higher (running locally or via proxy)" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Gradle (wrapper included — no separate install needed)" styleClass="docs-body" wrapText="true"/>
+                                </VBox>
+
+                                <Label text="Step-by-Step Setup" styleClass="docs-h2"/>
                                 <HBox spacing="14" alignment="TOP_LEFT">
                                     <Label text="1" styleClass="docs-step-number"/>
-                                    <VBox spacing="4" VBox.vgrow="ALWAYS">
-                                        <Label text="Build the project using Gradle" styleClass="docs-body" style="-fx-text-fill: #e2e8f0;"/>
-                                        <VBox styleClass="docs-code-block">
-                                            <padding><Insets top="10" bottom="10" left="14" right="14"/></padding>
+                                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                        <Label text="Open DatabaseConfig.java and set your MySQL credentials:" styleClass="docs-body" wrapText="true"/>
+                                        <VBox styleClass="docs-code-block"><padding><Insets top="10" bottom="10" left="14" right="14"/></padding>
+                                            <Label text="DB_URL      = &quot;jdbc:mysql://localhost:3306/examverse_db&quot;" styleClass="docs-code-block"/>
+                                            <Label text="DB_USER     = &quot;root&quot;" styleClass="docs-code-block"/>
+                                            <Label text="DB_PASSWORD = &quot;your_password&quot;" styleClass="docs-code-block"/>
+                                        </VBox>
+                                    </VBox>
+                                </HBox>
+                                <HBox spacing="14" alignment="TOP_LEFT">
+                                    <Label text="2" styleClass="docs-step-number"/>
+                                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                        <Label text="Run the project from the project root using Gradle:" styleClass="docs-body" wrapText="true"/>
+                                        <VBox styleClass="docs-code-block"><padding><Insets top="10" bottom="10" left="14" right="14"/></padding>
                                             <Label text="./gradlew run" styleClass="docs-code-block"/>
                                         </VBox>
                                     </VBox>
                                 </HBox>
-
-                                <!-- Step 2 -->
-                                <HBox spacing="14" alignment="TOP_LEFT">
-                                    <Label text="2" styleClass="docs-step-number"/>
-                                    <VBox spacing="4">
-                                        <Label text="The intro cinematic plays on first launch. Press any key or wait for it to complete." styleClass="docs-body" wrapText="true"/>
-                                    </VBox>
-                                </HBox>
-
-                                <!-- Step 3 -->
                                 <HBox spacing="14" alignment="TOP_LEFT">
                                     <Label text="3" styleClass="docs-step-number"/>
                                     <VBox spacing="4">
-                                        <Label text="Register a new account or log in. Choose your role — Student or Admin/Teacher — before submitting." styleClass="docs-body" wrapText="true"/>
+                                        <Label text="On first run, the database examverse_db is created automatically, all tables are initialized, and a default admin account is seeded. The intro cinematic will play." styleClass="docs-body" wrapText="true"/>
                                     </VBox>
                                 </HBox>
-
-                                <!-- Step 4 -->
                                 <HBox spacing="14" alignment="TOP_LEFT">
                                     <Label text="4" styleClass="docs-step-number"/>
                                     <VBox spacing="4">
-                                        <Label text="You will be redirected to your role-specific dashboard automatically after successful login." styleClass="docs-body" wrapText="true"/>
+                                        <Label text="To configure email (SMTP), open EmailConfig.java and set your host, port, and credentials before running." styleClass="docs-body" wrapText="true"/>
                                     </VBox>
                                 </HBox>
                             </VBox>
+                        </VBox>
 
-                            <Region styleClass="section-divider"/>
+                        <!-- ── First Login ── -->
+                        <VBox fx:id="panelFirstLogin" styleClass="docs-content-area" visible="false" managed="false">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
+                                <Label text="First Login" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
+                                <Label text="After the intro cinematic completes, you are taken to the Dashboard Landing page. From here you can Log In or Sign Up." styleClass="docs-body" wrapText="true"/>
 
-                            <!-- Section: Student Guide -->
-                            <VBox spacing="12">
-                                <Label text="Taking an Exam" styleClass="docs-h2"/>
-                                <Label text="From the Student Dashboard, select any available exam to begin. Exams are timed — a countdown timer is always visible in the top-right corner. Navigate between questions using the Previous / Next buttons, or jump directly using the question palette on the sidebar."
-                                       styleClass="docs-body" wrapText="true"/>
-                                <Label text="On submission (manual or automatic when time expires), your result is immediately calculated and displayed with a detailed breakdown of correct, incorrect, and skipped answers."
-                                       styleClass="docs-body" wrapText="true"/>
-                            </VBox>
+                                <Label text="Signing Up" styleClass="docs-h2"/>
+                                <VBox spacing="6">
+                                    <Label text="→  Click Sign Up on the landing page." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Fill in your full name, username, email, and password." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Select your role: Student or Admin/Teacher." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Accept the Terms and Conditions, then submit." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  A welcome email is sent automatically to your address." styleClass="docs-body" wrapText="true"/>
+                                </VBox>
 
-                            <Region styleClass="section-divider"/>
+                                <Label text="Logging In" styleClass="docs-h2"/>
+                                <VBox spacing="6">
+                                    <Label text="→  Enter your username or email address in the login field." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Enter your password and click Log In." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  You are redirected to your role-specific dashboard automatically." styleClass="docs-body" wrapText="true"/>
+                                </VBox>
 
-                            <!-- Section: Admin Guide -->
-                            <VBox spacing="12">
-                                <Label text="Managing Questions (Admin)" styleClass="docs-h2"/>
-                                <Label text="Navigate to the Admin Dashboard and open the Question Manager. You can add new questions individually using the dialog form, specifying the question text, four options, the correct answer, subject, and difficulty level."
-                                       styleClass="docs-body" wrapText="true"/>
-                                <Label text="Questions are stored in the file-based data repository and are immediately available for exam assignment."
-                                       styleClass="docs-body" wrapText="true"/>
-                            </VBox>
+                                <Label text="Forgot Password" styleClass="docs-h2"/>
+                                <Label text="Click Forgot Password on the login screen. Enter your registered email. A reset link is sent by email — click it, enter a new password, and you are back in." styleClass="docs-body" wrapText="true"/>
 
-                            <Region styleClass="section-divider"/>
-
-                            <!-- Section: Configuration -->
-                            <VBox spacing="12">
-                                <Label text="Configuration" styleClass="docs-h2"/>
-                                <Label text="Application settings are defined in AppConfig.java and DatabaseConfig.java. Email settings (SMTP host, credentials) are configured in EmailConfig.java. Scene routing is managed centrally via SceneManager and SceneConfig."
-                                       styleClass="docs-body" wrapText="true"/>
-                                <VBox styleClass="docs-code-block">
-                                    <padding><Insets top="12" bottom="12" left="16" right="16"/></padding>
-                                    <Label text="src/main/java/com/examverse/config/" styleClass="docs-code-block"/>
-                                    <Label text="  ├── AppConfig.java" styleClass="docs-code-block"/>
-                                    <Label text="  ├── DatabaseConfig.java" styleClass="docs-code-block"/>
-                                    <Label text="  ├── EmailConfig.java" styleClass="docs-code-block"/>
-                                    <Label text="  └── SceneConfig.java" styleClass="docs-code-block"/>
+                                <Label text="Default Admin Account" styleClass="docs-h2"/>
+                                <VBox styleClass="docs-code-block"><padding><Insets top="10" bottom="10" left="14" right="14"/></padding>
+                                    <Label text="Username: admin    Password: admin123" styleClass="docs-code-block"/>
+                                    <Label text="Change this immediately after first login!" styleClass="docs-code-block"/>
                                 </VBox>
                             </VBox>
-
                         </VBox>
-                    </VBox>
+
+                        <!-- ── Taking an Exam ── -->
+                        <VBox fx:id="panelTakingExam" styleClass="docs-content-area" visible="false" managed="false">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
+                                <Label text="Taking an Exam" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
+                                <Label text="From your Student Dashboard, select any active exam from the list. The exam overview shows the subject, total questions, duration, total marks, and passing marks. Click Start to begin." styleClass="docs-body" wrapText="true"/>
+
+                                <Label text="During the Exam" styleClass="docs-h2"/>
+                                <VBox spacing="6">
+                                    <Label text="→  A countdown timer is always visible in the corner." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Navigate with Previous / Next buttons or the question palette." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Answered questions are highlighted in the palette." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  You may change any answer at any time before submitting." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Click Submit when done, or the exam auto-submits when time expires." styleClass="docs-body" wrapText="true"/>
+                                </VBox>
+
+                                <Label text="After Submission" styleClass="docs-h2"/>
+                                <Label text="The Result screen instantly shows your total score, accuracy percentage, pass/fail status, time taken, and a full answer-by-answer breakdown with correct answers highlighted in green." styleClass="docs-body" wrapText="true"/>
+                                <Label text="You can retake the exam from the result screen. Each attempt is tracked independently in your result history." styleClass="docs-body" wrapText="true"/>
+                            </VBox>
+                        </VBox>
+
+                        <!-- ── Practice Mode ── -->
+                        <VBox fx:id="panelPractice" styleClass="docs-content-area" visible="false" managed="false">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
+                                <Label text="Practice Mode" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
+                                <Label text="Practice Mode is an ungraded, untimed way to go through exam questions at your own pace. No score is recorded — it is designed purely for preparation." styleClass="docs-body" wrapText="true"/>
+
+                                <Label text="How It Works" styleClass="docs-h2"/>
+                                <VBox spacing="6">
+                                    <Label text="→  Select Practice Mode from the Student Dashboard." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Choose a subject or exam to practice." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Answer each question and receive immediate feedback." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Correct answers are shown in green, wrong in red, right after selection." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Navigate freely — no time pressure, no submission required." styleClass="docs-body" wrapText="true"/>
+                                </VBox>
+
+                                <Label text="AI Hints" styleClass="docs-h2"/>
+                                <Label text="In Practice Mode, you can request an AI-powered hint for any question using the Hint button. This calls the Gemini AI service to generate a contextual explanation without revealing the direct answer." styleClass="docs-body" wrapText="true"/>
+                            </VBox>
+                        </VBox>
+
+                        <!-- ── Contests ── -->
+                        <VBox fx:id="panelContests" styleClass="docs-content-area" visible="false" managed="false">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
+                                <Label text="Live Contests" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
+                                <Label text="Contests are time-boxed competitive events created by admins. Unlike regular exams, contests are synchronized — all participants start at the same moment and compete for leaderboard positions." styleClass="docs-body" wrapText="true"/>
+
+                                <Label text="Joining a Contest" styleClass="docs-h2"/>
+                                <VBox spacing="6">
+                                    <Label text="→  Open Contests from your Student Dashboard." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Select an available contest and click Join." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  The Contest Intro screen shows the rules and details." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  You enter the Contest Lobby and wait for the admin to start." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Once started, the Contest Room opens with a synchronized countdown." styleClass="docs-body" wrapText="true"/>
+                                </VBox>
+
+                                <Label text="During the Contest" styleClass="docs-h2"/>
+                                <Label text="Answer questions as fast and accurately as possible. When done, use the ContestSubmitDialog to confirm your submission. After the contest ends, the Written Review screen shows your full breakdown — your answer vs. the correct answer for every question." styleClass="docs-body" wrapText="true"/>
+                            </VBox>
+                        </VBox>
+
+                        <!-- ── Leaderboard ── -->
+                        <VBox fx:id="panelLeaderboard" styleClass="docs-content-area" visible="false" managed="false">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
+                                <Label text="Leaderboard &amp; Ratings" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
+                                <Label text="After each contest ends, a live leaderboard is displayed showing all participants ranked by score, then by time taken (faster submissions rank higher on a tie)." styleClass="docs-body" wrapText="true"/>
+
+                                <Label text="Student Ratings" styleClass="docs-h2"/>
+                                <Label text="Each student accumulates a rating (StudentRating) across all contests they participate in. Your rating is visible on your Profile section in the Student Dashboard and updates after every contest." styleClass="docs-body" wrapText="true"/>
+
+                                <Label text="StudentStats" styleClass="docs-h2"/>
+                                <VBox spacing="6">
+                                    <Label text="Your profile also tracks StudentStats, including:" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Total exams attempted" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Overall accuracy percentage" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Best score achieved" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Total contests participated in" styleClass="docs-body" wrapText="true"/>
+                                </VBox>
+                            </VBox>
+                        </VBox>
+
+                        <!-- ── Forum ── -->
+                        <VBox fx:id="panelForum" styleClass="docs-content-area" visible="false" managed="false">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
+                                <Label text="Discussion Forum" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
+                                <Label text="The Discussion Forum is accessible from your Student Dashboard. It is a shared space where students and admins can post questions, share resources, and discuss exam topics." styleClass="docs-body" wrapText="true"/>
+
+                                <Label text="Posting a Message" styleClass="docs-h2"/>
+                                <VBox spacing="6">
+                                    <Label text="→  Open Discussion Forum from your dashboard." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Type your message in the compose field." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Click Send to post. Your name and timestamp are attached." styleClass="docs-body" wrapText="true"/>
+                                </VBox>
+
+                                <Label text="Admin Moderation" styleClass="docs-h2"/>
+                                <Label text="Admins access the forum via the AdminForumController, which provides the same interface plus the ability to delete any message. Admins can remove inappropriate or irrelevant posts to keep the forum clean." styleClass="docs-body" wrapText="true"/>
+
+                                <Label text="Forum Messages" styleClass="docs-h2"/>
+                                <Label text="All messages are stored as ForumMessage objects via the ForumService. Each message records the author ID, content, and timestamp." styleClass="docs-body" wrapText="true"/>
+                            </VBox>
+                        </VBox>
+
+                        <!-- ── Viewing Results ── -->
+                        <VBox fx:id="panelResults" styleClass="docs-content-area" visible="false" managed="false">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
+                                <Label text="Viewing Results" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
+                                <Label text="From your Student Dashboard, navigate to the Results section. All past exam attempts are listed with the exam name, date, score, accuracy, and pass/fail status." styleClass="docs-body" wrapText="true"/>
+
+                                <Label text="Result Details" styleClass="docs-h2"/>
+                                <VBox spacing="6">
+                                    <Label text="→  Click any result to see the full detailed breakdown." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Each question is listed with your selected answer highlighted." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Correct answers are shown in green, wrong answers in red." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Total score, accuracy, and time spent are shown at the top." styleClass="docs-body" wrapText="true"/>
+                                </VBox>
+
+                                <Label text="Retaking an Exam" styleClass="docs-h2"/>
+                                <Label text="From the result screen, click Retake to start a fresh attempt. Each attempt is recorded independently — your history shows every attempt separately so you can track improvement over time." styleClass="docs-body" wrapText="true"/>
+                            </VBox>
+                        </VBox>
+
+                        <!-- ── Admin Dashboard ── -->
+                        <VBox fx:id="panelAdminDash" styleClass="docs-content-area" visible="false" managed="false">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
+                                <Label text="Admin Dashboard" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
+                                <Label text="Log in with an Admin account to access the Admin Dashboard (AdminDashboardController). It is the central hub for all administrative operations." styleClass="docs-body" wrapText="true"/>
+
+                                <Label text="Dashboard Sections" styleClass="docs-h2"/>
+                                <VBox spacing="6">
+                                    <Label text="→  Question Manager — create, edit, delete questions" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Exam Manager — create and manage exam papers" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Contest Manager — schedule and run live contests" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Exam Reports — view class-wide analytics" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Forum — moderate the discussion forum" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Notifications — broadcast messages to all students" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Profile — manage your admin profile" styleClass="docs-body" wrapText="true"/>
+                                </VBox>
+
+                                <Label text="Broadcast Notifications" styleClass="docs-h2"/>
+                                <Label text="The AdminNotificationSender panel lets you compose a message and send it instantly to all registered students. Messages appear in the student's notification panel on their dashboard." styleClass="docs-body" wrapText="true"/>
+                            </VBox>
+                        </VBox>
+
+                        <!-- ── Managing Questions ── -->
+                        <VBox fx:id="panelManageQ" styleClass="docs-content-area" visible="false" managed="false">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
+                                <Label text="Managing Questions (Admin)" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
+                                <Label text="Navigate to the Admin Dashboard and open the Question Manager. Questions are stored in the MySQL questions table and are immediately available for assignment to exams." styleClass="docs-body" wrapText="true"/>
+
+                                <Label text="Adding a Question" styleClass="docs-h2"/>
+                                <VBox spacing="6">
+                                    <Label text="→  Click Add Question to open the dialog form." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Enter the question text." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Fill in all four options (A, B, C, D)." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Select the correct answer from the dropdown." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Assign a subject and difficulty level (EASY / MEDIUM / HARD)." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Optionally add an explanation shown in the result breakdown." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Click Save to add it to the question bank." styleClass="docs-body" wrapText="true"/>
+                                </VBox>
+
+                                <Label text="Editing &amp; Deleting" styleClass="docs-h2"/>
+                                <Label text="Select any question from the list to edit its details or delete it. Deleting a question removes it from all future exams, but does not affect historical student answers already recorded." styleClass="docs-body" wrapText="true"/>
+                            </VBox>
+                        </VBox>
+
+                        <!-- ── Contest Manager ── -->
+                        <VBox fx:id="panelContestMgr" styleClass="docs-content-area" visible="false" managed="false">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
+                                <Label text="Contest Manager (Admin)" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
+                                <Label text="From the Admin Dashboard, open the Contest Manager (ContestManagerController). This is where you create, schedule, and run all live competitive contests." styleClass="docs-body" wrapText="true"/>
+
+                                <Label text="Creating a Contest" styleClass="docs-h2"/>
+                                <VBox spacing="6">
+                                    <Label text="→  Click Add Contest to open the ContestDialogHelper form." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Enter the contest title, subject, and duration in minutes." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Set the scheduled date and start time." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Select questions from the question bank to include." styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Save the contest — it now appears in the student contest list." styleClass="docs-body" wrapText="true"/>
+                                </VBox>
+
+                                <Label text="Starting a Contest" styleClass="docs-h2"/>
+                                <Label text="When the scheduled time arrives, click Start in the Contest Manager. The Contest Lobby opens — students who have joined will see it activate. Once you confirm start, all participants' contest rooms open simultaneously with a synchronized countdown." styleClass="docs-body" wrapText="true"/>
+
+                                <Label text="Contest Database" styleClass="docs-h2"/>
+                                <Label text="Contest data is managed by ContestDatabaseSetup, which initializes the contest, contest_questions, contest_answers, and contest_participants tables separately from the main exam tables." styleClass="docs-body" wrapText="true"/>
+                            </VBox>
+                        </VBox>
+
+                        <!-- ── Exam Reports ── -->
+                        <VBox fx:id="panelReports" styleClass="docs-content-area" visible="false" managed="false">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
+                                <Label text="Exam Reports (Admin)" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
+                                <Label text="The ExamReportsController provides an aggregate analytics view of all exam activity across the platform. Access it from the Admin Dashboard." styleClass="docs-body" wrapText="true"/>
+
+                                <Label text="What You Can See" styleClass="docs-h2"/>
+                                <VBox spacing="6">
+                                    <Label text="→  Total attempts per exam" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Class-wide average score and accuracy" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Pass rate percentage per exam" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Top-performing students per exam" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  Individual student attempt history" styleClass="docs-body" wrapText="true"/>
+                                </VBox>
+
+                                <Label text="Data Source" styleClass="docs-h2"/>
+                                <Label text="All report data is pulled from the student_exam_attempts and student_answers tables in MySQL. Reports reflect all completed attempts in real time." styleClass="docs-body" wrapText="true"/>
+                            </VBox>
+                        </VBox>
+
+                        <!-- ── Configuration ── -->
+                        <VBox fx:id="panelConfig" styleClass="docs-content-area" visible="false" managed="false">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
+                                <Label text="Configuration Files" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
+                                <Label text="All configuration is centralized in the config/ package. There are no external .properties files — edit the Java config files directly before building." styleClass="docs-body" wrapText="true"/>
+
+                                <VBox styleClass="docs-code-block"><padding><Insets top="12" bottom="12" left="16" right="16"/></padding>
+                                    <Label text="src/main/java/com/examverse/config/" styleClass="docs-code-block"/>
+                                    <Label text="  ├── AppConfig.java             — app-wide constants" styleClass="docs-code-block"/>
+                                    <Label text="  ├── DatabaseConfig.java        — MySQL URL, user, password" styleClass="docs-code-block"/>
+                                    <Label text="  ├── ContestDatabaseSetup.java  — contest table initialization" styleClass="docs-code-block"/>
+                                    <Label text="  ├── EmailConfig.java           — SMTP host, port, credentials" styleClass="docs-code-block"/>
+                                    <Label text="  └── SceneConfig.java           — FXML path registry + caching" styleClass="docs-code-block"/>
+                                </VBox>
+
+                                <Label text="SceneConfig &amp; SceneManager" styleClass="docs-h2"/>
+                                <Label text="All FXML scene paths are registered in SceneConfig. SceneManager handles scene switching with intelligent caching — once a scene is loaded it is reused, making navigation instant." styleClass="docs-body" wrapText="true"/>
+
+                                <Label text="EmailConfig" styleClass="docs-h2"/>
+                                <Label text="Set your SMTP host, port, sender email, and password in EmailConfig.java. ExamVerse uses Gmail SMTP by default. Enable 'Less secure app access' or use an App Password if using Gmail." styleClass="docs-body" wrapText="true"/>
+                            </VBox>
+                        </VBox>
+
+                        <!-- ── Database Setup ── -->
+                        <VBox fx:id="panelDatabase" styleClass="docs-content-area" visible="false" managed="false">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
+                                <Label text="Database Setup" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
+                                <Label text="ExamVerse uses MySQL 8. On first run, DatabaseConfig.initializeTables() automatically creates the examverse_db database and all required tables if they do not already exist — no manual SQL needed." styleClass="docs-body" wrapText="true"/>
+
+                                <Label text="Tables Created Automatically" styleClass="docs-h2"/>
+                                <VBox styleClass="docs-code-block"><padding><Insets top="12" bottom="12" left="16" right="16"/></padding>
+                                    <Label text="users                    — all user accounts" styleClass="docs-code-block"/>
+                                    <Label text="exams                    — exam definitions" styleClass="docs-code-block"/>
+                                    <Label text="questions                — question bank" styleClass="docs-code-block"/>
+                                    <Label text="student_exam_attempts    — attempt records" styleClass="docs-code-block"/>
+                                    <Label text="student_answers          — per-question answers" styleClass="docs-code-block"/>
+                                    <Label text="(contest tables via ContestDatabaseSetup)" styleClass="docs-code-block"/>
+                                </VBox>
+
+                                <Label text="Seeded Default Data" styleClass="docs-h2"/>
+                                <VBox spacing="6">
+                                    <Label text="→  Default admin account: username admin / password admin123" styleClass="docs-body" wrapText="true"/>
+                                    <Label text="→  5 sample exams (Java, Data Structures, Algorithms, Database, Web Dev)" styleClass="docs-body" wrapText="true"/>
+                                </VBox>
+                                <Label text="Change the default admin password immediately after first login." styleClass="docs-body" wrapText="true"/>
+                            </VBox>
+                        </VBox>
+
+                        <!-- ── Project Structure ── -->
+                        <VBox fx:id="panelStructure" styleClass="docs-content-area" visible="false" managed="false">
+                            <padding><Insets top="40" bottom="40" left="40" right="40"/></padding>
+                            <VBox spacing="24">
+                                <Label text="Project Structure" styleClass="docs-h1"/>
+                                <Region styleClass="section-divider"/>
+                                <VBox styleClass="docs-code-block"><padding><Insets top="12" bottom="12" left="16" right="16"/></padding>
+                                    <Label text="src/main/java/com/examverse/" styleClass="docs-code-block"/>
+                                    <Label text="  ├── app/              ExamVerseApp.java, Launcher.java" styleClass="docs-code-block"/>
+                                    <Label text="  ├── config/           DB, Email, Scene, App, Contest config" styleClass="docs-code-block"/>
+                                    <Label text="  ├── controller/" styleClass="docs-code-block"/>
+                                    <Label text="  │   ├── admin/        AdminDashboard, ContestManager, Reports" styleClass="docs-code-block"/>
+                                    <Label text="  │   ├── auth/         Login, Signup, ForgotPassword, Reset" styleClass="docs-code-block"/>
+                                    <Label text="  │   ├── contest/      Lobby, Room, Result, Leaderboard, Review" styleClass="docs-code-block"/>
+                                    <Label text="  │   ├── dashboard/    Landing, Student, About, FAQ, Docs, etc." styleClass="docs-code-block"/>
+                                    <Label text="  │   ├── exam/         ExamController, ResultController" styleClass="docs-code-block"/>
+                                    <Label text="  │   └── forum/        DiscussionForum, AdminForum" styleClass="docs-code-block"/>
+                                    <Label text="  ├── model/" styleClass="docs-code-block"/>
+                                    <Label text="  │   ├── exam/         Exam, Question, Answer, Result, Contest..." styleClass="docs-code-block"/>
+                                    <Label text="  │   ├── forum/        ForumMessage" styleClass="docs-code-block"/>
+                                    <Label text="  │   └── user/         User, Student, Admin, StudentStats, Rating" styleClass="docs-code-block"/>
+                                    <Label text="  ├── service/          AI, Auth, Exam, Forum, Notification, Media..." styleClass="docs-code-block"/>
+                                    <Label text="  └── util/             SceneManager, helpers" styleClass="docs-code-block"/>
+                                </VBox>
+
+                                <Label text="Resources" styleClass="docs-h2"/>
+                                <VBox styleClass="docs-code-block"><padding><Insets top="12" bottom="12" left="16" right="16"/></padding>
+                                    <Label text="src/main/resources/com/examverse/" styleClass="docs-code-block"/>
+                                    <Label text="  ├── assets/   images/, music/, video/" styleClass="docs-code-block"/>
+                                    <Label text="  ├── css/      dashboard-landing.css, landing-pages.css, ..." styleClass="docs-code-block"/>
+                                    <Label text="  └── fxml/     auth/, contest/, dashboard/, exam/, forum/, intro/" styleClass="docs-code-block"/>
+                                </VBox>
+                            </VBox>
+                        </VBox>
+
+                    </StackPane>
+                    <!-- end content StackPane -->
 
                 </HBox>
             </VBox>

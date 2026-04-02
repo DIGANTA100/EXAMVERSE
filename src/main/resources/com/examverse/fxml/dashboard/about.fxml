@@ -177,10 +177,12 @@
                                 <!-- Contributions -->
                                 <VBox spacing="8">
                                     <Label text="CONTRIBUTIONS" styleClass="dev-detail-label"/>
-                                    <Label text="→  Backend logic &amp; services" styleClass="dev-contrib-item"/>
-                                    <Label text="→  Database handling &amp; DAO layer" styleClass="dev-contrib-item"/>
-                                    <Label text="→  Authentication system" styleClass="dev-contrib-item"/>
+                                    <Label text="→  Backend logic &amp; service layer" styleClass="dev-contrib-item"/>
+                                    <Label text="→  MySQL database &amp; DAO layer" styleClass="dev-contrib-item"/>
+                                    <Label text="→  Authentication &amp; email system" styleClass="dev-contrib-item"/>
                                     <Label text="→  Exam engine &amp; evaluation logic" styleClass="dev-contrib-item"/>
+                                    <Label text="→  Contest system &amp; leaderboard" styleClass="dev-contrib-item"/>
+                                    <Label text="→  Gemini AI integration" styleClass="dev-contrib-item"/>
                                 </VBox>
 
                                 <Region styleClass="section-divider"/>
@@ -242,7 +244,9 @@
                                     <Label text="→  Frontend UI — JavaFX, FXML, CSS" styleClass="dev-contrib-item"/>
                                     <Label text="→  Scene transitions &amp; animations" styleClass="dev-contrib-item"/>
                                     <Label text="→  Intro cinematic design" styleClass="dev-contrib-item"/>
-                                    <Label text="→  Visual design system" styleClass="dev-contrib-item"/>
+                                    <Label text="→  Visual design system &amp; CSS theme" styleClass="dev-contrib-item"/>
+                                    <Label text="→  Dashboard UI &amp; landing pages" styleClass="dev-contrib-item"/>
+                                    <Label text="→  Forum &amp; notification UI" styleClass="dev-contrib-item"/>
                                 </VBox>
 
                                 <Region styleClass="section-divider"/>
@@ -295,12 +299,17 @@
                         <VBox spacing="10">
                             <Label text="TECHNOLOGIES" styleClass="project-info-title"/>
                             <HBox spacing="10" alignment="CENTER_LEFT">
-                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="Java" styleClass="tech-chip-text"/></HBox>
-                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="JavaFX" styleClass="tech-chip-text"/></HBox>
+                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="Java 17" styleClass="tech-chip-text"/></HBox>
+                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="JavaFX 17" styleClass="tech-chip-text"/></HBox>
                                 <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="FXML" styleClass="tech-chip-text"/></HBox>
                                 <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="CSS" styleClass="tech-chip-text"/></HBox>
+                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="MySQL 8" styleClass="tech-chip-text"/></HBox>
+                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="Gemini AI" styleClass="tech-chip-text"/></HBox>
+                            </HBox>
+                            <HBox spacing="10" alignment="CENTER_LEFT">
                                 <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="Gradle" styleClass="tech-chip-text"/></HBox>
-                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="File Storage / DAO" styleClass="tech-chip-text"/></HBox>
+                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="SMTP / Email" styleClass="tech-chip-text"/></HBox>
+                                <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="JDBC / DAO" styleClass="tech-chip-text"/></HBox>
                                 <HBox styleClass="tech-chip"><padding><Insets top="6" bottom="6" left="14" right="14"/></padding><Label text="MediaPlayer" styleClass="tech-chip-text"/></HBox>
                             </HBox>
                         </VBox>

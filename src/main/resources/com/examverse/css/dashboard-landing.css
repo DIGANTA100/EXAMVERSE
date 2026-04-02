@@ -55,40 +55,43 @@
 /* Navigation Buttons (Top Right) */
 .nav-button {
     -fx-background-color: transparent;
-    -fx-text-fill: #94a3b8;
-    -fx-font-size: 13px;
-    -fx-font-weight: 300;
-    -fx-font-family: "Segoe UI Light", "Arial", sans-serif;
+    -fx-text-fill: #e2e8f0;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
     -fx-letter-spacing: 0.05em;
     -fx-cursor: hand;
     -fx-background-radius: 0;
     -fx-border-width: 0;
-    -fx-padding: 8 0 8 0;
+    -fx-padding: 8 4 8 4;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.6), 4, 0.4, 0, 1);
 }
 
 .nav-button:hover {
     -fx-text-fill: #22d3ee;
-    -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.3), 8, 0.5, 0, 0);
+    -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.5), 10, 0.6, 0, 0);
 }
 
 .nav-button-secondary {
-    -fx-background-color: rgba(15, 23, 42, 0.5);
-    -fx-border-color: rgba(51, 65, 85, 0.5);
+    -fx-background-color: rgba(34, 211, 238, 0.08);
+    -fx-border-color: rgba(34, 211, 238, 0.4);
     -fx-border-width: 1;
-    -fx-border-radius: 4;
-    -fx-background-radius: 4;
-    -fx-text-fill: #cbd5e1;
-    -fx-font-size: 13px;
-    -fx-font-weight: 400;
-    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-text-fill: #f1f5f9;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-font-family: "Segoe UI Semibold", "Arial", sans-serif;
     -fx-padding: 8 20 8 20;
     -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.15), 8, 0.4, 0, 0);
 }
 
 .nav-button-secondary:hover {
-    -fx-border-color: rgba(34, 211, 238, 0.5);
+    -fx-border-color: rgba(34, 211, 238, 0.7);
     -fx-text-fill: #22d3ee;
-    -fx-background-color: rgba(15, 23, 42, 0.7);
+    -fx-background-color: rgba(34, 211, 238, 0.15);
+    -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.4), 14, 0.5, 0, 0);
 }
 
 /* ==================== HERO SECTION ==================== */
@@ -206,44 +209,49 @@
 }
 
 .stat-label {
-    -fx-font-size: 9px;
-    -fx-text-fill: rgba(34, 211, 238, 0.5);
-    -fx-font-weight: 500;
-    -fx-letter-spacing: 0.25em;
+    -fx-font-size: 10px;
+    -fx-text-fill: rgba(34, 211, 238, 0.85);
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 0.2em;
     -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 3, 0.4, 0, 1);
 }
 
 .stat-value {
-    -fx-font-size: 12px;
-    -fx-text-fill: #e2e8f0;
-    -fx-font-weight: 400;
+    -fx-font-size: 13px;
+    -fx-text-fill: #f1f5f9;
+    -fx-font-weight: 500;
     -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 3, 0.4, 0, 1);
 }
 
 /* Footer Links */
 .footer-link {
     -fx-background-color: transparent;
-    -fx-text-fill: #64748b;
-    -fx-font-size: 11px;
-    -fx-font-weight: 300;
-    -fx-letter-spacing: 0.15em;
-    -fx-font-family: "Segoe UI Light", "Arial", sans-serif;
+    -fx-text-fill: #cbd5e1;
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-letter-spacing: 0.1em;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
     -fx-cursor: hand;
     -fx-background-radius: 0;
     -fx-border-width: 0;
     -fx-padding: 4 0 4 0;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 3, 0.4, 0, 1);
 }
 
 .footer-link:hover {
     -fx-text-fill: #22d3ee;
+    -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.4), 8, 0.5, 0, 0);
 }
 
 .copyright {
-    -fx-font-size: 9px;
-    -fx-text-fill: rgba(100, 116, 139, 0.5);
-    -fx-font-weight: 300;
-    -fx-letter-spacing: 0.15em;
-    -fx-font-family: "Segoe UI Light", "Arial", sans-serif;
+    -fx-font-size: 10px;
+    -fx-text-fill: rgba(148, 163, 184, 0.75);
+    -fx-font-weight: 400;
+    -fx-letter-spacing: 0.1em;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 3, 0.4, 0, 1);
 }
 
 /* ==================== RESPONSIVE ADJUSTMENTS ==================== */

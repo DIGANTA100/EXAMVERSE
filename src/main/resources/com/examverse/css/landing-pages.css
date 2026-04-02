@@ -577,6 +577,45 @@
     -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.15), 10, 0.4, 0, 0);
 }
 
+/* ── ComboBox button text & arrow ── */
+.form-input .arrow-button {
+    -fx-background-color: transparent;
+}
+.form-input .arrow-button .arrow {
+    -fx-background-color: #94a3b8;
+}
+.form-input .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e2e8f0;
+    -fx-font-size: 13px;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+}
+
+/* ── ComboBox dropdown popup ── */
+.form-input .combo-popup .list-view {
+    -fx-background-color: #0f172a;
+    -fx-border-color: rgba(34, 211, 238, 0.25);
+    -fx-border-width: 1;
+    -fx-border-radius: 7;
+    -fx-background-radius: 7;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 20, 0.4, 0, 4);
+}
+.form-input .combo-popup .list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #cbd5e1;
+    -fx-font-size: 13px;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-padding: 10 14 10 14;
+}
+.form-input .combo-popup .list-view .list-cell:hover {
+    -fx-background-color: rgba(34, 211, 238, 0.08);
+    -fx-text-fill: #22d3ee;
+}
+.form-input .combo-popup .list-view .list-cell:selected {
+    -fx-background-color: rgba(34, 211, 238, 0.12);
+    -fx-text-fill: #22d3ee;
+}
+
 .form-textarea {
     -fx-background-color: rgba(30, 41, 59, 0.5);
     -fx-border-color: rgba(71, 85, 105, 0.4);
