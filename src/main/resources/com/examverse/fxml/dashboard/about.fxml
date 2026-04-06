@@ -63,6 +63,13 @@
                         <padding><Insets top="36" bottom="36" left="40" right="40"/></padding>
                         <HBox alignment="CENTER_LEFT" spacing="40">
 
+                            <!-- Supervisor Photo -->
+                            <StackPane>
+                                <VBox alignment="CENTER" styleClass="dev-avatar" minWidth="140" minHeight="140" maxWidth="140" maxHeight="140">
+                                    <ImageView fx:id="supervisorImage" fitWidth="140" fitHeight="140" preserveRatio="false" smooth="true"/>
+                                </VBox>
+                            </StackPane>
+
                             <!-- Left: Title + Name -->
                             <VBox spacing="14" HBox.hgrow="ALWAYS">
 
