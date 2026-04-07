@@ -52,7 +52,9 @@ public class SceneManager {
             "contest-leaderboard", // ← ADD THIS
             "written-review",      // ← ADD THIS
             "student-dashboard",   // ← ADD THIS
-            "admin-dashboard"      // ← ADD THIS
+            "admin-dashboard",     // ← ADD THIS
+            "all-exams",           // ← FIX: must reload when new exams are created
+            "question-manager"     // ← FIX: must reload when new exams are created
     };
     /** Returns true if this path should always bypass the cache. */
     private static boolean neverCache(String fxmlPath) {

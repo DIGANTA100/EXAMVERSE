@@ -451,6 +451,54 @@
     -fx-background-color: transparent;
 }
 
+.text-area > .scroll-pane > .viewport > .content {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ffffff !important;
+}
+
+.text-area .text {
+    -fx-fill: #ffffff !important;
+    -fx-font-smoothing-type: lcd;
+}
+
+/* ========================================
+   COMPREHENSIVE TEXTAREA FIX
+   Ensures text stays white when typing
+   ======================================== */
+
+/* Base TextArea */
+.text-area {
+    -fx-text-fill: #ffffff !important;
+}
+
+/* TextArea content area */
+.text-area .content {
+    -fx-text-fill: #ffffff !important;
+    -fx-fill: #ffffff !important;
+}
+
+/* TextArea when focused (actively typing) - CRITICAL FIX */
+.text-area:focused {
+    -fx-text-fill: #ffffff !important;
+}
+
+.text-area:focused .text {
+    -fx-fill: #ffffff !important;
+}
+
+.text-area:focused .content {
+    -fx-text-fill: #ffffff !important;
+    -fx-fill: #ffffff !important;
+}
+
+/* Ensure caret (cursor) is visible */
+.text-area .caret {
+    -fx-stroke: #ffffff;
+}
+
+/* END TEXTAREA FIX */
+
+
 .combo-box > .list-cell {
     -fx-background-color: transparent;
     -fx-text-fill: #e2e8f0;
