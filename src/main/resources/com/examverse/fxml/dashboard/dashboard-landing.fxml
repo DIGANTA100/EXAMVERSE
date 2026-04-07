@@ -135,7 +135,7 @@
         <!-- Bottom Footer Bar -->
         <HBox alignment="CENTER" spacing="30" styleClass="footer-bar">
             <padding>
-                <Insets top="25" bottom="25" left="60" right="60"/>
+                <Insets top="22" bottom="42" left="60" right="60"/>
             </padding>
 
             <!-- Left Side - System Stats -->

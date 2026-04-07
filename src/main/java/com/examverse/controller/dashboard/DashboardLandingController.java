@@ -10,7 +10,9 @@ import javafx.scene.media.MediaView;
 import javafx.util.Duration;
 import com.examverse.util.SceneManager;
 
+import java.awt.Desktop;
 import java.io.File;
+import java.net.URI;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -211,8 +213,19 @@ public class DashboardLandingController implements Initializable {
 
     @FXML
     private void handleDemo() {
-        System.out.println("Demo - not yet implemented");
-        // Will be implemented in a future update
+        // ─── Replace the URL below with your actual YouTube video link ───
+        String youtubeUrl = "https://www.youtube.com/watch?v=YOUR_VIDEO_ID";
+        // ──────────────────────────────────────────────────────────────────
+        try {
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                Desktop.getDesktop().browse(new URI(youtubeUrl));
+            } else {
+                // Fallback for Linux/headless environments
+                Runtime.getRuntime().exec(new String[]{"xdg-open", youtubeUrl});
+            }
+        } catch (Exception e) {
+            System.err.println("Could not open demo video: " + e.getMessage());
+        }
     }
 
     @FXML

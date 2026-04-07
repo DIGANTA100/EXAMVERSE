@@ -21,6 +21,7 @@ import java.util.ResourceBundle;
 public class AboutController implements Initializable {
 
     @FXML private VBox rootPane;
+    @FXML private ImageView supervisorImage;
     @FXML private ImageView prottoyImage;
     @FXML private ImageView digantaImage;
 
@@ -40,6 +41,7 @@ public class AboutController implements Initializable {
      *   src/main/resources/com/examverse/assets/images/diganta.jpg
      */
     private void loadDeveloperPhotos() {
+        loadPhoto(supervisorImage, "/com/examverse/assets/images/supervisor.jpg");
         loadPhoto(prottoyImage, "/com/examverse/assets/images/prottoy.jpg");
         loadPhoto(digantaImage, "/com/examverse/assets/images/diganta.jpg");
     }

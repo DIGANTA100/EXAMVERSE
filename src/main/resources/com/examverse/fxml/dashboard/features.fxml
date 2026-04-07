@@ -40,13 +40,13 @@
                 <VBox alignment="CENTER" spacing="10" styleClass="page-header">
                     <Label text="PLATFORM FEATURES" styleClass="page-eyebrow"/>
                     <Label text="Built for Academic Excellence" styleClass="page-title"/>
-                    <Label text="Everything you need — from adaptive exams to AI-powered insights — in one unified system."
-                           styleClass="page-description" textAlignment="CENTER" wrapText="true" maxWidth="620"/>
+                    <Label text="A complete ecosystem — from AI-powered exams to live contests, discussion forums, and real-time analytics."
+                           styleClass="page-description" textAlignment="CENTER" wrapText="true" maxWidth="680"/>
                 </VBox>
 
-                <!-- ====== CORE FEATURES ====== -->
+                <!-- ====== CORE EXAM FEATURES ====== -->
                 <VBox spacing="16">
-                    <Label text="CORE FEATURES" styleClass="section-label"/>
+                    <Label text="CORE EXAM SYSTEM" styleClass="section-label"/>
                     <Region styleClass="section-divider-glow" minWidth="60" maxWidth="60"/>
 
                     <HBox spacing="16" alignment="TOP_CENTER">
@@ -60,29 +60,12 @@
                                 </HBox>
                                 <VBox spacing="8">
                                     <Label text="Smart Exam Engine" styleClass="feature-title"/>
-                                    <Label text="Timed, auto-evaluated MCQ exams with randomized question ordering and instant scoring on completion." styleClass="feature-desc" wrapText="true"/>
+                                    <Label text="Timed, auto-evaluated MCQ exams with randomized question ordering, per-question navigation palette, and instant scoring on completion." styleClass="feature-desc" wrapText="true"/>
                                 </VBox>
                                 <HBox spacing="6">
                                     <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="LIVE" styleClass="feature-tag-text"/></HBox>
                                     <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="AUTO-GRADE" styleClass="feature-tag-text"/></HBox>
-                                </HBox>
-                            </VBox>
-                        </VBox>
-
-                        <!-- Role-Based Access -->
-                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
-                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
-                            <VBox spacing="16">
-                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
-                                    <Label text="🔐" styleClass="feature-icon"/>
-                                </HBox>
-                                <VBox spacing="8">
-                                    <Label text="Role-Based Access" styleClass="feature-title"/>
-                                    <Label text="Separate Student and Admin/Teacher portals with distinct dashboards, permissions, and workflows for each role." styleClass="feature-desc" wrapText="true"/>
-                                </VBox>
-                                <HBox spacing="6">
-                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="STUDENT" styleClass="feature-tag-text"/></HBox>
-                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="ADMIN" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="TIMED" styleClass="feature-tag-text"/></HBox>
                                 </HBox>
                             </VBox>
                         </VBox>
@@ -96,49 +79,11 @@
                                 </HBox>
                                 <VBox spacing="8">
                                     <Label text="Practice Mode" styleClass="feature-title"/>
-                                    <Label text="Ungraded practice sessions let students rehearse at their own pace with immediate per-question feedback." styleClass="feature-desc" wrapText="true"/>
+                                    <Label text="Ungraded, unlimited practice sessions with immediate per-question feedback. Students rehearse at their own pace before taking a graded exam." styleClass="feature-desc" wrapText="true"/>
                                 </VBox>
                                 <HBox spacing="6">
                                     <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="SELF-PACED" styleClass="feature-tag-text"/></HBox>
-                                </HBox>
-                            </VBox>
-                        </VBox>
-
-                    </HBox>
-
-                    <HBox spacing="16" alignment="TOP_CENTER">
-
-                        <!-- AI Integration -->
-                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
-                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
-                            <VBox spacing="16">
-                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
-                                    <Label text="🤖" styleClass="feature-icon"/>
-                                </HBox>
-                                <VBox spacing="8">
-                                    <Label text="AI-Powered Insights" styleClass="feature-title"/>
-                                    <Label text="Gemini AI integration provides intelligent question suggestions, performance analysis, and personalized study hints." styleClass="feature-desc" wrapText="true"/>
-                                </VBox>
-                                <HBox spacing="6">
-                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="GEMINI AI" styleClass="feature-tag-text"/></HBox>
-                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="ADAPTIVE" styleClass="feature-tag-text"/></HBox>
-                                </HBox>
-                            </VBox>
-                        </VBox>
-
-                        <!-- Question Manager -->
-                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
-                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
-                            <VBox spacing="16">
-                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
-                                    <Label text="🗂️" styleClass="feature-icon"/>
-                                </HBox>
-                                <VBox spacing="8">
-                                    <Label text="Question Manager" styleClass="feature-title"/>
-                                    <Label text="Admins can create, edit, and categorize question banks with support for multiple subjects and difficulty levels." styleClass="feature-desc" wrapText="true"/>
-                                </VBox>
-                                <HBox spacing="6">
-                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="ADMIN ONLY" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="INSTANT FEEDBACK" styleClass="feature-tag-text"/></HBox>
                                 </HBox>
                             </VBox>
                         </VBox>
@@ -152,7 +97,7 @@
                                 </HBox>
                                 <VBox spacing="8">
                                     <Label text="Results &amp; Analytics" styleClass="feature-title"/>
-                                    <Label text="Detailed per-exam result breakdowns with score history, pass/fail tracking, and improvement trends over time." styleClass="feature-desc" wrapText="true"/>
+                                    <Label text="Detailed per-exam result breakdowns with score history, pass/fail tracking, accuracy percentages, and improvement trends over all attempts." styleClass="feature-desc" wrapText="true"/>
                                 </VBox>
                                 <HBox spacing="6">
                                     <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="HISTORY" styleClass="feature-tag-text"/></HBox>
@@ -164,13 +109,224 @@
                     </HBox>
                 </VBox>
 
-                <!-- ====== SYSTEM FEATURES ====== -->
+                <!-- ====== CONTEST SYSTEM ====== -->
                 <VBox spacing="16">
-                    <Label text="SYSTEM &amp; SECURITY" styleClass="section-label"/>
+                    <Label text="LIVE CONTEST SYSTEM" styleClass="section-label"/>
                     <Region styleClass="section-divider-glow" minWidth="60" maxWidth="60"/>
 
                     <HBox spacing="16" alignment="TOP_CENTER">
 
+                        <!-- Contest Rooms -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="🏆" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Live Contest Rooms" styleClass="feature-title"/>
+                                    <Label text="Admins create time-boxed contest sessions with a lobby, live countdown, and synchronized start. Students join via a contest intro screen and compete in real time." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="REAL-TIME" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="LOBBY" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Leaderboard -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="🥇" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Leaderboard &amp; Ratings" styleClass="feature-title"/>
+                                    <Label text="Live leaderboard updates after each contest submission. Student ratings are tracked across contests and reflected on their profile via the StudentRating system." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="RANKINGS" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="ELO-STYLE" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Written Review -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="✍️" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Written Review &amp; Results" styleClass="feature-title"/>
+                                    <Label text="After each contest, a structured written review panel shows detailed explanations per question, your answer vs. the correct answer, and a full score breakdown." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="POST-CONTEST" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="DETAILED" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                    </HBox>
+                </VBox>
+
+                <!-- ====== ADMIN TOOLS ====== -->
+                <VBox spacing="16">
+                    <Label text="ADMIN &amp; MANAGEMENT" styleClass="section-label"/>
+                    <Region styleClass="section-divider-glow" minWidth="60" maxWidth="60"/>
+
+                    <HBox spacing="16" alignment="TOP_CENTER">
+
+                        <!-- Role-Based Access -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="🔐" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Role-Based Access" styleClass="feature-title"/>
+                                    <Label text="Separate Student and Admin/Teacher portals with distinct dashboards, navigation flows, and permission boundaries. Role is locked at registration." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="STUDENT" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="ADMIN" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Question &amp; Contest Manager -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="🗂️" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Question &amp; Contest Manager" styleClass="feature-title"/>
+                                    <Label text="Admins create, edit, and manage question banks by subject and difficulty. The ContestManagerController allows full scheduling, editing, and deletion of live contests." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="ADMIN ONLY" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="FULL CRUD" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Exam Reports -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="📋" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Exam Reports Dashboard" styleClass="feature-title"/>
+                                    <Label text="Admins access aggregate reports with attempt counts, class-wide score distributions, top performers, and per-exam analytics. Admins can also send broadcast notifications." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="ANALYTICS" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="CLASS-WIDE" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                    </HBox>
+                </VBox>
+
+                <!-- ====== SOCIAL & COMMUNITY ====== -->
+                <VBox spacing="16">
+                    <Label text="COMMUNITY &amp; COMMUNICATION" styleClass="section-label"/>
+                    <Region styleClass="section-divider-glow" minWidth="60" maxWidth="60"/>
+
+                    <HBox spacing="16" alignment="TOP_CENTER">
+
+                        <!-- Discussion Forum -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="💬" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Discussion Forum" styleClass="feature-title"/>
+                                    <Label text="A full in-app discussion forum for students and admins. Post questions, share resources, and discuss exam topics. Admins have moderation controls via the AdminForumController." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="FORUM" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="MODERATED" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Notifications -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="🔔" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Notification System" styleClass="feature-title"/>
+                                    <Label text="In-app notification panel on the Student Dashboard surfaces exam announcements, contest invites, and system alerts. Admins can broadcast notifications to all students." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="IN-APP" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="BROADCAST" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Student Profile & Stats -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="👤" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="Student Profile &amp; Stats" styleClass="feature-title"/>
+                                    <Label text="Each student has a rich profile tracking their StudentStats (total exams, accuracy, best score), StudentRating (contest ELO), and a full exam attempt history." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="STATS" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="RATING" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                    </HBox>
+                </VBox>
+
+                <!-- ====== AI, SYSTEM & SECURITY ====== -->
+                <VBox spacing="16">
+                    <Label text="AI, SYSTEM &amp; SECURITY" styleClass="section-label"/>
+                    <Region styleClass="section-divider-glow" minWidth="60" maxWidth="60"/>
+
+                    <HBox spacing="16" alignment="TOP_CENTER">
+
+                        <!-- AI Integration -->
+                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
+                            <VBox spacing="16">
+                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
+                                    <Label text="🤖" styleClass="feature-icon"/>
+                                </HBox>
+                                <VBox spacing="8">
+                                    <Label text="AI-Powered Insights" styleClass="feature-title"/>
+                                    <Label text="Gemini AI integration provides intelligent question suggestions, automatic hint generation, performance analysis, and personalized study recommendations for each student." styleClass="feature-desc" wrapText="true"/>
+                                </VBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="GEMINI AI" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="ADAPTIVE" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Email Integration -->
                         <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
                             <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
                             <VBox spacing="16">
@@ -179,26 +335,13 @@
                                 </HBox>
                                 <VBox spacing="8">
                                     <Label text="Email Integration" styleClass="feature-title"/>
-                                    <Label text="Automated welcome emails on signup, password reset flows via secure email tokens, and notification support." styleClass="feature-desc" wrapText="true"/>
+                                    <Label text="Automated welcome emails on signup, secure password reset via email tokens, and contact form delivery — all powered by SMTP through EmailConfig and EmailService." styleClass="feature-desc" wrapText="true"/>
                                 </VBox>
                                 <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="SMTP" styleClass="feature-tag-text"/></HBox>
                             </VBox>
                         </VBox>
 
-                        <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
-                            <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
-                            <VBox spacing="16">
-                                <HBox styleClass="feature-icon-box" alignment="CENTER" minWidth="48" minHeight="48" maxWidth="48" maxHeight="48">
-                                    <Label text="🎬" styleClass="feature-icon"/>
-                                </HBox>
-                                <VBox spacing="8">
-                                    <Label text="Cinematic Intro" styleClass="feature-title"/>
-                                    <Label text="A custom video intro sequence plays on first launch, setting the stage for the ExamVerse experience with frame-perfect playback." styleClass="feature-desc" wrapText="true"/>
-                                </VBox>
-                                <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="MEDIAPLAYER" styleClass="feature-tag-text"/></HBox>
-                            </VBox>
-                        </VBox>
-
+                        <!-- Scene Caching & Cinematic -->
                         <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
                             <padding><Insets top="28" bottom="28" left="24" right="24"/></padding>
                             <VBox spacing="16">
@@ -206,10 +349,13 @@
                                     <Label text="⚡" styleClass="feature-icon"/>
                                 </HBox>
                                 <VBox spacing="8">
-                                    <Label text="Scene Caching &amp; Transitions" styleClass="feature-title"/>
-                                    <Label text="Intelligent scene caching for instant navigation and buttery-smooth fade transitions throughout the entire application." styleClass="feature-desc" wrapText="true"/>
+                                    <Label text="Cinematic Intro &amp; Scene Caching" styleClass="feature-title"/>
+                                    <Label text="A custom video intro cinematic plays on launch. SceneConfig and SceneManager provide intelligent scene caching for instant navigation with smooth fade transitions throughout." styleClass="feature-desc" wrapText="true"/>
                                 </VBox>
-                                <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="PERFORMANCE" styleClass="feature-tag-text"/></HBox>
+                                <HBox spacing="6">
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="MEDIAPLAYER" styleClass="feature-tag-text"/></HBox>
+                                    <HBox styleClass="feature-tag"><padding><Insets top="3" bottom="3" left="8" right="8"/></padding><Label text="PERFORMANCE" styleClass="feature-tag-text"/></HBox>
+                                </HBox>
                             </VBox>
                         </VBox>
 
