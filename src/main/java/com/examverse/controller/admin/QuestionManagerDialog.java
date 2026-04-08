@@ -42,7 +42,7 @@ public class QuestionManagerDialog extends Dialog<ButtonType> {
         DialogPane dialogPane = getDialogPane();
         try {
             dialogPane.getStylesheets().add(
-                    getClass().getResource("/com/examverse/css/student-dashboard.css").toExternalForm()
+                    getClass().getResource("/com/examverse/css/admin-dashboard.css").toExternalForm()
             );
             dialogPane.getStyleClass().add("alert");
         } catch (Exception e) {
@@ -378,6 +378,8 @@ public class QuestionManagerDialog extends Dialog<ButtonType> {
         questionField.setPromptText("Enter the question text...");
         questionField.setPrefRowCount(3);
         questionField.setWrapText(true);
+        questionField.setStyle("-fx-background-color: #1a1f2e; -fx-text-fill: #e2e8f0; -fx-prompt-text-fill: #4b5568;");
+
         grid.add(questionLabel, 0, row);
         grid.add(questionField, 1, row);
         row++;
@@ -452,6 +454,7 @@ public class QuestionManagerDialog extends Dialog<ButtonType> {
         explanationField.setPromptText("Add explanation for the correct answer (optional)");
         explanationField.setPrefRowCount(2);
         explanationField.setWrapText(true);
+        explanationField.setStyle("-fx-background-color: #1a1f2e; -fx-text-fill: #e2e8f0; -fx-prompt-text-fill: #4b5568;");
         grid.add(explanationLabel, 0, row);
         grid.add(explanationField, 1, row);
 

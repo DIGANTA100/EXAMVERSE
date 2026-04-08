@@ -51,10 +51,10 @@ public class AdminDashboardController implements Initializable {
 
     @FXML
 
-   private Label welcomeLabel, dateTimeLabel;
+    private Label welcomeLabel, dateTimeLabel;
 
-  @FXML
-  private Button userAvatar;
+    @FXML
+    private Button userAvatar;
 
     @FXML
     private Label totalExamsLabel, totalQuestionsLabel, totalStudentsLabel, totalAttemptsLabel;
@@ -308,7 +308,7 @@ public class AdminDashboardController implements Initializable {
         viewBtn.getStyleClass().add("btn-primary");
         viewBtn.setOnAction(e -> handleViewExam(exam));
 
-        actionRow.getChildren().addAll(editBtn, questionsBtn, viewBtn);
+        actionRow.getChildren().addAll( questionsBtn, viewBtn);
 
         // Add all to card
         card.getChildren().addAll(headerRow, titleLabel, descLabel, statsRow, actionRow);
@@ -400,9 +400,9 @@ public class AdminDashboardController implements Initializable {
         );
 
         // Style the content label (the question text)
-           javafx.scene.Node contentLbl = dp.lookup(".content.label");
-   if (contentLbl != null)
-       contentLbl.setStyle("-fx-text-fill: #e2e8f0; -fx-font-size: 14px;");
+        javafx.scene.Node contentLbl = dp.lookup(".content.label");
+        if (contentLbl != null)
+            contentLbl.setStyle("-fx-text-fill: #e2e8f0; -fx-font-size: 14px;");
 
         // Style buttons after the dialog is shown (only reliable hook)
         alert.setOnShown(e -> {
@@ -560,6 +560,13 @@ public class AdminDashboardController implements Initializable {
         DialogPane dialogPane = dialog.getDialogPane();
         dialogPane.getStylesheets().add(getClass().getResource("/com/examverse/css/admin-dashboard.css").toExternalForm());
         dialogPane.getStyleClass().add("alert");
+        dialogPane.setStyle(
+                "-fx-background-color: #13151c;" +
+                        "-fx-border-color: #1e2231;" +
+                        "-fx-border-width: 1px;" +
+                        "-fx-border-radius: 12px;" +
+                        "-fx-background-radius: 12px;"
+        );
 
         // Add buttons
         ButtonType createButtonType = new ButtonType("Create Exam", ButtonBar.ButtonData.OK_DONE);
@@ -580,6 +587,19 @@ public class AdminDashboardController implements Initializable {
         TextArea descArea = new TextArea();
         descArea.setPromptText("Description");
         descArea.setPrefRowCount(3);
+        descArea.getStyleClass().add("text-area");
+        // Explicit inline style ensures the text is visible even if CSS cascade is incomplete in dialogs
+        descArea.setStyle(
+                "-fx-background-color: #1a1f2e;" +
+                        "-fx-text-fill: #e2e8f0;" +
+                        "-fx-prompt-text-fill: #4b5568;" +
+                        "-fx-border-color: #2d3348;" +
+                        "-fx-border-width: 1px;" +
+                        "-fx-border-radius: 6px;" +
+                        "-fx-background-radius: 6px;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-padding: 8 12 8 12;"
+        );
 
         ComboBox<String> difficultyBox = new ComboBox<>();
         difficultyBox.getItems().addAll("EASY", "MEDIUM", "HARD");

@@ -451,6 +451,16 @@
     -fx-background-color: transparent;
 }
 
+/* Fix: the inner content node of TextArea defaults to white — must be explicitly set */
+.text-area .content {
+    -fx-background-color: #1a1f2e;
+    -fx-text-fill: #e2e8f0;
+}
+
+.text-area:focused .content {
+    -fx-background-color: #1e2231;
+}
+
 .combo-box > .list-cell {
     -fx-background-color: transparent;
     -fx-text-fill: #e2e8f0;

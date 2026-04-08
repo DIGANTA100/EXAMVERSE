@@ -159,7 +159,7 @@ public class QuestionManagerController implements Initializable {
         viewBtn.getStyleClass().add("btn-primary");
         viewBtn.setOnAction(e -> handleViewExam(exam));
 
-        actionRow.getChildren().addAll(editBtn, questionsBtn, viewBtn);
+        actionRow.getChildren().addAll( questionsBtn, viewBtn);
 
         card.getChildren().addAll(headerRow, titleLabel, descLabel, statsRow, actionRow);
         return card;
