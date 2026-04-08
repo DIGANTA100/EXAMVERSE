@@ -261,7 +261,7 @@ public class AllExamsController implements Initializable {
         deleteBtn.getStyleClass().add("btn-danger");
         deleteBtn.setOnAction(e -> handleDeleteExam(exam));
 
-        actionRow.getChildren().addAll(editBtn, questionsBtn, statsBtn, toggleStatusBtn, deleteBtn);
+        actionRow.getChildren().addAll( questionsBtn, statsBtn, toggleStatusBtn, deleteBtn);
 
         card.getChildren().addAll(headerRow, descLabel, statsRow, actionRow);
 
