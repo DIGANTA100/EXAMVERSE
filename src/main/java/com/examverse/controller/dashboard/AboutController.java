@@ -42,7 +42,7 @@ public class AboutController implements Initializable {
      */
     private void loadDeveloperPhotos() {
         loadPhoto(supervisorImage, "/com/examverse/assets/images/supervisor.jpg");
-        loadPhoto(prottoyImage, "/com/examverse/assets/images/prottoy.jpg");
+        loadPhoto(prottoyImage, "/com/examverse/assets/images/prottoy.jpeg");
         loadPhoto(digantaImage, "/com/examverse/assets/images/diganta.jpg");
     }
 

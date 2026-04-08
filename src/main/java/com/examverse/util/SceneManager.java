@@ -52,7 +52,10 @@ public class SceneManager {
             "contest-leaderboard", // ← ADD THIS
             "written-review",      // ← ADD THIS
             "student-dashboard",   // ← ADD THIS
-            "admin-dashboard"      // ← ADD THIS
+            "admin-dashboard",
+            "all-exams",
+            "question-manager"
+            // ← ADD THIS
     };
     /** Returns true if this path should always bypass the cache. */
     private static boolean neverCache(String fxmlPath) {

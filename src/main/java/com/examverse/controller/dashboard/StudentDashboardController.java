@@ -377,15 +377,24 @@ public class StudentDashboardController implements Initializable {
     // ─────────────────────────────────────────────────────────────────────────
 
     private void setContentWithAnimation(VBox content) {
+        // ✅ Always restore the normal content container if forum hijacked the center
+        if (rootPane.getCenter() != contentScrollPane) {
+            rootPane.setCenter(contentScrollPane);
+        }
+        // Stop forum polling if navigating away
+        if (activeForum != null) {
+            activeForum.stopPolling();
+            activeForum = null;
+        }
+
         content.setOpacity(0);
         contentPane.getChildren().setAll(content);
-        FadeTransition fade  = new FadeTransition(Duration.millis(250), content);
+        FadeTransition fade = new FadeTransition(Duration.millis(250), content);
         fade.setFromValue(0); fade.setToValue(1);
         TranslateTransition slide = new TranslateTransition(Duration.millis(250), content);
         slide.setFromY(14); slide.setToY(0);
         new ParallelTransition(fade, slide).play();
     }
-
     private DiscussionForumController activeForum; // keep reference to stop polling on nav away
 
     private void loadForum() {

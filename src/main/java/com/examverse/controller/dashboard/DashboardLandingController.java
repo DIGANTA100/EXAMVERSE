@@ -214,7 +214,7 @@ public class DashboardLandingController implements Initializable {
     @FXML
     private void handleDemo() {
         // ─── Replace the URL below with your actual YouTube video link ───
-        String youtubeUrl = "https://www.youtube.com/watch?v=YOUR_VIDEO_ID";
+        String youtubeUrl = "https://youtu.be/tm7iBEOTL0A";
         // ──────────────────────────────────────────────────────────────────
         try {
             if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
