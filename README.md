@@ -5,7 +5,7 @@
 <!--  📌 Replace the src below with your actual banner image URL  -->
 <!--  Recommended: 1280×640px, upload to /assets/images/ in repo  -->
 <!-- ============================================================ -->
-<img src="assets/images/banner.png" alt="ExamVerse Banner" width="100%" />
+<img src="src/main/resources/com.examverse/assets/images/banner.png" alt="ExamVerse Banner" width="100%" />
 
 <br/>
 
