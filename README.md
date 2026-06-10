@@ -125,7 +125,7 @@
 
 <div align="center">
 
-[![ExamVerse Demo Video](https://i.ytimg.com/vi/YOUR_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/YOUR_VIDEO_LINK_HERE)
+[![ExamVerse Demo Video](https://img.youtube.com/vi/tm7iBEOTL0A/maxresdefault.jpg)](https://youtu.be/tm7iBEOTL0A)
 
 *👆 Click to watch the full demo on YouTube*
 
@@ -304,11 +304,11 @@ Contributions are welcome! Feel free to open issues or submit pull requests.
 
 **Diganta**
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/YOUR_LINKEDIN_USERNAME_HERE)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ajmainfayekdiganta/)
 &nbsp;
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/DIGANTA100)
 &nbsp;
-[![YouTube](https://img.shields.io/badge/YouTube-Subscribe-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/YOUR_CHANNEL_LINK_HERE)
+[![YouTube](https://img.shields.io/badge/YouTube-Watch%20Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/tm7iBEOTL0A)
 
 </div>
 
