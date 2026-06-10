@@ -102,7 +102,7 @@
 
 | Dashboard Landing | Contest Room |
 |:-----------------:|:------------:|
-| ![Dashboard](assets/images/screenshots/dashboard.png) | ![Contest Room](assets/images/screenshots/contest-room.png) |
+| ![Dashboard](src/main/resources/com.examverse/assets/images/dashboard.png) | ![Contest Room](assets/images/screenshots/contest-room.png) |
 
 | Admin Panel | Exam Taking |
 |:-----------:|:-----------:|
