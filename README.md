@@ -1,12 +1,167 @@
-# ExamVerse
+<div align="center">
 
-A JavaFX-based examination platform supporting student dashboards, contest rooms, exam management, and AI-powered evaluation.
+<!-- ============================================================ -->
+<!--  BANNER IMAGE                                                 -->
+<!--  📌 Replace the src below with your actual banner image URL  -->
+<!--  Recommended: 1280×640px, upload to /assets/images/ in repo  -->
+<!-- ============================================================ -->
+<img src="assets/images/banner.png" alt="ExamVerse Banner" width="100%" />
+
+<br/>
+
+# ⚡ ExamVerse
+
+### *A Next-Generation JavaFX Examination & Contest Platform*
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Java-17-orange?style=for-the-badge&logo=openjdk&logoColor=white" />
+  <img src="https://img.shields.io/badge/JavaFX-17-blue?style=for-the-badge&logo=java&logoColor=white" />
+  <img src="https://img.shields.io/badge/MySQL-8.0+-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
+  <img src="https://img.shields.io/badge/Gemini_AI-Integrated-8E75B2?style=for-the-badge&logo=google&logoColor=white" />
+  <img src="https://img.shields.io/badge/Gradle-Build-02303A?style=for-the-badge&logo=gradle&logoColor=white" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
+</p>
+
+<br/>
+
+<!-- ============================================================ -->
+<!--  ACTION BUTTONS — replace # with your actual links           -->
+<!-- ============================================================ -->
+
+[![▶ Watch Demo](https://img.shields.io/badge/▶%20Watch%20Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/YOUR_VIDEO_LINK_HERE)
+&nbsp;
+[![⭐ Star this Repo](https://img.shields.io/badge/⭐%20Star%20this%20Repo-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/DIGANTA100/EXAMVERSE)
+&nbsp;
+[![🔗 LinkedIn](https://img.shields.io/badge/🔗%20LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/YOUR_LINKEDIN_USERNAME_HERE)
+&nbsp;
+[![🍴 Fork](https://img.shields.io/badge/🍴%20Fork-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/DIGANTA100/EXAMVERSE/fork)
+
+<br/>
+
+</div>
 
 ---
 
-## Prerequisites
+## 📖 About ExamVerse
 
-Before running the project, ensure the following are installed:
+**ExamVerse** is a feature-rich desktop examination platform built with **JavaFX**, designed for educational institutions and competitive exam environments. It combines a polished UI experience with real-time contest rooms, AI-powered answer evaluation, and a full admin management suite — all backed by a MySQL database.
+
+> 🎯 Built as a full-stack desktop application — from animated intro screens and 3D dashboards to live leaderboards and AI-graded written exams.
+
+---
+
+## ✨ Features
+
+<table>
+<tr>
+<td width="50%">
+
+### 🎓 Student Side
+- Personalized student dashboard with 3D landing view
+- Take scheduled exams with live timer
+- Join contest rooms and compete in real-time
+- View leaderboard rankings & detailed results
+- Written answer submission with AI evaluation
+- Discussion forum for peer interaction
+- Notifications for upcoming exams & contests
+
+</td>
+<td width="50%">
+
+### 🛠️ Admin Side
+- Full admin dashboard with analytics
+- Create, edit & manage exams and questions
+- Organize and schedule contests
+- View per-student exam reports
+- Manage student accounts
+- Send broadcast notifications
+- Moderate the discussion forum
+
+</td>
+</tr>
+</table>
+
+### 🤖 AI & Extra
+- **Gemini AI** integration for evaluating written/subjective answers
+- Cinematic intro video with animated transitions
+- Background music per contest arena (8 unique tracks)
+- Email-based password reset flow
+- Role-based access control (Admin / Student)
+
+---
+
+## 🖼️ Screenshots
+
+<!-- ============================================================ -->
+<!--  SCREENSHOTS — replace placeholder paths with real ones      -->
+<!--  Put your screenshots inside assets/images/screenshots/      -->
+<!--  Recommended size: ~1200×700px per screenshot                -->
+<!-- ============================================================ -->
+
+<div align="center">
+
+| Dashboard Landing | Contest Room |
+|:-----------------:|:------------:|
+| ![Dashboard](assets/images/screenshots/dashboard.png) | ![Contest Room](assets/images/screenshots/contest-room.png) |
+
+| Admin Panel | Exam Taking |
+|:-----------:|:-----------:|
+| ![Admin](assets/images/screenshots/admin-dashboard.png) | ![Exam](assets/images/screenshots/exam-taking.png) |
+
+| Leaderboard | Results |
+|:-----------:|:-------:|
+| ![Leaderboard](assets/images/screenshots/leaderboard.png) | ![Results](assets/images/screenshots/results.png) |
+
+</div>
+
+---
+
+## 🎬 Demo Video
+
+<!-- ============================================================ -->
+<!--  VIDEO THUMBNAIL — replace with your YouTube thumbnail link  -->
+<!--  To get thumbnail: https://i.ytimg.com/vi/YOUR_VIDEO_ID/maxresdefault.jpg -->
+<!-- ============================================================ -->
+
+<div align="center">
+
+[![ExamVerse Demo Video](https://i.ytimg.com/vi/YOUR_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/YOUR_VIDEO_LINK_HERE)
+
+*👆 Click to watch the full demo on YouTube*
+
+</div>
+
+---
+
+## 🗂️ Project Structure
+
+```
+EXAMVERSE/
+├── src/main/java/com/examverse/
+│   ├── app/            → Entry point (Launcher.java, ExamVerseApp.java)
+│   ├── config/         → Database, email, and scene configuration
+│   ├── controller/
+│   │   ├── admin/      → Admin dashboard, exams, contests, students
+│   │   ├── auth/       → Login, signup, password reset
+│   │   ├── contest/    → Contest lobby, room, leaderboard, results
+│   │   ├── dashboard/  → Student & landing dashboard sections
+│   │   ├── exam/       → Exam taking & result display
+│   │   └── forum/      → Discussion forum (admin & student)
+│   ├── model/          → Data models (User, Exam, Contest, Question…)
+│   ├── service/
+│   │   ├── ai/         → Gemini AI integration
+│   │   ├── auth/       → Auth, email, password reset, UserDAO
+│   │   └── exam/       → Exam, contest, evaluation, timer services
+│   └── util/           → SessionManager, SceneManager, Validator
+└── src/main/resources/com/examverse/
+    ├── assets/         → Images, music (8 tracks), intro videos
+    ├── css/            → Stylesheets for all views
+    └── fxml/           → FXML layout files for all screens
+```
+
+---
+
+## ⚙️ Prerequisites
 
 | Requirement | Version |
 |---|---|
@@ -14,260 +169,172 @@ Before running the project, ensure the following are installed:
 | JavaFX SDK | 17 |
 | MySQL Server | 8.0+ |
 | MySQL Connector/J | 8.2.0 |
-| Maven or Gradle | Latest stable |
-| IntelliJ IDEA or VS Code | Latest stable |
+| Gradle | Latest stable |
+| IntelliJ IDEA / VS Code | Latest stable |
 
-- **Download JDK 17:** https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html  
-- **Download JavaFX SDK 17:** https://gluonhq.com/products/javafx/  
-- **Download MySQL Community Server:** https://dev.mysql.com/downloads/mysql/
+<details>
+<summary>📥 Download Links</summary>
+
+- [JDK 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
+- [JavaFX SDK 17](https://gluonhq.com/products/javafx/)
+- [MySQL Community Server](https://dev.mysql.com/downloads/mysql/)
+- [Git](https://git-scm.com/downloads)
+
+</details>
 
 ---
 
-## Getting the Source Code
+## 🚀 Getting Started
 
-The full project source is hosted on GitHub. Since the submitted file only contains this README, you must clone the repository first.
-
-**Repository:** https://github.com/DIGANTA100/EXAMVERSE
-
-Make sure **Git** is installed on your system: https://git-scm.com/downloads
-
-Open a terminal and run:
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/DIGANTA100/EXAMVERSE.git
+cd EXAMVERSE
 ```
 
-This will create an `EXAMVERSE` folder in your current directory containing the full project.
+### 2. Database Setup
 
----
+> **MySQL must be running before you launch the app.**
 
-## Installation & Setup
+**a)** Open `src/main/java/com/examverse/config/DatabaseConfig.java` and update your credentials:
 
-### Option 1 — IntelliJ IDEA
+```java
+private static final String DB_URL      = "jdbc:mysql://localhost:3306/examverse_db";
+private static final String DB_USER     = "root";
+private static final String DB_PASSWORD = "your_mysql_password_here"; // ← change this
+```
 
-1. **Clone the repository**
+**b)** That's it — on first run, ExamVerse **automatically**:
+- Creates the `examverse_db` database
+- Creates all required tables
+- Seeds a default admin account and sample exam data
 
-   Open a terminal and run:
+> 🔑 **Default admin login:** `admin` / `admin123`
 
-   ```bash
-   git clone https://github.com/DIGANTA100/EXAMVERSE.git
-   ```
+### 3. IDE Setup
 
-   Or use IntelliJ's built-in Git support:
-   - Launch IntelliJ IDEA
-   - On the Welcome screen, click **Get from VCS**
-   - Enter the URL: `https://github.com/DIGANTA100/EXAMVERSE.git`
-   - Choose a local directory and click **Clone**
+<details>
+<summary>🟦 IntelliJ IDEA</summary>
 
-2. **Open the project**
-
-   - If you cloned via terminal, go to **File → Open** and select the `EXAMVERSE` folder
-   - Wait for IntelliJ to index the project
-
-3. **Set the Project SDK to Java 17**
-
-   - Go to **File → Project Structure → Project**
-   - Set **SDK** to `Java 17`
-   - Set **Language level** to `17`
-
-4. **Add JavaFX SDK as a library**
-
-   - Go to **File → Project Structure → Libraries**
-   - Click **+** → **Java**
-   - Navigate to your JavaFX SDK folder and select the `lib` directory
-   - Click **OK** and apply
-
-5. **Configure the Run Configuration for `Launcher.java`**
-
-   - Go to **Run → Edit Configurations**
-   - Click **+** → **Application**
-   - Set **Main class** to `com.examverse.app.Launcher`
-   - In the **VM options** field, add the following (replace the path with your actual JavaFX SDK `lib` path):
-
+1. Open the cloned folder via **File → Open**
+2. Set SDK to Java 17: **File → Project Structure → Project**
+3. Add JavaFX lib as a library: **File → Project Structure → Libraries → + → Java → select JavaFX `lib/` folder**
+4. Create a Run Configuration (**Run → Edit Configurations → + → Application**):
+   - **Main class:** `com.examverse.app.Launcher`
+   - **VM options:**
      ```
      --module-path /path/to/javafx-sdk-17/lib --add-modules javafx.controls,javafx.fxml,javafx.media,javafx.web
      ```
+5. Press **Shift + F10** to run
 
-   - Click **Apply → OK**
+</details>
 
-6. **Run the project**
+<details>
+<summary>🟦 Visual Studio Code</summary>
 
-   - Click the green **Run** button, or press `Shift + F10`
-   - The application will launch from `Launcher.java`
+1. Install the **Extension Pack for Java**
+2. Open the cloned folder via **File → Open Folder**
+3. Create `.vscode/launch.json`:
 
----
-
-### Option 2 — Visual Studio Code
-
-1. **Install required VS Code extensions**
-
-   - [Extension Pack for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack) (includes Language Support, Debugger, Maven, and Project Manager for Java)
-
-2. **Clone the repository**
-
-   Open a terminal and run:
-
-   ```bash
-   git clone https://github.com/DIGANTA100/EXAMVERSE.git
-   ```
-
-   Or use VS Code's built-in Git support:
-   - Open VS Code
-   - Press `Ctrl + Shift + P` and search for **Git: Clone**
-   - Enter the URL: `https://github.com/DIGANTA100/EXAMVERSE.git`
-   - Choose a local folder and click **Open** when prompted
-
-3. **Open the project**
-
-   - If you cloned via terminal, go to **File → Open Folder** and select the `EXAMVERSE` folder
-
-4. **Configure Java 17 in VS Code**
-
-
-   - Open the Command Palette (`Ctrl + Shift + P`)
-   - Search for **Java: Configure Java Runtime**
-   - Make sure **JDK 17** is listed and selected for this project
-   - If not detected, add the JDK path manually in `settings.json`:
-
-     ```json
-     "java.jdt.ls.java.home": "/path/to/jdk-17"
-     ```
-
-5. **Add the JavaFX VM arguments**
-
-   - Create or edit `.vscode/launch.json` in the project root with the following content:
-
-     ```json
-     {
-       "version": "0.2.0",
-       "configurations": [
-         {
-           "type": "java",
-           "name": "Launch ExamVerse",
-           "request": "launch",
-           "mainClass": "com.examverse.app.Launcher",
-           "vmArgs": "--module-path /path/to/javafx-sdk-17/lib --add-modules javafx.controls,javafx.fxml,javafx.media,javafx.web"
-         }
-       ]
-     }
-     ```
-
-   > Replace `/path/to/javafx-sdk-17/lib` with the actual path to the `lib` folder inside your JavaFX SDK installation.
-
-6. **Add JavaFX to the classpath**
-
-   - Open the Command Palette (`Ctrl + Shift + P`)
-   - Search for **Java: Configure Classpath**
-   - Under **Referenced Libraries**, click **+** and add all `.jar` files from the JavaFX SDK `lib` folder
-
-7. **Run the project**
-
-   - Open `src/main/java/com/examverse/app/Launcher.java`
-   - Press `F5` or click **Run → Start Debugging**
-   - Alternatively, click the **Run** button that appears above the `main` method
-
----
-
-## Database Setup
-
-ExamVerse uses **MySQL** as its database. You must have MySQL Server running before launching the application.
-
-### Step 1 — Install & Start MySQL
-
-- Download and install **MySQL Community Server 8.0+** from https://dev.mysql.com/downloads/mysql/
-- During installation, set a root password — remember it, you will need it in the next step
-- Make sure the MySQL service is running (port `3306` by default)
-
-### Step 2 — Configure Your Credentials
-
-Open the following file:
-
-```
-src/main/java/com/examverse/config/DatabaseConfig.java
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Launch ExamVerse",
+      "request": "launch",
+      "mainClass": "com.examverse.app.Launcher",
+      "vmArgs": "--module-path /path/to/javafx-sdk-17/lib --add-modules javafx.controls,javafx.fxml,javafx.media,javafx.web"
+    }
+  ]
+}
 ```
 
-Find **line 18** and update the password to match your MySQL root password:
+4. Open `Launcher.java` and press **F5**
 
-```java
-private static final String DB_URL = "jdbc:mysql://localhost:3306/examverse_db";
-private static final String DB_USER = "root";
-private static final String DB_PASSWORD = "your_mysql_password_here"; // Change this
-```
+</details>
 
-> The username is `root` by default. If you use a different MySQL user, update `DB_USER` as well.
+### 4. Gradle Dependency
 
-### Step 3 — Database and Tables Are Auto-Created
-
-You do **not** need to manually create the database or tables. On first run, the application will automatically:
-
-- Create the `examverse_db` database if it does not exist
-- Create all required tables (`users`, `exams`, `questions`, `student_exam_attempts`, `student_answers`)
-- Insert a default admin account and sample exam data
-
-**Default admin credentials (auto-created on first run):**
-
-```
-Username : admin
-Password : admin123
-```
-
-### Step 4 — Add MySQL Connector to Your Build
-
-Make sure the MySQL JDBC driver is included in your dependencies.
-
-In `build.gradle.kts` (Gradle):
+Make sure your `build.gradle.kts` includes the MySQL connector:
 
 ```kotlin
 implementation("com.mysql:mysql-connector-j:8.2.0")
 ```
 
-Or in `pom.xml` (Maven):
+---
 
-```xml
-<dependency>
-    <groupId>com.mysql</groupId>
-    <artifactId>mysql-connector-j</artifactId>
-    <version>8.2.0</version>
-</dependency>
-```
+## 🧠 Tech Stack
 
-Initial contest data is additionally set up by `ContestDatabaseSetup.java` on first run.
+| Layer | Technology |
+|---|---|
+| UI Framework | JavaFX 17 + FXML |
+| Styling | CSS (custom per module) |
+| Backend Logic | Java 17 |
+| Database | MySQL 8.0+ via JDBC |
+| AI Evaluation | Google Gemini API |
+| Email Service | JavaMail (SMTP) |
+| Build Tool | Gradle (Kotlin DSL) |
+| Media | MP4 intro videos, MP3 arena music |
 
 ---
 
-## Project Entry Point
+## 🤝 Contributing
 
-The application starts from:
+Contributions are welcome! Feel free to open issues or submit pull requests.
 
-```
-src/main/java/com/examverse/app/Launcher.java
-```
-
-`Launcher.java` bootstraps the JavaFX application and delegates to `ExamVerseApp.java`.
-
----
-
-## Project Structure Overview
-
-```
-EXAMVERSE/
-├── src/main/java/com/examverse/
-│   ├── app/          → Entry point (Launcher.java, ExamVerseApp.java)
-│   ├── config/       → Database, email, and scene configuration
-│   ├── controller/   → JavaFX controllers (admin, auth, contest, exam, dashboard)
-│   ├── model/        → Data models (User, Exam, Contest, Question, etc.)
-│   ├── service/      → Business logic and services (AI, auth, exam, storage)
-│   └── util/         → Utilities (SessionManager, SceneManager, Validator)
-└── src/main/resources/com/examverse/
-    ├── assets/       → Images, music, and video assets
-    ├── css/          → Stylesheets for all views
-    └── fxml/         → FXML layout files for all screens
-```
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m "Add your feature"`
+4. Push and open a Pull Request
 
 ---
 
-## Notes
+## 👨‍💻 Author
 
-- Make sure the **JavaFX module path is set correctly** in both the IDE and the run configuration. Missing VM arguments is the most common cause of `java.lang.module` errors on startup.
-- If you see `Graphics Device initialization failed`, ensure JavaFX `lib` jars are on the classpath.
-- The email feature requires valid SMTP credentials in `EmailConfig.java`.
+<div align="center">
+
+<!-- ============================================================ -->
+<!--  AUTHOR AVATAR — replace with your GitHub profile image URL  -->
+<!-- ============================================================ -->
+
+<img src="assets/images/diganta.jpg" width="100" style="border-radius:50%" alt="Diganta"/>
+
+**Diganta**
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/YOUR_LINKEDIN_USERNAME_HERE)
+&nbsp;
+[![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/DIGANTA100)
+&nbsp;
+[![YouTube](https://img.shields.io/badge/YouTube-Subscribe-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/YOUR_CHANNEL_LINK_HERE)
+
+</div>
+
+---
+
+## ⚠️ Troubleshooting
+
+| Issue | Fix |
+|---|---|
+| `java.lang.module` error on startup | Check VM args — missing `--module-path` or `--add-modules` |
+| `Graphics Device initialization failed` | Ensure all JavaFX `.jar` files are on the classpath |
+| MySQL connection refused | Make sure MySQL service is running on port 3306 |
+| Email not sending | Add valid SMTP credentials in `EmailConfig.java` |
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+*If you found this project helpful, please consider giving it a ⭐ — it means a lot!*
+
+[![⭐ Star on GitHub](https://img.shields.io/badge/⭐%20Star%20on%20GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/DIGANTA100/EXAMVERSE)
+
+</div>
