@@ -102,15 +102,15 @@
 
 | Dashboard Landing | Contest Room |
 |:-----------------:|:------------:|
-| ![Dashboard](src/main/resources/com/examverse/assets/images/dashboard.png) | ![Contest Room](assets/images/screenshots/contest-room.png) |
+| ![Dashboard](src/main/resources/com/examverse/assets/images/dashboard.png) | ![Contest Room](src/main/resources/com/examverse/assets/images/contest-room.png) |
 
 | Admin Panel | Exam Taking |
 |:-----------:|:-----------:|
-| ![Admin](assets/images/screenshots/admin-dashboard.png) | ![Exam](assets/images/screenshots/exam-taking.png) |
+| ![Admin](src/main/resources/com/examverse/assets/images/admin-dashboard.png) | ![Exam](src/main/resources/com/examverse/assets/images/exam-taking.png) |
 
 | Leaderboard | Results |
 |:-----------:|:-------:|
-| ![Leaderboard](assets/images/screenshots/leaderboard.png) | ![Results](assets/images/screenshots/results.png) |
+| ![Leaderboard](src/main/resources/com/examverse/assets/images/leaderboard.png) | ![Results](src/main/resources/com/examverse/assets/images/results.png) |
 
 </div>
 
