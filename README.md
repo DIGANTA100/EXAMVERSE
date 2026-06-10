@@ -28,11 +28,11 @@
 <!--  ACTION BUTTONS — replace # with your actual links           -->
 <!-- ============================================================ -->
 
-[![▶ Watch Demo](https://img.shields.io/badge/▶%20Watch%20Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/tm7iBEOTL0A)([[https://www.youtube.com/YOUR_VIDEO_LINK_HERE](https://youtu.be/tm7iBEOTL0A?si=paX_o0MZPQLUsDbj)](https://youtu.be/tm7iBEOTL0A?si=p1xhcyC5oEoIC9IS))
+[![▶ Watch Demo](https://img.shields.io/badge/▶%20Watch%20Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/tm7iBEOTL0A)
 &nbsp;
 [![⭐ Star this Repo](https://img.shields.io/badge/⭐%20Star%20this%20Repo-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/DIGANTA100/EXAMVERSE)
 &nbsp;
-[![🔗 LinkedIn](https://img.shields.io/badge/🔗%20LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ajmainfayekdiganta/)(https://www.linkedin.com/in/YOUR_LINKEDIN_USERNAME_HERE)
+[![🔗 LinkedIn](https://img.shields.io/badge/🔗%20LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ajmainfayekdiganta/)
 &nbsp;
 [![🍴 Fork](https://img.shields.io/badge/🍴%20Fork-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/DIGANTA100/EXAMVERSE/fork)
 
