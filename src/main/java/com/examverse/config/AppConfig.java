@@ -46,7 +46,7 @@ public final class AppConfig {
     //  3. Paste the key below (starts with "AIza...")
     // ════════════════════════════════════════════════════════════════════════
 
-    public static final String GEMINI_API_KEY = "AIzaSyB-OWJWave8iSxU4dTpxfigeuht0gAHc9M";   // ← paste here
+    public static final String GEMINI_API_KEY = "";   // ← paste here
 
     // ════════════════════════════════════════════════════════════════════════
     //  EMAIL / SMTP CONFIGURATION (for OTP / password reset)

@@ -81,6 +81,7 @@ public class StudentDashboardController implements Initializable {
 
     @FXML private ScrollPane contentScrollPane;
     @FXML private Button forumBtn;
+    @FXML private VBox contentContainer;
 
     // ── Services ─────────────────────────────────────────────────────────────
 
@@ -378,8 +379,8 @@ public class StudentDashboardController implements Initializable {
 
     private void setContentWithAnimation(VBox content) {
         // ✅ Always restore the normal content container if forum hijacked the center
-        if (rootPane.getCenter() != contentScrollPane) {
-            rootPane.setCenter(contentScrollPane);
+        if (rootPane.getCenter() != contentContainer) {
+            rootPane.setCenter(contentContainer);
         }
         // Stop forum polling if navigating away
         if (activeForum != null) {
